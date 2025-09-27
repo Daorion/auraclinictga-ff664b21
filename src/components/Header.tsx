@@ -10,7 +10,6 @@ const Header = () => {
   const navigation = [
     { name: 'Início', href: '/' },
     { name: 'Profissionais', href: '/profissionais' },
-    { name: 'Serviços Sirlei', href: '/servicos-sirlei' },
   ];
 
   const isActive = (href: string) => location.pathname === href;

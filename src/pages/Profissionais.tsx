@@ -1,63 +1,12 @@
 import Header from '@/components/Header';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { getProfissionaisBasicos } from '@/data/profissionais';
 
 const Profissionais = () => {
-  const profissionais = [
-    {
-      nome: 'Sirlei',
-      especialidade: 'Massoterapia e Tratamentos Estéticos',
-      descricao: 'Especialista em massagens relaxantes, terapêuticas e estéticas. Oferece uma ampla gama de tratamentos para bem-estar e beleza.',
-      destaque: true
-    },
-    {
-      nome: 'Simone',
-      especialidade: 'Nail Designer',
-      descricao: 'Unhas em gel, alongamento e banho em gel com técnicas modernas e produtos de qualidade.',
-      destaque: false
-    },
-    {
-      nome: 'Dra. Dediane',
-      especialidade: 'Harmonização Facial',
-      descricao: 'Harmonização facial, botox, microagulhamento e preenchimentos com técnicas avançadas.',
-      destaque: false
-    },
-    {
-      nome: 'Cleia',
-      especialidade: 'Terapias e Estética',
-      descricao: 'Massagens relaxantes, pedras quentes, modeladora turbinada, microderme e bandagem.',
-      destaque: false
-    },
-    {
-      nome: 'Luana',
-      especialidade: 'Tratamentos Faciais',
-      descricao: 'Microagulhamento, botox, enzimas e eletroterapia para rejuvenescimento facial.',
-      destaque: false
-    },
-    {
-      nome: 'Nadja',
-      especialidade: 'Design de Sobrancelhas',
-      descricao: 'Micropigmentação, design de sobrancelhas, brow lamination e epilação egípcia.',
-      destaque: false
-    },
-    {
-      nome: 'Rayka',
-      especialidade: 'Extensão de Cílios',
-      descricao: 'Extensão de cílios em diversos volumes para um olhar mais marcante e natural.',
-      destaque: false
-    },
-    {
-      nome: 'Dra. Geisiane',
-      especialidade: 'Tratamentos Corporais',
-      descricao: 'Massagem MAF, limpeza de pele e tratamentos específicos para gordura e flacidez.',
-      destaque: false
-    },
-    {
-      nome: 'Dra. Vanessa',
-      especialidade: 'Harmonização',
-      descricao: 'Harmonização facial e corporal com técnicas modernas e seguras.',
-      destaque: false
-    }
-  ];
+  const profissionais = getProfissionaisBasicos();
 
   const precos = [
     {
@@ -121,9 +70,16 @@ const Profissionais = () => {
                     {profissional.especialidade}
                   </h4>
                   
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed mb-6">
                     {profissional.descricao}
                   </p>
+                  
+                  <Link to={`/profissional/${profissional.id}`}>
+                    <Button className="w-full gap-2 group">
+                      Ver Serviços
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
                 </div>
               </Card>
             ))}
