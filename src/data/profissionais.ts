@@ -382,7 +382,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Médica especializada em harmonização estética facial e corporal.',
     experiencia: '11+ anos de experiência',
-    imagem: '/src/assets/sirlei.jpg',
+    imagem: '/src/assets/vanessa.jpg',
     secaoServicos: [
       {
         categoria: 'Harmonização Estética',
@@ -398,6 +398,81 @@ export const profissionaisData: ProfissionalData[] = [
           {
             titulo: 'Procedimentos Minimamente Invasivos',
             descricao: 'Técnicas avançadas com recovery rápido.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'fernanda',
+    nome: 'Dra. Fernanda Mattos',
+    especialidade: 'Farmacêutica Esteta',
+    descricao: 'Especialista em tratamentos estéticos injetáveis, faciais e terapia capilar com protocolos modernos e eficazes.',
+    destaque: false,
+    bio: 'Farmacêutica esteta com ampla experiência em procedimentos estéticos avançados, especializada em tratamentos injetáveis, rejuvenescimento facial e terapias capilares.',
+    experiencia: '8+ anos de experiência',
+    imagem: '/src/assets/fernanda.jpg',
+    secaoServicos: [
+      {
+        categoria: 'Tratamentos Injetáveis',
+        servicos: [
+          {
+            titulo: 'Botox',
+            descricao: 'Aplicação de toxina botulínica para suavização de rugas e linhas de expressão, com resultados naturais e harmoniosos.'
+          },
+          {
+            titulo: 'Soroterapia',
+            descricao: 'Infusão de vitaminas, minerais e antioxidantes para hidratação profunda, revitalização e bem-estar geral.'
+          },
+          {
+            titulo: 'PEIM (Protocolo Estético Intradérmico Microinflamatório)',
+            descricao: 'Técnica avançada para tratamento de gordura localizada e flacidez através de microinjeções específicas.'
+          },
+          {
+            titulo: 'Skinbooster',
+            descricao: 'Hidratação profunda da pele através de ácido hialurônico injetável para textura uniforme e aspecto rejuvenescido.'
+          },
+          {
+            titulo: 'PDRN (Polidesoxirribonucleotídeo)',
+            descricao: 'Tratamento regenerativo celular que estimula a reparação dos tecidos, melhora a qualidade da pele e promove rejuvenescimento natural.'
+          }
+        ]
+      },
+      {
+        categoria: 'Tratamentos Faciais',
+        servicos: [
+          {
+            titulo: 'Microagulhamento',
+            descricao: 'Estimulação de colágeno através de microagulhas para renovação celular, melhoria de cicatrizes e textura da pele.'
+          },
+          {
+            titulo: 'Limpeza de Pele',
+            descricao: 'Limpeza profunda com extração de impurezas, desobstrução de poros e renovação celular para pele saudável e radiante.'
+          },
+          {
+            titulo: 'Dermaplaning',
+            descricao: 'Remoção de células mortas e penugens faciais para pele lisa, luminosa e com melhor absorção de produtos.'
+          },
+          {
+            titulo: 'Enzimas',
+            descricao: 'Tratamento enzimático para esfoliação suave, renovação celular e luminosidade natural da pele.'
+          },
+          {
+            titulo: 'Jato de Plasma para Rejuvenescimento',
+            descricao: 'Tecnologia avançada de plasma para rejuvenescimento sem cirurgia, tratando flacidez, rugas e manchas.'
+          },
+          {
+            titulo: 'Peeling Químico',
+            descricao: 'Renovação profunda da pele através de ácidos específicos para tratar manchas, acne, rugas e uniformizar o tom da pele.'
+          }
+        ]
+      },
+      {
+        categoria: 'Terapia Capilar',
+        servicos: [
+          {
+            titulo: 'Terapia Capilar',
+            descricao: 'Tratamentos avançados para fortalecimento, crescimento e saúde dos fios, combatendo queda e restaurando a vitalidade capilar.'
           }
         ]
       }
