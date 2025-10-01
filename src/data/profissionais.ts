@@ -34,7 +34,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: true,
     bio: 'Profissional com mais de 10 anos de experiência em massoterapia e estética. Especializada em técnicas de relaxamento e tratamentos estéticos avançados.',
     experiencia: '10+ anos de experiência',
-    imagem: '/src/assets/sirlei.jpg',
+    imagem: '/assets/profissionais/sirlei.jpg',
     secaoServicos: [
       {
         categoria: 'Massagens Relaxantes',
@@ -186,7 +186,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Nail designer especializada em técnicas avançadas de manicure e pedicure, com foco em unhas em gel e nail art.',
     experiencia: '8+ anos de experiência',
-    imagem: '/src/assets/simone.jpg',
+    imagem: '/assets/profissionais/simone.jpg',
     secaoServicos: [
       {
         categoria: 'Unhas em Gel',
@@ -215,7 +215,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Terapeuta especializada em tratamentos corporais e faciais com técnicas diversificadas.',
     experiencia: '7+ anos de experiência',
-    imagem: '/src/assets/cleia.jpg',
+    imagem: '/assets/profissionais/cleia.jpg',
     secaoServicos: [
       {
         categoria: 'Massagens Terapêuticas',
@@ -253,7 +253,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Esteticista especializada em tratamentos faciais avançados e rejuvenescimento.',
     experiencia: '6+ anos de experiência',
-    imagem: '/src/assets/luana.jpg',
+    imagem: '/assets/profissionais/luana.jpg',
     secaoServicos: [
       {
         categoria: 'Tratamentos de Rejuvenescimento',
@@ -282,7 +282,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Designer de sobrancelhas especializada em técnicas modernas de micropigmentação e design.',
     experiencia: '5+ anos de experiência',
-    imagem: '/src/assets/nadja.jpg',
+    imagem: '/assets/profissionais/nadja.jpg',
     secaoServicos: [
       {
         categoria: 'Design de Sobrancelhas',
@@ -324,7 +324,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Especialista em extensão de cílios com técnicas que garantem naturalidade e durabilidade.',
     experiencia: '4+ anos de experiência',
-    imagem: '/src/assets/rayka.jpg',
+    imagem: '/assets/profissionais/rayka.jpg',
     secaoServicos: [
       {
         categoria: 'Extensão de Cílios',
@@ -353,7 +353,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Fisioterapeuta especializada em tratamentos corporais estéticos e funcionais.',
     experiencia: '9+ anos de experiência',
-    imagem: '/src/assets/geisiane.jpg',
+    imagem: '/assets/profissionais/geisiane.jpg',
     secaoServicos: [
       {
         categoria: 'Tratamentos Corporais Avançados',
@@ -382,7 +382,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Médica especializada em harmonização estética facial e corporal.',
     experiencia: '11+ anos de experiência',
-    imagem: '/src/assets/vanessa.jpg',
+    imagem: '/assets/profissionais/vanessa.jpg',
     secaoServicos: [
       {
         categoria: 'Harmonização Estética',
@@ -411,7 +411,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Farmacêutica esteta com ampla experiência em procedimentos estéticos avançados, especializada em tratamentos injetáveis, rejuvenescimento facial e terapias capilares.',
     experiencia: '8+ anos de experiência',
-    imagem: '/src/assets/fernanda.jpg',
+    imagem: '/assets/profissionais/fernanda.jpg',
     secaoServicos: [
       {
         categoria: 'Tratamentos Injetáveis',
