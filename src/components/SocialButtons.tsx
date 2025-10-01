@@ -20,7 +20,7 @@ const SocialButtons = () => {
     {
       icon: Instagram,
       label: 'Instagram',
-      href: 'https://www.instagram.com/sirleiglatzmassoterapeuta/',
+      href: 'https://www.instagram.com/beautyvilleespaco/',
       bgColor: 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700',
       textColor: 'text-white'
     }
