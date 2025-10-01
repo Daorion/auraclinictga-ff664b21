@@ -137,17 +137,19 @@ const ProfissionalDetail = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {profissional.contato?.whatsapp && (
-                  <Button 
-                    className="gap-2"
-                    onClick={() => window.open(`https://wa.me/${profissional.contato?.whatsapp}`, '_blank')}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    WhatsApp
-                  </Button>
-                )}
+                <Button 
+                  className="gap-2"
+                  onClick={() => window.open('https://api.whatsapp.com/send/?phone=5565996480484&text&type=phone_number&app_absent=0', '_blank')}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp da Clínica
+                </Button>
                 
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => window.open('tel:+5565996480484', '_blank')}
+                >
                   <Phone className="w-4 h-4" />
                   Ligar para a Clínica
                 </Button>
