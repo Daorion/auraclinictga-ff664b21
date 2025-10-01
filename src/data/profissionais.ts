@@ -17,6 +17,7 @@ export interface ProfissionalData {
   destaque: boolean;
   bio: string;
   experiencia: string;
+  imagem: string;
   secaoServicos: SecaoServicos[];
   contato?: {
     whatsapp?: string;
@@ -33,21 +34,76 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: true,
     bio: 'Profissional com mais de 10 anos de experiência em massoterapia e estética. Especializada em técnicas de relaxamento e tratamentos estéticos avançados.',
     experiencia: '10+ anos de experiência',
+    imagem: '/src/assets/sirlei.jpg',
     secaoServicos: [
       {
         categoria: 'Massagens Relaxantes',
         servicos: [
           {
-            titulo: 'Massagem Relaxante Clássica',
-            descricao: 'Massagem suave e relaxante para alívio do estresse e tensões musculares do dia a dia.'
+            titulo: 'Massagem Relaxante Tradicional',
+            descricao: 'Uma experiência para desligar o mundo e reconectar com você. A massagem relaxante tradicional utiliza movimentos suaves e contínuos que aliviam tensões, reduzem o estresse e promovem bem-estar imediato. Ideal para quem busca momentos de paz em meio à rotina.'
           },
           {
             titulo: 'Massagem com Pedras Quentes',
-            descricao: 'Terapia relaxante que utiliza pedras vulcânicas aquecidas para promover relaxamento profundo.'
+            descricao: 'Aliando o toque das mãos ao calor das pedras vulcânicas, essa técnica promove relaxamento profundo, melhora a circulação e reduz dores musculares. Uma verdadeira terapia que aquece o corpo e acalma a mente.'
           },
           {
-            titulo: 'Massagem Aromaterapêutica',
-            descricao: 'Combinação de massagem relaxante com óleos essenciais terapêuticos.'
+            titulo: 'Escalda-pés com Manobras Relaxantes',
+            descricao: 'Um cuidado especial que começa pelos pés. Banho morno com ervas e sais relaxantes, seguido de manobras manuais que aliviam o cansaço, melhoram a circulação e proporcionam leveza ao corpo inteiro.'
+          }
+        ]
+      },
+      {
+        categoria: 'Massagens Terapêuticas',
+        servicos: [
+          {
+            titulo: 'Liberação Miofascial',
+            descricao: 'Indicado para quem sofre com dores crônicas e tensões musculares profundas. A técnica atua nas fáscias (tecidos que envolvem os músculos), liberando pontos de tensão e melhorando a mobilidade com efeitos duradouros.'
+          },
+          {
+            titulo: 'Drenagem Linfática Manual',
+            descricao: 'Movimentos suaves, lentos e rítmicos que ativam o sistema linfático, combatendo inchaços, retenção de líquidos e toxinas. Ideal para quem busca leveza, definição e bem-estar corporal.'
+          },
+          {
+            titulo: 'Massagem Pré-operatória',
+            descricao: 'Prepara o corpo para cirurgias, ativando a circulação e reduzindo edemas. É um cuidado essencial para otimizar a recuperação e favorecer melhores resultados no pós-operatório.'
+          },
+          {
+            titulo: 'Massagem Pós-operatória',
+            descricao: 'Com técnicas específicas e toques controlados, essa massagem acelera a recuperação, reduz edemas e hematomas, e promove conforto no período de cicatrização. Um suporte profissional essencial no processo de cura.'
+          },
+          {
+            titulo: 'Aplicação de Bandagem Elástica (Tape)',
+            descricao: 'As bandagens terapêuticas auxiliam na redução de dores, melhora postural, suporte muscular e drenagem de líquidos. São aplicadas estrategicamente conforme a necessidade individual, com resultados visíveis já nas primeiras aplicações.'
+          }
+        ]
+      },
+      {
+        categoria: 'Massagens Estéticas',
+        servicos: [
+          {
+            titulo: 'Drenagem Modeladora',
+            descricao: 'A união da drenagem linfática com toques mais firmes que modelam o corpo. Estimula a eliminação de líquidos e ativa a circulação, ajudando na definição corporal com conforto.'
+          },
+          {
+            titulo: 'Dreno Modeladora',
+            descricao: 'Técnica que une a drenagem profunda com movimentos intensos e ritmados, focando em reduzir medidas, melhorar o contorno corporal e estimular o metabolismo de forma natural.'
+          },
+          {
+            titulo: 'Massagem Modeladora',
+            descricao: 'Movimentos intensos e firmes que agem diretamente na gordura localizada e celulite. Ideal para quem busca definição corporal, melhora da textura da pele e sensação de leveza.'
+          },
+          {
+            titulo: 'Massagem Turbinada',
+            descricao: 'A versão intensa da modeladora. Utiliza acessórios e movimentos potentes que ativam a circulação, quebram gordura localizada e promovem resultados visíveis em poucas sessões.'
+          },
+          {
+            titulo: 'Massagem Circulatória',
+            descricao: 'Técnica focada em melhorar a circulação sanguínea, trazendo alívio para pernas cansadas, sensação de inchaço e cansaço corporal. Perfeita para dias puxados ou para quem passa muito tempo em pé.'
+          },
+          {
+            titulo: 'Detox Corporal',
+            descricao: 'Uma verdadeira faxina no organismo. Combina esfoliação, aplicação de ativos desintoxicantes e manobras que estimulam o sistema linfático. Renova a pele e proporciona uma sensação incrível de leveza e purificação.'
           }
         ]
       },
@@ -56,32 +112,64 @@ export const profissionaisData: ProfissionalData[] = [
         servicos: [
           {
             titulo: 'Limpeza de Pele Profunda',
-            descricao: 'Remoção de impurezas, cravos e oleosidade excessiva para uma pele mais saudável.'
+            descricao: 'Mais do que estética: é cuidado com a saúde da sua pele. A limpeza profunda remove cravos, impurezas e células mortas, desobstrui poros e deixa a pele mais saudável, viçosa e pronta para absorver tratamentos. Ideal para quem deseja uma pele renovada e equilibrada.'
           },
           {
-            titulo: 'Hidratação Facial',
-            descricao: 'Tratamento intensivo para restaurar a hidratação e luminosidade da pele.'
+            titulo: 'LEDterapia',
+            descricao: 'Tecnologia a favor da sua beleza. A luz de LED atua em diferentes camadas da pele, tratando acne, manchas, sinais do tempo e estimulando o colágeno. É segura, indolor e personalizada para cada tipo de necessidade.'
           },
           {
-            titulo: 'Peeling Químico',
-            descricao: 'Renovação celular através de ácidos específicos para cada tipo de pele.'
+            titulo: 'Dermaplaning',
+            descricao: 'Um tratamento que deixa a pele com toque de seda. A técnica remove as células mortas e os pelos finos do rosto (penugens), proporcionando uma pele lisa, iluminada e com melhor absorção de cosméticos. Resultado imediato e incrível.'
+          },
+          {
+            titulo: 'Revitalização Facial',
+            descricao: 'Indicado para peles cansadas, opacas ou desidratadas. Une ativos específicos com técnicas de aplicação que estimulam o colágeno, renovam as células e devolvem o brilho natural da pele. Ideal para um efeito glow e aparência descansada.'
+          },
+          {
+            titulo: 'Hidragloss',
+            descricao: 'Hidratação intensa e brilho natural para os lábios. O tratamento nutre profundamente, define o contorno labial e realça a cor natural da boca, deixando um efeito "gloss" saudável, macio e irresistível. Sensação de boca renovada já na primeira aplicação.'
           }
         ]
       },
       {
-        categoria: 'Tratamentos Corporais',
+        categoria: 'Tratamentos Corporais com Aparelhos e Técnicas Avançadas',
         servicos: [
           {
-            titulo: 'Massagem Modeladora',
-            descricao: 'Técnica específica para redução de medidas e modelagem corporal.'
+            titulo: 'Radiofrequência',
+            descricao: 'Tecnologia que aquece as camadas mais profundas da pele para estimular a produção de colágeno. Combate a flacidez, melhora a textura da pele e trata celulites de forma eficaz, sem dor ou tempo de recuperação.'
           },
           {
-            titulo: 'Drenagem Linfática',
-            descricao: 'Massagem terapêutica para estimular o sistema linfático e reduzir inchaços.'
+            titulo: 'Corrente Russa',
+            descricao: 'Aparelho de eletroestimulação que tonifica a musculatura, melhora a firmeza da pele e auxilia no ganho de definição muscular. Ideal para quem quer complementar os treinos ou acelerar os resultados estéticos.'
           },
           {
-            titulo: 'Esfoliação Corporal',
-            descricao: 'Renovação da pele através de esfoliação seguida de hidratação intensiva.'
+            titulo: 'Corrente Aussie',
+            descricao: 'Estímulo muscular profundo com foco em fortalecimento e definição. Age como uma academia localizada nos pontos certos do corpo, ideal para potencializar os treinos e definir regiões específicas com eficiência.'
+          },
+          {
+            titulo: 'Ultrassom',
+            descricao: 'Combate à gordura localizada com resultados visíveis. As ondas ultrassônicas penetram nas camadas de gordura, fragmentando-as para serem eliminadas naturalmente pelo organismo. Tratamento indolor, eficaz e não invasivo.'
+          },
+          {
+            titulo: 'Criomodelagem',
+            descricao: 'A união do frio e da estética. A técnica utiliza crioterapia (baixas temperaturas) para tratar gordura localizada, promovendo quebra de adipócitos e remodelação do contorno corporal. Ideal para quem busca redução de medidas com tecnologia segura.'
+          },
+          {
+            titulo: 'Terapias Combinadas',
+            descricao: 'Para resultados mais potentes e personalizados. Combinação estratégica de técnicas manuais e aparelhos, definidas após avaliação, para tratar diversos objetivos ao mesmo tempo: flacidez, gordura localizada, celulite e mais.'
+          },
+          {
+            titulo: 'Intradermoterapia Corporal',
+            descricao: 'Aplicação de ativos diretamente na camada onde o problema está. Utiliza microinjeções para tratar gordura localizada, flacidez e celulite com mais precisão e resultados rápidos. Procedimento feito com segurança e acompanhamento profissional.'
+          },
+          {
+            titulo: 'Remodelação Glútea com Intradermoterapia',
+            descricao: 'Técnica exclusiva para quem busca firmeza e volume na região dos glúteos. São aplicados ativos específicos para estimular o colágeno, melhorar o tônus e realçar a forma natural dos glúteos com mais harmonia.'
+          },
+          {
+            titulo: 'PAMP – Protocolo Avançado para Glúteos',
+            descricao: 'Protocolo completo que une eletroestimulação, técnicas manuais, ativos firmadores e estratégias personalizadas. Ideal para elevar, firmar e modelar os glúteos com naturalidade e resultados consistentes. Um verdadeiro upgrade na autoestima.'
           }
         ]
       }
@@ -98,6 +186,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Nail designer especializada em técnicas avançadas de manicure e pedicure, com foco em unhas em gel e nail art.',
     experiencia: '8+ anos de experiência',
+    imagem: '/src/assets/simone.jpg',
     secaoServicos: [
       {
         categoria: 'Unhas em Gel',
@@ -119,34 +208,6 @@ export const profissionaisData: ProfissionalData[] = [
     ]
   },
   {
-    id: 'dediane',
-    nome: 'Dra. Dediane',
-    especialidade: 'Harmonização Facial',
-    descricao: 'Harmonização facial, botox, microagulhamento e preenchimentos com técnicas avançadas.',
-    destaque: false,
-    bio: 'Médica especializada em harmonização facial e procedimentos estéticos minimamente invasivos.',
-    experiencia: '12+ anos de experiência',
-    secaoServicos: [
-      {
-        categoria: 'Harmonização Facial',
-        servicos: [
-          {
-            titulo: 'Aplicação de Botox',
-            descricao: 'Tratamento para redução de rugas de expressão e linhas finas.'
-          },
-          {
-            titulo: 'Preenchimento com Ácido Hialurônico',
-            descricao: 'Restauração de volume e contorno facial natural.'
-          },
-          {
-            titulo: 'Microagulhamento',
-            descricao: 'Estimulação do colágeno para renovação e rejuvenescimento da pele.'
-          }
-        ]
-      }
-    ]
-  },
-  {
     id: 'cleia',
     nome: 'Cleia',
     especialidade: 'Terapias e Estética',
@@ -154,6 +215,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Terapeuta especializada em tratamentos corporais e faciais com técnicas diversificadas.',
     experiencia: '7+ anos de experiência',
+    imagem: '/src/assets/cleia.jpg',
     secaoServicos: [
       {
         categoria: 'Massagens Terapêuticas',
@@ -191,6 +253,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Esteticista especializada em tratamentos faciais avançados e rejuvenescimento.',
     experiencia: '6+ anos de experiência',
+    imagem: '/src/assets/luana.jpg',
     secaoServicos: [
       {
         categoria: 'Tratamentos de Rejuvenescimento',
@@ -219,6 +282,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Designer de sobrancelhas especializada em técnicas modernas de micropigmentação e design.',
     experiencia: '5+ anos de experiência',
+    imagem: '/src/assets/nadja.jpg',
     secaoServicos: [
       {
         categoria: 'Design de Sobrancelhas',
@@ -260,6 +324,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Especialista em extensão de cílios com técnicas que garantem naturalidade e durabilidade.',
     experiencia: '4+ anos de experiência',
+    imagem: '/src/assets/rayka.jpg',
     secaoServicos: [
       {
         categoria: 'Extensão de Cílios',
@@ -288,6 +353,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Fisioterapeuta especializada em tratamentos corporais estéticos e funcionais.',
     experiencia: '9+ anos de experiência',
+    imagem: '/src/assets/geisiane.jpg',
     secaoServicos: [
       {
         categoria: 'Tratamentos Corporais Avançados',
@@ -316,6 +382,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: false,
     bio: 'Médica especializada em harmonização estética facial e corporal.',
     experiencia: '11+ anos de experiência',
+    imagem: '/src/assets/sirlei.jpg',
     secaoServicos: [
       {
         categoria: 'Harmonização Estética',
@@ -348,6 +415,7 @@ export const getProfissionaisBasicos = () => {
     nome: prof.nome,
     especialidade: prof.especialidade,
     descricao: prof.descricao,
-    destaque: prof.destaque
+    destaque: prof.destaque,
+    imagem: prof.imagem
   }));
 };

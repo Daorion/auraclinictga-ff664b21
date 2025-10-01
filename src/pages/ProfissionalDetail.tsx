@@ -23,17 +23,19 @@ const ProfissionalDetail = () => {
   const getCategoryColor = (categoria: string) => {
     const colorMap: { [key: string]: string } = {
       'Massagens Relaxantes': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
+      'Massagens Terapêuticas': 'bg-teal-100 text-teal-800 dark:bg-teal-900/20 dark:text-teal-300',
+      'Massagens Estéticas': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300',
       'Tratamentos Faciais': 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-300',
       'Tratamentos Corporais': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300',
-      'Unhas em Gel': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300',
-      'Harmonização Facial': 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300',
-      'Massagens Terapêuticas': 'bg-teal-100 text-teal-800 dark:bg-teal-900/20 dark:text-teal-300',
+      'Tratamentos Corporais com Aparelhos e Técnicas Avançadas': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
+      'Tratamentos Corporais Avançados': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
       'Tratamentos Estéticos': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300',
       'Tratamentos de Rejuvenescimento': 'bg-rose-100 text-rose-800 dark:bg-rose-900/20 dark:text-rose-300',
+      'Unhas em Gel': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300',
+      'Harmonização Facial': 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300',
+      'Harmonização Estética': 'bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-300',
       'Design de Sobrancelhas': 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300',
-      'Extensão de Cílios': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-300',
-      'Tratamentos Corporais Avançados': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
-      'Harmonização Estética': 'bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-300'
+      'Extensão de Cílios': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-300'
     };
     return colorMap[categoria] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
   };
@@ -56,10 +58,12 @@ const ProfissionalDetail = () => {
 
           {/* Professional Header */}
           <div className="text-center mb-12">
-            <div className="w-32 h-32 bg-gradient-primary rounded-full mx-auto mb-6 flex items-center justify-center">
-              <span className="text-4xl font-bold text-primary-foreground">
-                {profissional.nome.charAt(0)}
-              </span>
+            <div className="w-40 h-40 rounded-full mx-auto mb-6 overflow-hidden shadow-elegant">
+              <img 
+                src={profissional.imagem} 
+                alt={profissional.nome}
+                className="w-full h-full object-cover"
+              />
             </div>
             
             {profissional.destaque && (
