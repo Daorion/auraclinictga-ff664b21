@@ -32,7 +32,7 @@ const ProfissionalDetail = () => {
       'Tratamentos Corporais Avançados': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
       'Tratamentos Estéticos': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300',
       'Tratamentos de Rejuvenescimento': 'bg-rose-100 text-rose-800 dark:bg-rose-900/20 dark:text-rose-300',
-      'Tratamento de Emagrecimento': 'bg-gradient-to-br from-rose-100 to-red-100 text-red-900 dark:from-rose-950/40 dark:to-red-950/40 dark:text-rose-200 border-2 border-rose-400 dark:border-rose-700',
+      'Tratamento de Emagrecimento': 'bg-gradient-to-br from-rose-100 to-red-100 text-[#58101b] dark:from-[#58101b]/40 dark:to-[#58101b]/30 dark:text-rose-200 border-2 border-[#58101b]/60 dark:border-[#58101b]',
       'Unhas em Gel': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300',
       'Harmonização Facial': 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300',
       'Harmonização Estética': 'bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-300',
@@ -96,7 +96,7 @@ const ProfissionalDetail = () => {
 
           {/* Special Hero for Luana - moved here after experience */}
           {profissional.id === 'luana' && (
-            <div className="mb-12 bg-gradient-to-br from-rose-700 to-red-800 dark:from-rose-900 dark:to-red-950 rounded-3xl p-8 md:p-12 shadow-2xl">
+            <div className="mb-12 bg-gradient-to-br from-[#58101b] to-[#3d0b13] dark:from-[#58101b] dark:to-[#2d0810] rounded-3xl p-8 md:p-12 shadow-2xl">
               <div className="text-center text-white">
                 <div className="inline-block mb-4">
                   <Badge className="bg-white/20 text-white border-white/30 text-sm px-4 py-2">
@@ -128,24 +128,24 @@ const ProfissionalDetail = () => {
                     // Special card for featured services (Tirzepatida)
                     if (servico.destaque) {
                       return (
-                        <Card key={serviceIndex} className="col-span-1 md:col-span-2 lg:col-span-3 p-8 bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/30 border-2 border-rose-400 dark:border-rose-700 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
+                        <Card key={serviceIndex} className="col-span-1 md:col-span-2 lg:col-span-3 p-8 bg-gradient-to-br from-rose-50 to-red-50 dark:from-[#58101b]/20 dark:to-[#3d0b13]/20 border-2 border-[#58101b]/50 dark:border-[#58101b] hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
                           <div className="flex flex-col md:flex-row gap-6 items-start">
                             <div className="flex-shrink-0">
-                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-700 to-red-800 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#58101b] to-[#3d0b13] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
                                 ⭐
                               </div>
                             </div>
                             
                             <div className="flex-1">
                               <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <h3 className="text-2xl font-bold text-red-900 dark:text-rose-200">
+                                <h3 className="text-2xl font-bold text-[#58101b] dark:text-rose-200">
                                   {servico.titulo}
                                 </h3>
-                                <Badge className="bg-gradient-to-r from-rose-700 to-red-800 text-white border-0">
+                                <Badge className="bg-gradient-to-r from-[#58101b] to-[#3d0b13] text-white border-0">
                                   Tratamento Premium
                                 </Badge>
                                 {servico.preco && (
-                                  <span className="text-xl font-bold text-red-800 dark:text-rose-300 bg-white dark:bg-rose-950/50 px-4 py-2 rounded-full shadow-sm">
+                                  <span className="text-xl font-bold text-[#58101b] dark:text-rose-300 bg-white dark:bg-[#58101b]/30 px-4 py-2 rounded-full shadow-sm">
                                     {servico.preco}
                                   </span>
                                 )}
@@ -156,7 +156,7 @@ const ProfissionalDetail = () => {
                               </p>
                               
                               <Button 
-                                className="bg-gradient-to-r from-rose-700 to-red-800 hover:from-rose-800 hover:to-red-900 text-white shadow-lg gap-2"
+                                className="bg-gradient-to-r from-[#58101b] to-[#3d0b13] hover:from-[#6b1422] hover:to-[#4d0e17] text-white shadow-lg gap-2"
                                 onClick={() => window.open('https://api.whatsapp.com/send/?phone=5565996480484&text&type=phone_number&app_absent=0', '_blank')}
                               >
                                 <MessageCircle className="w-4 h-4" />
@@ -196,10 +196,10 @@ const ProfissionalDetail = () => {
           {/* Testimonials Section - Only for Luana */}
           {profissional.id === 'luana' && (
             <div className="mt-16">
-              <div className="bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/20 dark:to-red-950/20 rounded-2xl p-8 shadow-card-elegant border border-rose-200 dark:border-rose-800">
+              <div className="bg-gradient-to-br from-rose-50 to-red-50 dark:from-[#58101b]/20 dark:to-[#3d0b13]/20 rounded-2xl p-8 shadow-card-elegant border border-[#58101b]/30 dark:border-[#58101b]">
                 <div className="text-center mb-10">
                   <div className="inline-flex items-center gap-2 mb-4">
-                    <Star className="w-6 h-6 text-rose-700 dark:text-rose-400 fill-rose-700 dark:fill-rose-400" />
+                    <Star className="w-6 h-6 text-[#58101b] dark:text-rose-400 fill-[#58101b] dark:fill-rose-400" />
                     <h3 className="text-3xl font-bold text-primary">Depoimentos</h3>
                     <Star className="w-6 h-6 text-rose-700 dark:text-rose-400 fill-rose-700 dark:fill-rose-400" />
                   </div>
@@ -224,7 +224,7 @@ const ProfissionalDetail = () => {
                           ))}
                         </div>
                       </div>
-                      <Badge className="bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+                      <Badge className="bg-[#58101b]/10 text-[#58101b] dark:bg-[#58101b]/30 dark:text-rose-300 border border-[#58101b]/30">
                         Tirzepatida
                       </Badge>
                     </div>
@@ -233,7 +233,7 @@ const ProfissionalDetail = () => {
                   {/* Testimonial 2 - Botox */}
                   <Card className="p-6 bg-white dark:bg-card hover:shadow-xl transition-shadow">
                     <div className="mb-4">
-                      <div className="text-4xl text-rose-700 dark:text-rose-400 mb-2">"</div>
+                      <div className="text-4xl text-[#58101b] dark:text-rose-400 mb-2">"</div>
                       <p className="text-muted-foreground leading-relaxed">
                         Resultado incrível e natural! As rugas suavizaram sem perder minha expressão. A Luana tem mão de fada e muito profissionalismo.
                       </p>
@@ -256,7 +256,7 @@ const ProfissionalDetail = () => {
                   {/* Testimonial 3 - General */}
                   <Card className="p-6 bg-white dark:bg-card hover:shadow-xl transition-shadow">
                     <div className="mb-4">
-                      <div className="text-4xl text-rose-700 dark:text-rose-400 mb-2">"</div>
+                      <div className="text-4xl text-[#58101b] dark:text-rose-400 mb-2">"</div>
                       <p className="text-muted-foreground leading-relaxed">
                         Profissional extremamente competente e atenciosa. Explica tudo com detalhes e me sinto segura em cada sessão. Super recomendo!
                       </p>
@@ -285,14 +285,14 @@ const ProfissionalDetail = () => {
             <div className="mt-16">
               <div className="bg-card rounded-2xl p-8 shadow-card-elegant">
                 <div className="flex items-center justify-center gap-3 mb-8">
-                  <HelpCircle className="w-8 h-8 text-rose-700 dark:text-rose-400" />
+                  <HelpCircle className="w-8 h-8 text-[#58101b] dark:text-rose-400" />
                   <h3 className="text-3xl font-bold text-primary">Perguntas Frequentes sobre Tirzepatida</h3>
-                  <Badge className="bg-gradient-to-r from-rose-700 to-red-800 text-white">Premium</Badge>
+                  <Badge className="bg-gradient-to-r from-[#58101b] to-[#3d0b13] text-white">Premium</Badge>
                 </div>
                 
                 <Accordion type="single" collapsible className="w-full space-y-4">
                   <AccordionItem value="item-1" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       O que é Tirzepatida (Mounjaro®)?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -301,7 +301,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="item-2" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       Como funciona o tratamento?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -310,7 +310,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="item-3" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       Quem pode fazer o tratamento?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -319,7 +319,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="item-4" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       Quais são os resultados esperados?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -328,7 +328,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="item-5" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       O tratamento é seguro? Quais os efeitos colaterais?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -337,7 +337,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="item-6" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       Preciso de prescrição médica?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -346,7 +346,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="item-7" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       Quanto tempo dura o tratamento?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -355,7 +355,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="item-8" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       Como faço para iniciar?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
@@ -459,7 +459,7 @@ const ProfissionalDetail = () => {
                   </AccordionItem>
 
                   <AccordionItem value="botox-10" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-rose-700 dark:hover:text-rose-400">
+                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
                       Como faço para agendar?
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground leading-relaxed">
