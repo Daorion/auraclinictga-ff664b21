@@ -2,6 +2,7 @@ export interface Servico {
   titulo: string;
   descricao: string;
   preco?: string;
+  destaque?: boolean;
 }
 
 export interface SecaoServicos {
@@ -281,16 +282,32 @@ export const profissionaisData: ProfissionalData[] = [
   {
     id: 'luana',
     nome: 'Luana',
-    especialidade: 'Tratamentos Faciais',
-    descricao: 'Microagulhamento, botox, enzimas e eletroterapia para rejuvenescimento facial.',
-    destaque: false,
-    bio: 'Esteticista especializada em tratamentos faciais avançados e rejuvenescimento.',
+    especialidade: 'Estética Facial Avançada e Emagrecimento',
+    descricao: 'Especialista em tratamentos inovadores de emagrecimento com Tirzepatida, rejuvenescimento facial com Botox e terapias avançadas.',
+    destaque: true,
+    bio: 'Profissional com expertise em tratamentos faciais e corporais de alta performance. Especializada em protocolos de emagrecimento com Tirzepatida (Mounjaro®), rejuvenescimento facial com toxina botulínica, microagulhamento e terapias estéticas avançadas. Oferece acompanhamento personalizado focado em resultados reais e transformadores.',
     experiencia: '6+ anos de experiência',
     imagem: '/assets/profissionais/luana.jpg',
     secaoServicos: [
       {
+        categoria: 'Tratamento de Emagrecimento',
+        servicos: [
+          {
+            titulo: 'Tirzepatida (Mounjaro®)',
+            descricao: 'Tratamento inovador e revolucionário para emagrecimento, aprovado pela ANVISA. A Tirzepatida é um agonista duplo dos receptores GIP e GLP-1, proporcionando perda de peso eficaz e sustentável através da redução do apetite, controle da glicemia e melhora do metabolismo. Estudos clínicos demonstram redução de até 20% do peso corporal. Indicado para quem busca resultados reais e duradouros com acompanhamento profissional personalizado. Deve ser utilizado em conjunto com dieta equilibrada e prática de exercícios físicos. Consulte para saber se você é candidato(a) ao tratamento.',
+            preco: 'Consultar',
+            destaque: true
+          }
+        ]
+      },
+      {
         categoria: 'Tratamentos de Rejuvenescimento',
         servicos: [
+          {
+            titulo: 'Botox (Toxina Botulínica)',
+            descricao: 'O tratamento mais realizado no mundo para rejuvenescimento facial. A toxina botulínica suaviza rugas e linhas de expressão (testa, olhos, glabela), previne o envelhecimento precoce e promove um efeito lifting natural sem necessidade de cirurgia. Resultados visíveis em 3 a 7 dias com duração de 4 a 6 meses. Aplicação segura, precisa e personalizada para cada rosto, respeitando a expressão natural e harmonia facial.',
+            preco: 'Consultar'
+          },
           {
             titulo: 'Microagulhamento',
             descricao: 'Estimulação do colágeno para renovação celular e melhoria da textura da pele.'
