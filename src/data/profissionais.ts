@@ -181,27 +181,60 @@ export const profissionaisData: ProfissionalData[] = [
   {
     id: 'simone',
     nome: 'Simone',
-    especialidade: 'Nail Designer',
-    descricao: 'Unhas em gel, alongamento e banho em gel com técnicas modernas e produtos de qualidade.',
+    especialidade: 'Nail Designer e Designer de Sobrancelhas',
+    descricao: 'Especialista em alongamento de unhas, banho de gel, esmaltação em gel e design de sobrancelhas personalizado.',
     destaque: false,
-    bio: 'Nail designer especializada em técnicas avançadas de manicure e pedicure, com foco em unhas em gel e nail art.',
+    bio: 'Nail designer e designer de sobrancelhas especializada em técnicas avançadas de unhas em gel e design facial personalizado.',
     experiencia: '8+ anos de experiência',
     imagem: '/assets/profissionais/simone.jpg',
     secaoServicos: [
       {
-        categoria: 'Unhas em Gel',
+        categoria: 'Serviços de Unhas',
         servicos: [
           {
-            titulo: 'Unhas em Gel Tradicionais',
-            descricao: 'Aplicação de gel para fortalecimento e brilho natural das unhas.'
-          },
-          {
             titulo: 'Alongamento de Unhas',
-            descricao: 'Extensão das unhas naturais com técnicas de gel ou acrílico.'
+            descricao: 'Técnica moderna e precisa que utiliza o molde F1 para alongar as unhas com resultado natural, resistente e duradouro. Ideal para quem deseja unhas mais longas e com acabamento impecável, sem agredir as unhas naturais.',
+            preco: 'R$ 210 (Manutenção: R$ 170)'
           },
           {
-            titulo: 'Nail Art',
-            descricao: 'Decoração artística personalizada para suas unhas.'
+            titulo: 'Banho de Gel',
+            descricao: 'Perfeito para fortalecer as unhas naturais, o banho de gel cria uma camada protetora que aumenta a durabilidade do esmalte e evita que as unhas quebrem. Indicado para quem quer unhas bonitas, fortes e com brilho prolongado.',
+            preco: 'R$ 130'
+          },
+          {
+            titulo: 'Esmaltação em Gel',
+            descricao: 'Esmalte com alta durabilidade e brilho intenso que permanece perfeito por até 20 dias. Secagem imediata na cabine, sem risco de borrar. Ideal para quem busca praticidade e acabamento impecável no dia a dia.',
+            preco: 'R$ 90'
+          }
+        ]
+      },
+      {
+        categoria: 'Design de Sobrancelhas',
+        servicos: [
+          {
+            titulo: 'Design de Sobrancelhas Personalizado',
+            descricao: 'Análise facial completa para valorizar o formato natural do seu rosto. O design é feito de forma personalizada, respeitando o crescimento dos fios e realçando a sua beleza de forma harmônica e natural.',
+            preco: 'R$ 45'
+          },
+          {
+            titulo: 'Design de Sobrancelhas com Henna',
+            descricao: 'Além do design tradicional, a henna é aplicada para preencher e realçar o formato das sobrancelhas, proporcionando um efeito de sobrancelhas mais definidas e marcadas. O resultado dura de 7 a 10 dias na pele.',
+            preco: 'R$ 55'
+          }
+        ]
+      },
+      {
+        categoria: 'Tratamentos Complementares',
+        servicos: [
+          {
+            titulo: 'Spa dos Lábios',
+            descricao: 'Tratamento de hidratação profunda que remove células mortas, devolve maciez, viço e suavidade aos lábios. Ideal para quem sofre com ressecamento e quer lábios saudáveis e bonitos.',
+            preco: 'R$ 30'
+          },
+          {
+            titulo: 'Epilação de Buço na Cera',
+            descricao: 'Remoção delicada e eficiente dos pelos do buço com cera morna, garantindo uma pele lisinha, sem irritações e com resultado duradouro.',
+            preco: 'R$ 20'
           }
         ]
       }
@@ -259,7 +292,7 @@ export const profissionaisData: ProfissionalData[] = [
         categoria: 'Tratamentos de Rejuvenescimento',
         servicos: [
           {
-            titulo: 'Microagulhamento Facial',
+            titulo: 'Microagulhamento',
             descricao: 'Estimulação do colágeno para renovação celular e melhoria da textura da pele.'
           },
           {
@@ -267,8 +300,8 @@ export const profissionaisData: ProfissionalData[] = [
             descricao: 'Tratamento enzimático para renovação e luminosidade da pele.'
           },
           {
-            titulo: 'Eletroterapia Facial',
-            descricao: 'Uso de correntes específicas para tonificação e rejuvenescimento facial.'
+            titulo: 'Eletroterapia Corporal',
+            descricao: 'Uso de correntes específicas para tonificação e modelagem corporal com resultados eficazes.'
           }
         ]
       }
@@ -288,8 +321,8 @@ export const profissionaisData: ProfissionalData[] = [
         categoria: 'Design de Sobrancelhas',
         servicos: [
           {
-            titulo: 'Henna',
-            descricao: 'Coloração natural das sobrancelhas com henna.',
+            titulo: 'Aplicação de Henna ou Coloração',
+            descricao: 'Coloração das sobrancelhas com henna ou tintura.',
             preco: 'R$ 35'
           },
           {
@@ -311,6 +344,11 @@ export const profissionaisData: ProfissionalData[] = [
             titulo: 'Micropigmentação',
             descricao: 'Técnica semi-permanente para preenchimento das sobrancelhas.',
             preco: 'R$ 200'
+          },
+          {
+            titulo: 'Micropigmentação Labial',
+            descricao: 'Técnica semi-permanente para definição e coloração dos lábios.',
+            preco: 'R$ 300'
           }
         ]
       }
@@ -330,16 +368,16 @@ export const profissionaisData: ProfissionalData[] = [
         categoria: 'Extensão de Cílios',
         servicos: [
           {
-            titulo: 'Volume Clássico',
-            descricao: 'Aplicação fio a fio para um resultado natural e elegante.'
+            titulo: 'Volume Brasileiro',
+            descricao: 'Técnica brasileira que oferece volume e naturalidade perfeitos para um olhar marcante.'
           },
           {
-            titulo: 'Volume Russo',
-            descricao: 'Técnica que cria volume intenso com múltiplos fios ultra-finos.'
+            titulo: 'Glamour/Egípcio',
+            descricao: 'Estilo glamouroso e sofisticado inspirado na beleza egípcia, com volume intenso e dramático.'
           },
           {
-            titulo: 'Híbrido',
-            descricao: 'Combinação das técnicas clássica e volume para resultado personalizado.'
+            titulo: 'Hyper 30+',
+            descricao: 'Técnica de mega volume com mais de 30 fios por cílio natural, para resultado ultra volumoso.'
           }
         ]
       }
@@ -348,10 +386,10 @@ export const profissionaisData: ProfissionalData[] = [
   {
     id: 'geisiane',
     nome: 'Dra. Geisiane',
-    especialidade: 'Tratamentos Corporais',
+    especialidade: 'Biomédica',
     descricao: 'Massagem MAF, limpeza de pele e tratamentos específicos para gordura e flacidez.',
     destaque: false,
-    bio: 'Fisioterapeuta especializada em tratamentos corporais estéticos e funcionais.',
+    bio: 'Biomédica especializada em tratamentos corporais estéticos e funcionais.',
     experiencia: '9+ anos de experiência',
     imagem: '/assets/profissionais/geisiane.jpg',
     secaoServicos: [
@@ -360,7 +398,7 @@ export const profissionaisData: ProfissionalData[] = [
         servicos: [
           {
             titulo: 'Massagem MAF',
-            descricao: 'Massagem Anti-Flacidez para tonificação e firmeza da pele.'
+            descricao: 'É uma técnica de drenagem linfática manual que combina manobras específicas com alongamentos, posturas e respirações. Seus benefícios incluem a redução de inchaço, celulite e medidas, além de promover relaxamento, melhorar a circulação sanguínea e intestinal e auxiliar na cicatrização e imunidade.'
           },
           {
             titulo: 'Tratamento para Gordura Localizada',

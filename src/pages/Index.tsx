@@ -1,5 +1,4 @@
 import Header from '@/components/Header';
-import SocialButtons from '@/components/SocialButtons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight, Sparkles, Heart, Star } from 'lucide-react';
@@ -63,8 +62,6 @@ const Index = () => {
           </p>
           
           <div className="space-y-6">
-            <SocialButtons />
-            
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button 
                 asChild 
@@ -130,8 +127,6 @@ const Index = () => {
             Agende seu horário e descubra como podemos realçar sua beleza natural 
             com nossos tratamentos exclusivos e personalizados.
           </p>
-          
-          <SocialButtons />
         </div>
       </section>
     </div>
