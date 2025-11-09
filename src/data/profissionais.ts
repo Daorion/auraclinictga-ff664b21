@@ -194,18 +194,15 @@ export const profissionaisData: ProfissionalData[] = [
         servicos: [
           {
             titulo: 'Alongamento de Unhas',
-            descricao: 'Técnica moderna e precisa que utiliza o molde F1 para alongar as unhas com resultado natural, resistente e duradouro. Ideal para quem deseja unhas mais longas e com acabamento impecável, sem agredir as unhas naturais.',
-            preco: 'R$ 210 (Manutenção: R$ 170)'
+            descricao: 'Técnica moderna e precisa que utiliza o molde F1 para alongar as unhas com resultado natural, resistente e duradouro. Ideal para quem deseja unhas mais longas e com acabamento impecável, sem agredir as unhas naturais.'
           },
           {
             titulo: 'Banho de Gel',
-            descricao: 'Perfeito para fortalecer as unhas naturais, o banho de gel cria uma camada protetora que aumenta a durabilidade do esmalte e evita que as unhas quebrem. Indicado para quem quer unhas bonitas, fortes e com brilho prolongado.',
-            preco: 'R$ 130'
+            descricao: 'Perfeito para fortalecer as unhas naturais, o banho de gel cria uma camada protetora que aumenta a durabilidade do esmalte e evita que as unhas quebrem. Indicado para quem quer unhas bonitas, fortes e com brilho prolongado.'
           },
           {
             titulo: 'Esmaltação em Gel',
-            descricao: 'Esmalte com alta durabilidade e brilho intenso que permanece perfeito por até 20 dias. Secagem imediata na cabine, sem risco de borrar. Ideal para quem busca praticidade e acabamento impecável no dia a dia.',
-            preco: 'R$ 90'
+            descricao: 'Esmalte com alta durabilidade e brilho intenso que permanece perfeito por até 20 dias. Secagem imediata na cabine, sem risco de borrar. Ideal para quem busca praticidade e acabamento impecável no dia a dia.'
           }
         ]
       },
@@ -214,13 +211,11 @@ export const profissionaisData: ProfissionalData[] = [
         servicos: [
           {
             titulo: 'Design de Sobrancelhas Personalizado',
-            descricao: 'Análise facial completa para valorizar o formato natural do seu rosto. O design é feito de forma personalizada, respeitando o crescimento dos fios e realçando a sua beleza de forma harmônica e natural.',
-            preco: 'R$ 45'
+            descricao: 'Análise facial completa para valorizar o formato natural do seu rosto. O design é feito de forma personalizada, respeitando o crescimento dos fios e realçando a sua beleza de forma harmônica e natural.'
           },
           {
             titulo: 'Design de Sobrancelhas com Henna',
-            descricao: 'Além do design tradicional, a henna é aplicada para preencher e realçar o formato das sobrancelhas, proporcionando um efeito de sobrancelhas mais definidas e marcadas. O resultado dura de 7 a 10 dias na pele.',
-            preco: 'R$ 55'
+            descricao: 'Além do design tradicional, a henna é aplicada para preencher e realçar o formato das sobrancelhas, proporcionando um efeito de sobrancelhas mais definidas e marcadas. O resultado dura de 7 a 10 dias na pele.'
           }
         ]
       },
@@ -229,13 +224,11 @@ export const profissionaisData: ProfissionalData[] = [
         servicos: [
           {
             titulo: 'Spa dos Lábios',
-            descricao: 'Tratamento de hidratação profunda que remove células mortas, devolve maciez, viço e suavidade aos lábios. Ideal para quem sofre com ressecamento e quer lábios saudáveis e bonitos.',
-            preco: 'R$ 30'
+            descricao: 'Tratamento de hidratação profunda que remove células mortas, devolve maciez, viço e suavidade aos lábios. Ideal para quem sofre com ressecamento e quer lábios saudáveis e bonitos.'
           },
           {
             titulo: 'Epilação de Buço na Cera',
-            descricao: 'Remoção delicada e eficiente dos pelos do buço com cera morna, garantindo uma pele lisinha, sem irritações e com resultado duradouro.',
-            preco: 'R$ 20'
+            descricao: 'Remoção delicada e eficiente dos pelos do buço com cera morna, garantindo uma pele lisinha, sem irritações e com resultado duradouro.'
           }
         ]
       }
@@ -295,7 +288,6 @@ export const profissionaisData: ProfissionalData[] = [
           {
             titulo: 'Tirzepatida (Mounjaro®)',
             descricao: 'Tratamento inovador e revolucionário para emagrecimento, aprovado pela ANVISA. A Tirzepatida é um agonista duplo dos receptores GIP e GLP-1, proporcionando perda de peso eficaz e sustentável através da redução do apetite, controle da glicemia e melhora do metabolismo. Estudos clínicos demonstram redução de até 20% do peso corporal. Indicado para quem busca resultados reais e duradouros com acompanhamento profissional personalizado. Deve ser utilizado em conjunto com dieta equilibrada e prática de exercícios físicos. Consulte para saber se você é candidato(a) ao tratamento.',
-            preco: 'Consultar',
             destaque: true
           }
         ]
@@ -305,8 +297,7 @@ export const profissionaisData: ProfissionalData[] = [
         servicos: [
           {
             titulo: 'Botox (Toxina Botulínica)',
-            descricao: 'O tratamento mais realizado no mundo para rejuvenescimento facial. A toxina botulínica suaviza rugas e linhas de expressão (testa, olhos, glabela), previne o envelhecimento precoce e promove um efeito lifting natural sem necessidade de cirurgia. Resultados visíveis em 3 a 7 dias com duração de 4 a 6 meses. Aplicação segura, precisa e personalizada para cada rosto, respeitando a expressão natural e harmonia facial.',
-            preco: 'Consultar'
+            descricao: 'O tratamento mais realizado no mundo para rejuvenescimento facial. A toxina botulínica suaviza rugas e linhas de expressão (testa, olhos, glabela), previne o envelhecimento precoce e promove um efeito lifting natural sem necessidade de cirurgia. Resultados visíveis em 3 a 7 dias com duração de 4 a 6 meses. Aplicação segura, precisa e personalizada para cada rosto, respeitando a expressão natural e harmonia facial.'
           },
           {
             titulo: 'Microagulhamento',
@@ -339,33 +330,27 @@ export const profissionaisData: ProfissionalData[] = [
         servicos: [
           {
             titulo: 'Aplicação de Henna ou Coloração',
-            descricao: 'Coloração das sobrancelhas com henna ou tintura.',
-            preco: 'R$ 35'
+            descricao: 'Coloração das sobrancelhas com henna ou tintura.'
           },
           {
             titulo: 'Design sem Henna',
-            descricao: 'Modelagem e design das sobrancelhas.',
-            preco: 'R$ 50'
+            descricao: 'Modelagem e design das sobrancelhas.'
           },
           {
             titulo: 'Design com Henna',
-            descricao: 'Design completo com aplicação de henna.',
-            preco: 'R$ 60'
+            descricao: 'Design completo com aplicação de henna.'
           },
           {
             titulo: 'Brow Lamination',
-            descricao: 'Técnica para disciplinar e dar volume às sobrancelhas.',
-            preco: 'R$ 120'
+            descricao: 'Técnica para disciplinar e dar volume às sobrancelhas.'
           },
           {
             titulo: 'Micropigmentação',
-            descricao: 'Técnica semi-permanente para preenchimento das sobrancelhas.',
-            preco: 'R$ 200'
+            descricao: 'Técnica semi-permanente para preenchimento das sobrancelhas.'
           },
           {
             titulo: 'Micropigmentação Labial',
-            descricao: 'Técnica semi-permanente para definição e coloração dos lábios.',
-            preco: 'R$ 300'
+            descricao: 'Técnica semi-permanente para definição e coloração dos lábios.'
           }
         ]
       }
