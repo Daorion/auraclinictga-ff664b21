@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { ArrowRight, Sparkles, Heart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import auraLogo from '@/assets/aura-logo-new.png';
-import clinicHero from '@/assets/clinic-hero.jpg';
+import clinicHero from '@/assets/clinic-hero-new.jpg';
 
 const Index = () => {
   const services = [
