@@ -1,4 +1,5 @@
 import Header from '@/components/Header';
+import SocialButtons from '@/components/SocialButtons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight, Sparkles, Heart, Star } from 'lucide-react';
@@ -127,6 +128,8 @@ const Index = () => {
             Agende seu horário e descubra como podemos realçar sua beleza natural 
             com nossos tratamentos exclusivos e personalizados.
           </p>
+
+          <SocialButtons />
         </div>
       </section>
     </div>

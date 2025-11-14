@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, MessageCircle } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import auraLogo from '@/assets/aura-logo.png';
 
 const Header = () => {
@@ -38,6 +39,20 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
+            <Button
+              asChild
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-elegant"
+            >
+              <a
+                href="https://wa.me/5565996480484"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2"
+              >
+                <MessageCircle size={18} />
+                <span>WhatsApp</span>
+              </a>
+            </Button>
           </nav>
 
           {/* Mobile menu button */}
@@ -51,7 +66,7 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-tertiary">
+          <nav className="md:hidden py-4 border-t border-tertiary space-y-2">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -64,6 +79,22 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
+            <div className="px-4 pt-2">
+              <Button
+                asChild
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-elegant"
+              >
+                <a
+                  href="https://wa.me/5565996480484"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center space-x-2"
+                >
+                  <MessageCircle size={18} />
+                  <span>WhatsApp</span>
+                </a>
+              </Button>
+            </div>
           </nav>
         )}
       </div>
