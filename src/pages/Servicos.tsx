@@ -161,7 +161,7 @@ const SlideContent = ({
           </p>
 
           <h1
-            className="text-[clamp(3rem,5vw,4.5rem)] font-bold text-[#58101b] leading-[0.9] tracking-[-0.03em] mb-4"
+            className="text-[clamp(3rem,5vw,4.5rem)] font-bold text-white leading-[0.9] tracking-[-0.03em] mb-4"
             style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
           >
             {slide.nome}
