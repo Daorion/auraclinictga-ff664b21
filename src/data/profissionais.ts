@@ -274,7 +274,7 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'luana',
-    nome: 'Luana',
+    nome: 'Dra. Luana',
     especialidade: 'Estética Facial Avançada e Emagrecimento',
     descricao: 'Especialista em tratamentos inovadores de emagrecimento com Tirzepatida, rejuvenescimento facial com Botox e terapias avançadas.',
     destaque: true,
