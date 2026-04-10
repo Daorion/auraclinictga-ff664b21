@@ -94,7 +94,7 @@ const Servicos = () => {
               style={{
                 width: i === currentSlide ? 36 : 6,
                 height: 3,
-                background: 'rgba(88, 16, 27, 0.08)',
+                background: 'rgba(255, 255, 255, 0.15)',
                 transition: 'width 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
               }}
             >
@@ -102,7 +102,7 @@ const Servicos = () => {
                 <div
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: 'rgba(88, 16, 27, 0.4)',
+                    background: 'rgba(255, 255, 255, 0.5)',
                     transform: `scaleX(${progress})`,
                     transformOrigin: 'left',
                   }}
