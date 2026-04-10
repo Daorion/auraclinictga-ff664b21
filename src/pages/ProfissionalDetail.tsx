@@ -4,9 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { ArrowLeft, MessageCircle, Phone, Star, HelpCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Phone, Star, HelpCircle, Sparkles, Heart, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProfissionalById } from '@/data/profissionais';
+import sirleiWork1 from '@/assets/sirlei-work1.png';
+import sirleiWork2 from '@/assets/sirlei-work2.png';
 
 const ProfissionalDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -94,7 +96,70 @@ const ProfissionalDetail = () => {
             </div>
           </div>
 
-          {/* Special Hero for Luana - moved here after experience */}
+          {/* Special Hero for Sirlei */}
+          {profissional.id === 'sirlei' && (
+            <div className="mb-12">
+              {/* Hero Banner */}
+              <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl p-8 md:p-12 shadow-elegant mb-8">
+                <div className="text-center mb-8">
+                  <Badge className="bg-primary text-primary-foreground text-sm px-4 py-2 mb-4">
+                    ✨ Especialista em Massoterapia
+                  </Badge>
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+                    Cuidado Profissional para Corpo e Mente
+                  </h2>
+                  <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                    Técnicas avançadas em massagens relaxantes, terapêuticas e estéticas, 
+                    aliadas a tratamentos faciais e corporais com aparelhos de última geração.
+                  </p>
+                </div>
+
+                {/* Work Photos */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                  <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-elegant transition-shadow duration-300">
+                    <img 
+                      src={sirleiWork1} 
+                      alt="Sirlei realizando massagem terapêutica" 
+                      className="w-full h-72 object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-elegant transition-shadow duration-300">
+                    <img 
+                      src={sirleiWork2} 
+                      alt="Sirlei em atendimento especializado" 
+                      className="w-full h-72 object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Diferenciais */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <Card className="p-6 text-center hover:shadow-elegant transition-all duration-300 hover:scale-105">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-7 h-7 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-primary mb-2">+30 Técnicas</h3>
+                  <p className="text-sm text-muted-foreground">Ampla variedade de massagens e tratamentos para cada necessidade</p>
+                </Card>
+                <Card className="p-6 text-center hover:shadow-elegant transition-all duration-300 hover:scale-105">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Heart className="w-7 h-7 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-primary mb-2">Atendimento Humanizado</h3>
+                  <p className="text-sm text-muted-foreground">Cuidado personalizado focado no bem-estar integral</p>
+                </Card>
+                <Card className="p-6 text-center hover:shadow-elegant transition-all duration-300 hover:scale-105">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Shield className="w-7 h-7 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-primary mb-2">10+ Anos de Experiência</h3>
+                  <p className="text-sm text-muted-foreground">Profissional certificada com formação contínua</p>
+                </Card>
+              </div>
+            </div>
+          )}
+
           {profissional.id === 'luana' && (
             <div className="mb-12 bg-gradient-to-br from-[#58101b] to-[#3d0b13] dark:from-[#58101b] dark:to-[#2d0810] rounded-3xl p-8 md:p-12 shadow-2xl">
               <div className="text-center text-white">
