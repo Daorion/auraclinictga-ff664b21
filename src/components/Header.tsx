@@ -16,24 +16,22 @@ const Header = () => {
   const isActive = (href: string) => location.pathname === href;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-quaternary/95 backdrop-blur-sm border-b border-tertiary shadow-elegant">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-            <img src={auraLogo} alt="Aura Clinic" className="h-10 w-auto" />
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="container mx-auto px-6">
+        <div className="flex items-center justify-between h-16">
+          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <img src={auraLogo} alt="Aura Clinic" className="h-8 w-auto" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center gap-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`text-lg font-medium transition-colors hover:text-primary ${
+                className={`text-sm font-medium tracking-wide uppercase transition-colors ${
                   isActive(item.href) 
-                    ? 'text-primary border-b-2 border-primary pb-1' 
-                    : 'text-foreground'
+                    ? 'text-primary' 
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {item.name}
@@ -41,56 +39,56 @@ const Header = () => {
             ))}
             <Button
               asChild
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-elegant"
+              size="sm"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-5 text-xs font-medium tracking-wide uppercase"
             >
               <a
                 href="https://wa.me/5565996480484"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2"
+                className="flex items-center gap-2"
               >
-                <MessageCircle size={18} />
+                <MessageCircle size={14} />
                 <span>WhatsApp</span>
               </a>
             </Button>
           </nav>
 
-          {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="md:hidden p-2 rounded-lg text-foreground hover:bg-muted transition-colors"
           >
             {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-tertiary space-y-2">
+          <nav className="md:hidden py-4 border-t border-border/50 space-y-1">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
                 onClick={() => setIsMenuOpen(false)}
-                className={`block py-3 px-4 text-lg font-medium transition-colors hover:text-primary hover:bg-tertiary/50 rounded-lg ${
-                  isActive(item.href) ? 'text-primary bg-tertiary/30' : 'text-foreground'
+                className={`block py-2.5 px-3 text-sm font-medium tracking-wide uppercase rounded-lg transition-colors ${
+                  isActive(item.href) ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {item.name}
               </Link>
             ))}
-            <div className="px-4 pt-2">
+            <div className="pt-2 px-3">
               <Button
                 asChild
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-elegant"
+                size="sm"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full text-xs font-medium tracking-wide uppercase"
               >
                 <a
                   href="https://wa.me/5565996480484"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center space-x-2"
+                  className="flex items-center justify-center gap-2"
                 >
-                  <MessageCircle size={18} />
+                  <MessageCircle size={14} />
                   <span>WhatsApp</span>
                 </a>
               </Button>
