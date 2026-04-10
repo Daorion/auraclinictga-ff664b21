@@ -274,7 +274,7 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'luana',
-    nome: 'Luana',
+    nome: 'Dra. Luana',
     especialidade: 'Estética Facial Avançada e Emagrecimento',
     descricao: 'Especialista em tratamentos inovadores de emagrecimento com Tirzepatida, rejuvenescimento facial com Botox e terapias avançadas.',
     destaque: true,
@@ -310,47 +310,6 @@ export const profissionaisData: ProfissionalData[] = [
           {
             titulo: 'Eletroterapia Corporal',
             descricao: 'Uso de correntes específicas para tonificação e modelagem corporal com resultados eficazes.'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'nadja',
-    nome: 'Nadja',
-    especialidade: 'Design de Sobrancelhas',
-    descricao: 'Micropigmentação, design de sobrancelhas, brow lamination e epilação egípcia.',
-    destaque: false,
-    bio: 'Designer de sobrancelhas especializada em técnicas modernas de micropigmentação e design.',
-    experiencia: '5+ anos de experiência',
-    imagem: '/assets/profissionais/nadja.jpg',
-    secaoServicos: [
-      {
-        categoria: 'Design de Sobrancelhas',
-        servicos: [
-          {
-            titulo: 'Aplicação de Henna ou Coloração',
-            descricao: 'Coloração das sobrancelhas com henna ou tintura.'
-          },
-          {
-            titulo: 'Design sem Henna',
-            descricao: 'Modelagem e design das sobrancelhas.'
-          },
-          {
-            titulo: 'Design com Henna',
-            descricao: 'Design completo com aplicação de henna.'
-          },
-          {
-            titulo: 'Brow Lamination',
-            descricao: 'Técnica para disciplinar e dar volume às sobrancelhas.'
-          },
-          {
-            titulo: 'Micropigmentação',
-            descricao: 'Técnica semi-permanente para preenchimento das sobrancelhas.'
-          },
-          {
-            titulo: 'Micropigmentação Labial',
-            descricao: 'Técnica semi-permanente para definição e coloração dos lábios.'
           }
         ]
       }
@@ -444,75 +403,56 @@ export const profissionaisData: ProfissionalData[] = [
     ]
   },
   {
-    id: 'fernanda',
-    nome: 'Dra. Fernanda Mattos',
-    especialidade: 'Farmacêutica Esteta',
-    descricao: 'Especialista em tratamentos estéticos injetáveis, faciais e terapia capilar com protocolos modernos e eficazes.',
+    id: 'tatynara',
+    nome: 'Tatynara Puka',
+    especialidade: 'Micropigmentadora & Especialista em Sobrancelhas',
+    descricao: 'Especialista em micropigmentação fio a fio, efeito henna, fios e sombra, micropigmentação labial e nos olhos, além de design de sobrancelhas.',
     destaque: false,
-    bio: 'Farmacêutica esteta com ampla experiência em procedimentos estéticos avançados, especializada em tratamentos injetáveis, rejuvenescimento facial e terapias capilares.',
-    experiencia: '8+ anos de experiência',
-    imagem: '/assets/profissionais/fernanda.jpg',
+    bio: 'Micropigmentadora especializada em técnicas avançadas de sobrancelhas e lábios. Oferece resultados naturais e duradouros com pigmentos de alta qualidade e equipamentos de última geração.',
+    experiencia: '5+ anos de experiência',
+    imagem: '/assets/profissionais/tatynara.png',
     secaoServicos: [
       {
-        categoria: 'Tratamentos Injetáveis',
+        categoria: 'Micropigmentação de Sobrancelhas',
         servicos: [
           {
-            titulo: 'Botox',
-            descricao: 'Aplicação de toxina botulínica para suavização de rugas e linhas de expressão, com resultados naturais e harmoniosos.'
+            titulo: 'Micro Fio a Fio',
+            descricao: 'Técnica que cria a aparência de cabelos naturais e permanentes com pigmentos inseridos na pele. Resultados duram 14 meses com retoques anuais. Personalizada em cor, textura e densidade para cada cliente.',
+            destaque: true
           },
           {
-            titulo: 'Soroterapia',
-            descricao: 'Infusão de vitaminas, minerais e antioxidantes para hidratação profunda, revitalização e bem-estar geral.'
+            titulo: 'Micro Henna',
+            descricao: 'Técnica de pigmentação semipermanente que imita a cor e textura da henna tradicional. Tons naturais de marrom, castanho, ruivo e preto. Duração de 6-9 meses com resultado natural e suave.'
           },
           {
-            titulo: 'PEIM (Protocolo Estético Intradérmico Microinflamatório)',
-            descricao: 'Técnica avançada para tratamento de gordura localizada e flacidez através de microinjeções específicas.'
-          },
-          {
-            titulo: 'Skinbooster',
-            descricao: 'Hidratação profunda da pele através de ácido hialurônico injetável para textura uniforme e aspecto rejuvenescido.'
-          },
-          {
-            titulo: 'PDRN (Polidesoxirribonucleotídeo)',
-            descricao: 'Tratamento regenerativo celular que estimula a reparação dos tecidos, melhora a qualidade da pele e promove rejuvenescimento natural.'
+            titulo: 'Fios & Sombra',
+            descricao: 'Técnica que combina fios realistas com efeito de sombra para volume e definição. Cria sobrancelhas mais grossas e preenchidas, com durabilidade de até 18 meses e aparência extremamente natural.'
           }
         ]
       },
       {
-        categoria: 'Tratamentos Faciais',
+        categoria: 'Micropigmentação Facial',
         servicos: [
           {
-            titulo: 'Microagulhamento',
-            descricao: 'Estimulação de colágeno através de microagulhas para renovação celular, melhoria de cicatrizes e textura da pele.'
+            titulo: 'Micropigmentação nos Olhos',
+            descricao: 'Realça a base dos cílios criando a ilusão de cílios mais grossos. Reduz necessidade de maquiagem com definição imediata, resistente à água e suor, com durabilidade superior a 18 meses.'
           },
           {
-            titulo: 'Limpeza de Pele',
-            descricao: 'Limpeza profunda com extração de impurezas, desobstrução de poros e renovação celular para pele saudável e radiante.'
-          },
-          {
-            titulo: 'Dermaplaning',
-            descricao: 'Remoção de células mortas e penugens faciais para pele lisa, luminosa e com melhor absorção de produtos.'
-          },
-          {
-            titulo: 'Enzimas',
-            descricao: 'Tratamento enzimático para esfoliação suave, renovação celular e luminosidade natural da pele.'
-          },
-          {
-            titulo: 'Jato de Plasma para Rejuvenescimento',
-            descricao: 'Tecnologia avançada de plasma para rejuvenescimento sem cirurgia, tratando flacidez, rugas e manchas.'
-          },
-          {
-            titulo: 'Peeling Químico',
-            descricao: 'Renovação profunda da pele através de ácidos específicos para tratar manchas, acne, rugas e uniformizar o tom da pele.'
+            titulo: 'Micropigmentação Labial',
+            descricao: 'Técnica semipermanente que define a forma dos lábios, aumenta a cor natural, reduz aparência de rugas e corrige assimetrias. Duração aproximada de 18 meses.'
           }
         ]
       },
       {
-        categoria: 'Terapia Capilar',
+        categoria: 'Design de Sobrancelhas',
         servicos: [
           {
-            titulo: 'Terapia Capilar',
-            descricao: 'Tratamentos avançados para fortalecimento, crescimento e saúde dos fios, combatendo queda e restaurando a vitalidade capilar.'
+            titulo: 'Design de Sobrancelhas',
+            descricao: 'Criação de forma harmoniosa e equilibrada considerando o formato do rosto, olhos e personalidade de cada pessoa.'
+          },
+          {
+            titulo: 'Design com Henna',
+            descricao: 'Design completo com aplicação de henna para realçar e definir as sobrancelhas. Cor natural e suave com duração de até 4 semanas.'
           }
         ]
       }
