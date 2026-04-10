@@ -85,7 +85,7 @@ const Servicos = () => {
 
       {/* ── Top bar (always visible) ── */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-12 pt-8">
-        <img src={auraLogo} alt="Aura Clinic" className="h-8 opacity-80" style={{ filter: 'brightness(0.2)' }} />
+        <img src={auraLogo} alt="Aura Clinic" className="h-8 opacity-70" style={{ filter: 'brightness(10)' }} />
         <div className="flex items-center gap-1.5">
           {slides.map((_, i) => (
             <div
