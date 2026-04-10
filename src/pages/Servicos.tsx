@@ -57,7 +57,7 @@ const Servicos = () => {
   const upcoming = nextSlide !== null ? slides[nextSlide] : null;
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#FDFCFA] relative">
+    <div className="h-screen w-screen overflow-hidden relative" style={{ background: 'linear-gradient(160deg, hsl(351 86% 14%), hsl(351 70% 20%), hsl(351 86% 16%))' }}>
 
       {/* ── Current slide ── */}
       <div
@@ -85,7 +85,7 @@ const Servicos = () => {
 
       {/* ── Top bar (always visible) ── */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-12 pt-8">
-        <img src={auraLogo} alt="Aura Clinic" className="h-8 opacity-80" style={{ filter: 'brightness(0.2)' }} />
+        <img src={auraLogo} alt="Aura Clinic" className="h-8 opacity-70" style={{ filter: 'brightness(10)' }} />
         <div className="flex items-center gap-1.5">
           {slides.map((_, i) => (
             <div
@@ -94,7 +94,7 @@ const Servicos = () => {
               style={{
                 width: i === currentSlide ? 36 : 6,
                 height: 3,
-                background: 'rgba(88, 16, 27, 0.08)',
+                background: 'rgba(255, 255, 255, 0.15)',
                 transition: 'width 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
               }}
             >
@@ -102,7 +102,7 @@ const Servicos = () => {
                 <div
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: 'rgba(88, 16, 27, 0.4)',
+                    background: 'rgba(255, 255, 255, 0.5)',
                     transform: `scaleX(${progress})`,
                     transformOrigin: 'left',
                   }}
@@ -115,7 +115,7 @@ const Servicos = () => {
 
       {/* ── Bottom ── */}
       <div className="absolute bottom-0 left-0 right-0 z-20 px-12 pb-6">
-        <p className="text-[9px] text-[#58101b]/15 tracking-[0.3em] uppercase font-medium">
+        <p className="text-[9px] text-white/20 tracking-[0.3em] uppercase font-medium">
           Aura Clinic · Tangará da Serra
         </p>
       </div>
@@ -161,18 +161,18 @@ const SlideContent = ({
           </p>
 
           <h1
-            className="text-[clamp(3rem,5vw,4.5rem)] font-bold text-[#58101b] leading-[0.9] tracking-[-0.03em] mb-4"
+            className="text-[clamp(3rem,5vw,4.5rem)] font-bold text-white leading-[0.9] tracking-[-0.03em] mb-4"
             style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
           >
             {slide.nome}
           </h1>
 
-          <p className="text-[11px] text-[#58101b]/30 font-medium tracking-[0.15em] uppercase mb-8">
+          <p className="text-[11px] text-white/40 font-medium tracking-[0.15em] uppercase mb-8">
             {slide.experiencia} · {slide.totalServicos} procedimentos
           </p>
 
           <p
-            className="text-[13.5px] text-[#555] leading-[1.8] mb-10 max-w-[420px]"
+            className="text-[13.5px] text-white/60 leading-[1.8] mb-10 max-w-[420px]"
             style={{
               opacity: visible ? 1 : 0,
               transform: visible ? 'translateY(0)' : 'translateY(16px)',
@@ -182,9 +182,9 @@ const SlideContent = ({
             {slide.bio}
           </p>
 
-          <div className="w-8 h-[1px] bg-[#58101b]/10 mb-7" />
+          <div className="w-8 h-[1px] bg-white/10 mb-7" />
 
-          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-[#58101b]/25 mb-4">
+          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-white/30 mb-4">
             Principais serviços
           </p>
 
@@ -199,8 +199,8 @@ const SlideContent = ({
                   transition: `all 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${600 + i * 100}ms`,
                 }}
               >
-                <div className="w-1 h-1 rounded-full bg-[#CCB8A6]" />
-                <p className="text-[11.5px] text-[#444] font-medium">{titulo}</p>
+                <div className="w-1 h-1 rounded-full bg-[#CCB8A6]/60" />
+                <p className="text-[11.5px] text-white/70 font-medium">{titulo}</p>
               </div>
             ))}
           </div>
@@ -215,7 +215,7 @@ const SlideContent = ({
             {slide.categorias.map((cat, i) => (
               <span
                 key={i}
-                className="text-[8px] tracking-[0.15em] uppercase text-[#58101b]/20 font-medium px-3 py-1 rounded-full border border-[#58101b]/[0.06]"
+                className="text-[8px] tracking-[0.15em] uppercase text-white/25 font-medium px-3 py-1 rounded-full border border-white/[0.08]"
               >
                 {cat}
               </span>
