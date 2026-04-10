@@ -4,9 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { ArrowLeft, MessageCircle, Phone, Star, HelpCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Phone, Star, HelpCircle, Sparkles, Heart, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProfissionalById } from '@/data/profissionais';
+import sirleiWork1 from '@/assets/sirlei-work1.png';
+import sirleiWork2 from '@/assets/sirlei-work2.png';
 
 const ProfissionalDetail = () => {
   const { id } = useParams<{ id: string }>();
