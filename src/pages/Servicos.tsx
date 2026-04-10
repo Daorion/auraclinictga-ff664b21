@@ -167,7 +167,7 @@ const SlideContent = ({
             {slide.nome}
           </h1>
 
-          <p className="text-[11px] text-[#58101b]/30 font-medium tracking-[0.15em] uppercase mb-8">
+          <p className="text-[11px] text-white/40 font-medium tracking-[0.15em] uppercase mb-8">
             {slide.experiencia} · {slide.totalServicos} procedimentos
           </p>
 
