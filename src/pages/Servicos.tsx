@@ -199,8 +199,8 @@ const SlideContent = ({
                   transition: `all 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${600 + i * 100}ms`,
                 }}
               >
-                <div className="w-1 h-1 rounded-full bg-[#CCB8A6]" />
-                <p className="text-[11.5px] text-[#444] font-medium">{titulo}</p>
+                <div className="w-1 h-1 rounded-full bg-[#CCB8A6]/60" />
+                <p className="text-[11.5px] text-white/70 font-medium">{titulo}</p>
               </div>
             ))}
           </div>
