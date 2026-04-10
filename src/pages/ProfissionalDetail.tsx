@@ -1,7 +1,5 @@
 import { useParams, Navigate } from 'react-router-dom';
 import Header from '@/components/Header';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ArrowLeft, MessageCircle, Phone, Star, HelpCircle, Sparkles, Heart, Shield } from 'lucide-react';
@@ -13,57 +11,25 @@ import sirleiWork2 from '@/assets/sirlei-work2.png';
 const ProfissionalDetail = () => {
   const { id } = useParams<{ id: string }>();
   
-  if (!id) {
-    return <Navigate to="/profissionais" replace />;
-  }
-
+  if (!id) return <Navigate to="/profissionais" replace />;
   const profissional = getProfissionalById(id);
-
-  if (!profissional) {
-    return <Navigate to="/profissionais" replace />;
-  }
-
-  const getCategoryColor = (categoria: string) => {
-    const colorMap: { [key: string]: string } = {
-      'Massagens Relaxantes': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
-      'Massagens Terapêuticas': 'bg-teal-100 text-teal-800 dark:bg-teal-900/20 dark:text-teal-300',
-      'Massagens Estéticas': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300',
-      'Tratamentos Faciais': 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-300',
-      'Tratamentos Corporais': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300',
-      'Tratamentos Corporais com Aparelhos e Técnicas Avançadas': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
-      'Tratamentos Corporais Avançados': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
-      'Tratamentos Estéticos': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300',
-      'Tratamentos de Rejuvenescimento': 'bg-rose-100 text-rose-800 dark:bg-rose-900/20 dark:text-rose-300',
-      'Tratamento de Emagrecimento': 'bg-gradient-to-br from-rose-100 to-red-100 text-[#58101b] dark:from-[#58101b]/40 dark:to-[#58101b]/30 dark:text-rose-200 border-2 border-[#58101b]/60 dark:border-[#58101b]',
-      'Unhas em Gel': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300',
-      'Harmonização Facial': 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300',
-      'Harmonização Estética': 'bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-300',
-      'Design de Sobrancelhas': 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300',
-      'Extensão de Cílios': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-300'
-    };
-    return colorMap[categoria] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-  };
+  if (!profissional) return <Navigate to="/profissionais" replace />;
 
   return (
-    <div className="min-h-screen bg-gradient-elegant">
+    <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          {/* Back Button */}
-          <div className="mb-8">
-            <Link to="/profissionais">
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                Voltar para Profissionais
-              </Button>
-            </Link>
-          </div>
+      <main className="pt-20 pb-20">
+        <div className="container mx-auto px-6 max-w-4xl">
+          {/* Back */}
+          <Link to="/profissionais" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10">
+            <ArrowLeft size={14} />
+            <span>Voltar</span>
+          </Link>
 
-
-          {/* Professional Header */}
-          <div className="text-center mb-12">
-            <div className="w-40 h-40 rounded-full mx-auto mb-6 overflow-hidden shadow-elegant ring-4 ring-primary/20">
+          {/* Profile Header */}
+          <div className="flex flex-col items-center text-center mb-16">
+            <div className="w-28 h-28 rounded-full overflow-hidden mb-6 ring-2 ring-border">
               <img 
                 src={profissional.imagem} 
                 alt={profissional.nome}
@@ -72,185 +38,113 @@ const ProfissionalDetail = () => {
             </div>
             
             {profissional.destaque && (
-              <Badge className="mb-4 bg-primary text-primary-foreground">
-                Profissional Destaque
-              </Badge>
+              <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-primary mb-3">Destaque</p>
             )}
             
-            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
+            <h1 className="text-4xl md:text-5xl font-semibold text-primary mb-2">
               {profissional.nome}
             </h1>
             
-            <h2 className="text-2xl text-secondary font-semibold mb-4">
+            <p className="text-base text-muted-foreground mb-4">
               {profissional.especialidade}
-            </h2>
+            </p>
             
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6">
+            <p className="text-sm text-muted-foreground max-w-lg leading-relaxed mb-4 font-light">
               {profissional.bio}
             </p>
             
-            <div className="inline-block bg-card rounded-lg px-4 py-2 shadow-sm">
-              <span className="text-sm font-semibold text-primary">
-                {profissional.experiencia}
-              </span>
-            </div>
+            <span className="text-xs font-medium tracking-[0.15em] uppercase text-primary/60">
+              {profissional.experiencia}
+            </span>
           </div>
 
-          {/* Special Hero for Sirlei */}
+          {/* Sirlei Special Section */}
           {profissional.id === 'sirlei' && (
-            <div className="mb-12">
-              {/* Hero Banner */}
-              <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl p-8 md:p-12 shadow-elegant mb-8">
-                <div className="text-center mb-8">
-                  <Badge className="bg-primary text-primary-foreground text-sm px-4 py-2 mb-4">
-                    ✨ Especialista em Massoterapia
-                  </Badge>
-                  <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-                    Cuidado Profissional para Corpo e Mente
-                  </h2>
-                  <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                    Técnicas avançadas em massagens relaxantes, terapêuticas e estéticas, 
-                    aliadas a tratamentos faciais e corporais com aparelhos de última geração.
-                  </p>
+            <div className="mb-16 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-2xl overflow-hidden aspect-[4/3]">
+                  <img src={sirleiWork1} alt="Sirlei - massagem terapêutica" className="w-full h-full object-cover" />
                 </div>
-
-                {/* Work Photos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                  <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-elegant transition-shadow duration-300">
-                    <img 
-                      src={sirleiWork1} 
-                      alt="Sirlei realizando massagem terapêutica" 
-                      className="w-full h-72 object-cover hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-elegant transition-shadow duration-300">
-                    <img 
-                      src={sirleiWork2} 
-                      alt="Sirlei em atendimento especializado" 
-                      className="w-full h-72 object-cover hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
+                <div className="rounded-2xl overflow-hidden aspect-[4/3]">
+                  <img src={sirleiWork2} alt="Sirlei - atendimento" className="w-full h-full object-cover" />
                 </div>
               </div>
 
-              {/* Diferenciais */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <Card className="p-6 text-center hover:shadow-elegant transition-all duration-300 hover:scale-105">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-7 h-7 text-primary" />
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { icon: Sparkles, title: '+30 Técnicas', desc: 'Ampla variedade de tratamentos' },
+                  { icon: Heart, title: 'Atendimento Humanizado', desc: 'Cuidado personalizado' },
+                  { icon: Shield, title: '10+ Anos', desc: 'Profissional certificada' },
+                ].map((item, i) => (
+                  <div key={i} className="text-center p-5 rounded-xl bg-card border border-border/50">
+                    <item.icon className="w-5 h-5 text-primary mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-primary">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
                   </div>
-                  <h3 className="font-bold text-primary mb-2">+30 Técnicas</h3>
-                  <p className="text-sm text-muted-foreground">Ampla variedade de massagens e tratamentos para cada necessidade</p>
-                </Card>
-                <Card className="p-6 text-center hover:shadow-elegant transition-all duration-300 hover:scale-105">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Heart className="w-7 h-7 text-primary" />
-                  </div>
-                  <h3 className="font-bold text-primary mb-2">Atendimento Humanizado</h3>
-                  <p className="text-sm text-muted-foreground">Cuidado personalizado focado no bem-estar integral</p>
-                </Card>
-                <Card className="p-6 text-center hover:shadow-elegant transition-all duration-300 hover:scale-105">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Shield className="w-7 h-7 text-primary" />
-                  </div>
-                  <h3 className="font-bold text-primary mb-2">10+ Anos de Experiência</h3>
-                  <p className="text-sm text-muted-foreground">Profissional certificada com formação contínua</p>
-                </Card>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Luana Special Banner */}
           {profissional.id === 'luana' && (
-            <div className="mb-12 bg-gradient-to-br from-[#58101b] to-[#3d0b13] dark:from-[#58101b] dark:to-[#2d0810] rounded-3xl p-8 md:p-12 shadow-2xl">
-              <div className="text-center text-white">
-                <div className="inline-block mb-4">
-                  <Badge className="bg-white/20 text-white border-white/30 text-sm px-4 py-2">
-                    ⭐ Tratamentos Premium
-                  </Badge>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Transformação Real com Ciência e Técnica
-                </h2>
-                <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto">
-                  Emagrecimento eficaz com Tirzepatida e rejuvenescimento facial com Botox. Resultados comprovados e acompanhamento personalizado.
-                </p>
-              </div>
+            <div className="mb-16 rounded-2xl bg-primary p-10 text-center">
+              <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-primary-foreground/60 mb-3">Tratamentos Premium</p>
+              <h2 className="text-3xl font-semibold text-primary-foreground mb-3">
+                Transformação com Ciência e Técnica
+              </h2>
+              <p className="text-sm text-primary-foreground/70 max-w-lg mx-auto font-light">
+                Emagrecimento com Tirzepatida e rejuvenescimento facial com Botox. Resultados comprovados.
+              </p>
             </div>
           )}
 
-          {/* Services Sections */}
+          {/* Services */}
           <div className="space-y-12">
             {profissional.secaoServicos.map((secao, index) => (
-              <div key={index} className="bg-card rounded-2xl p-8 shadow-card-elegant">
-                <div className="flex items-center gap-3 mb-8">
-                  <Badge className={getCategoryColor(secao.categoria)}>
+              <div key={index}>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <h2 className="text-lg font-semibold text-foreground tracking-tight">
                     {secao.categoria}
-                  </Badge>
+                  </h2>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {secao.servicos.map((servico, serviceIndex) => {
-                    // Special card for featured services (Tirzepatida)
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {secao.servicos.map((servico, si) => {
                     if (servico.destaque) {
                       return (
-                        <Card key={serviceIndex} className="col-span-1 md:col-span-2 lg:col-span-3 p-8 bg-gradient-to-br from-rose-50 to-red-50 dark:from-[#58101b]/20 dark:to-[#3d0b13]/20 border-2 border-[#58101b]/50 dark:border-[#58101b] hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
-                          <div className="flex flex-col md:flex-row gap-6 items-start">
-                            <div className="flex-shrink-0">
-                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#58101b] to-[#3d0b13] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                                ⭐
-                              </div>
+                        <div key={si} className="col-span-1 md:col-span-2 p-6 rounded-2xl bg-primary/5 border border-primary/10">
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm flex-shrink-0 mt-0.5">
+                              ⭐
                             </div>
-                            
                             <div className="flex-1">
-                              <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <h3 className="text-2xl font-bold text-[#58101b] dark:text-rose-200">
-                                  {servico.titulo}
-                                </h3>
-                                <Badge className="bg-gradient-to-r from-[#58101b] to-[#3d0b13] text-white border-0">
-                                  Tratamento Premium
-                                </Badge>
-                                {servico.preco && (
-                                  <span className="text-xl font-bold text-[#58101b] dark:text-rose-300 bg-white dark:bg-[#58101b]/30 px-4 py-2 rounded-full shadow-sm">
-                                    {servico.preco}
-                                  </span>
-                                )}
+                              <div className="flex flex-wrap items-center gap-3 mb-2">
+                                <h3 className="text-lg font-semibold text-primary">{servico.titulo}</h3>
+                                <span className="text-[10px] font-medium tracking-[0.15em] uppercase text-primary bg-primary/10 px-2.5 py-1 rounded-full">Premium</span>
                               </div>
-                              
-                              <p className="text-muted-foreground leading-relaxed text-base mb-6">
-                                {servico.descricao}
-                              </p>
-                              
-                              <Button 
-                                className="bg-gradient-to-r from-[#58101b] to-[#3d0b13] hover:from-[#6b1422] hover:to-[#4d0e17] text-white shadow-lg gap-2"
-                                onClick={() => window.open('https://api.whatsapp.com/send/?phone=5565996480484&text&type=phone_number&app_absent=0', '_blank')}
+                              <p className="text-sm text-muted-foreground leading-relaxed mb-4">{servico.descricao}</p>
+                              <a
+                                href="https://api.whatsapp.com/send/?phone=5565996480484&text&type=phone_number&app_absent=0"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                               >
-                                <MessageCircle className="w-4 h-4" />
+                                <MessageCircle size={14} />
                                 Agende sua Avaliação
-                              </Button>
+                              </a>
                             </div>
                           </div>
-                        </Card>
+                        </div>
                       );
                     }
                     
-                    // Regular service card
                     return (
-                      <Card key={serviceIndex} className="p-6 hover:shadow-lg transition-all duration-300 hover:scale-105">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="text-lg font-bold text-primary">
-                            {servico.titulo}
-                          </h3>
-                          {servico.preco && (
-                            <span className="text-lg font-bold text-secondary bg-tertiary/30 px-3 py-1 rounded-full">
-                              {servico.preco}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <p className="text-muted-foreground leading-relaxed">
-                          {servico.descricao}
-                        </p>
-                      </Card>
+                      <div key={si} className="p-5 rounded-xl bg-card border border-border/50 hover:border-primary/15 transition-colors">
+                        <h3 className="text-base font-semibold text-foreground mb-2">{servico.titulo}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{servico.descricao}</p>
+                      </div>
                     );
                   })}
                 </div>
@@ -258,313 +152,121 @@ const ProfissionalDetail = () => {
             ))}
           </div>
 
-          {/* Testimonials Section - Only for Luana */}
+          {/* Testimonials - Luana */}
           {profissional.id === 'luana' && (
             <div className="mt-16">
-              <div className="bg-gradient-to-br from-rose-50 to-red-50 dark:from-[#58101b]/20 dark:to-[#3d0b13]/20 rounded-2xl p-8 shadow-card-elegant border border-[#58101b]/30 dark:border-[#58101b]">
-                <div className="text-center mb-10">
-                  <div className="inline-flex items-center gap-2 mb-4">
-                    <Star className="w-6 h-6 text-[#58101b] dark:text-rose-400 fill-[#58101b] dark:fill-rose-400" />
-                    <h3 className="text-3xl font-bold text-primary">Depoimentos</h3>
-                    <Star className="w-6 h-6 text-rose-700 dark:text-rose-400 fill-rose-700 dark:fill-rose-400" />
+              <div className="text-center mb-8">
+                <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-2">Depoimentos</p>
+                <h3 className="text-2xl font-semibold text-primary">O que dizem nossos pacientes</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { text: 'Perdi 15kg em 4 meses com o acompanhamento da Luana. O tratamento mudou minha vida!', name: 'P.R.', type: 'Tirzepatida' },
+                  { text: 'Resultado incrível e natural! As rugas suavizaram sem perder minha expressão.', name: 'C.M.', type: 'Botox' },
+                  { text: 'Profissional extremamente competente e atenciosa. Super recomendo!', name: 'J.A.', type: 'Microagulhamento' },
+                ].map((t, i) => (
+                  <div key={i} className="p-6 rounded-xl bg-card border border-border/50">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">"{t.text}"</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                        <div className="flex gap-0.5 mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">{t.type}</span>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground">O que nossos pacientes dizem sobre os tratamentos</p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Testimonial 1 - Tirzepatida */}
-                  <Card className="p-6 bg-white dark:bg-card hover:shadow-xl transition-shadow">
-                    <div className="mb-4">
-                      <div className="text-4xl text-rose-700 dark:text-rose-400 mb-2">"</div>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Perdi 15kg em 4 meses com o acompanhamento da Luana. O tratamento mudou minha vida! Além da perda de peso, me sinto mais disposta e saudável.
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div>
-                        <p className="font-semibold text-primary">P.R.</p>
-                        <div className="flex gap-1 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                      </div>
-                      <Badge className="bg-[#58101b]/10 text-[#58101b] dark:bg-[#58101b]/30 dark:text-rose-300 border border-[#58101b]/30">
-                        Tirzepatida
-                      </Badge>
-                    </div>
-                  </Card>
-
-                  {/* Testimonial 2 - Botox */}
-                  <Card className="p-6 bg-white dark:bg-card hover:shadow-xl transition-shadow">
-                    <div className="mb-4">
-                      <div className="text-4xl text-[#58101b] dark:text-rose-400 mb-2">"</div>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Resultado incrível e natural! As rugas suavizaram sem perder minha expressão. A Luana tem mão de fada e muito profissionalismo.
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div>
-                        <p className="font-semibold text-primary">C.M.</p>
-                        <div className="flex gap-1 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                      </div>
-                      <Badge className="bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300">
-                        Botox
-                      </Badge>
-                    </div>
-                  </Card>
-
-                  {/* Testimonial 3 - General */}
-                  <Card className="p-6 bg-white dark:bg-card hover:shadow-xl transition-shadow">
-                    <div className="mb-4">
-                      <div className="text-4xl text-[#58101b] dark:text-rose-400 mb-2">"</div>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Profissional extremamente competente e atenciosa. Explica tudo com detalhes e me sinto segura em cada sessão. Super recomendo!
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div>
-                        <p className="font-semibold text-primary">J.A.</p>
-                        <div className="flex gap-1 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                      </div>
-                      <Badge className="bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300">
-                        Microagulhamento
-                      </Badge>
-                    </div>
-                  </Card>
-                </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* FAQ Tirzepatida - Only for Luana */}
+          {/* FAQ Tirzepatida - Luana */}
           {profissional.id === 'luana' && (
             <div className="mt-16">
-              <div className="bg-card rounded-2xl p-8 shadow-card-elegant">
-                <div className="flex items-center justify-center gap-3 mb-8">
-                  <HelpCircle className="w-8 h-8 text-[#58101b] dark:text-rose-400" />
-                  <h3 className="text-3xl font-bold text-primary">Perguntas Frequentes sobre Tirzepatida</h3>
-                  <Badge className="bg-gradient-to-r from-[#58101b] to-[#3d0b13] text-white">Premium</Badge>
-                </div>
-                
-                <Accordion type="single" collapsible className="w-full space-y-4">
-                  <AccordionItem value="item-1" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      O que é Tirzepatida (Mounjaro®)?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      A Tirzepatida é um medicamento inovador aprovado pela ANVISA para tratamento da obesidade e diabetes tipo 2. É um agonista duplo dos receptores GIP e GLP-1, que atua reduzindo o apetite, controlando a glicemia e melhorando o metabolismo. Estudos clínicos demonstram perda de peso de até 20% do peso corporal total.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-2" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      Como funciona o tratamento?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      O medicamento é aplicado via injeção subcutânea semanal. Ele age diretamente nos hormônios que regulam o apetite e a saciedade, fazendo com que você se sinta satisfeito(a) mais rapidamente e por mais tempo. Deve ser combinado com dieta equilibrada e exercícios físicos para resultados otimizados.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-3" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      Quem pode fazer o tratamento?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      O tratamento é indicado para adultos com IMC acima de 30 (obesidade) ou IMC acima de 27 com comorbidades relacionadas ao peso (como hipertensão, diabetes tipo 2, colesterol alto). É necessária avaliação médica completa antes de iniciar.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-4" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      Quais são os resultados esperados?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Os resultados variam de pessoa para pessoa, mas em média os pacientes perdem entre 15% a 20% do peso corporal ao longo de 6 a 12 meses de tratamento. Além da perda de peso, há melhora significativa em exames metabólicos, disposição e qualidade de vida.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-5" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      O tratamento é seguro? Quais os efeitos colaterais?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Sim, o tratamento é aprovado pela ANVISA e possui perfil de segurança comprovado. Os efeitos colaterais mais comuns são náuseas, diarreia e constipação, que geralmente são leves e diminuem com o tempo. O acompanhamento profissional garante que o tratamento seja feito de forma segura e personalizada.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-6" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      Preciso de prescrição médica?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Sim, a Tirzepatida é um medicamento de prescrição controlada. É obrigatória a avaliação com profissional habilitado, que irá avaliar seu histórico médico, realizar exames e prescrever o medicamento caso você seja candidato(a).
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-7" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      Quanto tempo dura o tratamento?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      O tratamento geralmente dura entre 6 a 12 meses, dependendo dos objetivos individuais e resposta ao medicamento. Após atingir o peso desejado, pode-se manter com doses menores ou estratégias de manutenção conforme orientação profissional.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="item-8" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      Como faço para iniciar?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Entre em contato para agendar uma avaliação completa. Nesta consulta, será realizada anamnese detalhada, avaliação de exames (se necessário solicitar novos), discussão de expectativas e, sendo candidato(a), prescrição e orientações para início do tratamento.
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+              <div className="text-center mb-8">
+                <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-2">FAQ</p>
+                <h3 className="text-2xl font-semibold text-primary">Perguntas sobre Tirzepatida</h3>
               </div>
+              
+              <Accordion type="single" collapsible className="space-y-2">
+                {[
+                  { q: 'O que é Tirzepatida (Mounjaro®)?', a: 'A Tirzepatida é um medicamento inovador aprovado pela ANVISA para tratamento da obesidade e diabetes tipo 2. É um agonista duplo dos receptores GIP e GLP-1, que atua reduzindo o apetite, controlando a glicemia e melhorando o metabolismo.' },
+                  { q: 'Como funciona o tratamento?', a: 'O medicamento é aplicado via injeção subcutânea semanal. Ele age diretamente nos hormônios que regulam o apetite e a saciedade. Deve ser combinado com dieta equilibrada e exercícios físicos.' },
+                  { q: 'Quem pode fazer o tratamento?', a: 'O tratamento é indicado para adultos com IMC acima de 30 ou IMC acima de 27 com comorbidades. É necessária avaliação médica completa antes de iniciar.' },
+                  { q: 'Quais são os resultados esperados?', a: 'Em média os pacientes perdem entre 15% a 20% do peso corporal ao longo de 6 a 12 meses, com melhora significativa em exames metabólicos.' },
+                  { q: 'O tratamento é seguro?', a: 'Sim, é aprovado pela ANVISA com perfil de segurança comprovado. Os efeitos colaterais mais comuns são leves e diminuem com o tempo.' },
+                  { q: 'Preciso de prescrição médica?', a: 'Sim, a Tirzepatida é de prescrição controlada. É obrigatória avaliação com profissional habilitado.' },
+                  { q: 'Quanto tempo dura o tratamento?', a: 'Geralmente entre 6 a 12 meses, dependendo dos objetivos individuais e resposta ao medicamento.' },
+                  { q: 'Como faço para iniciar?', a: 'Entre em contato para agendar uma avaliação completa com anamnese detalhada e orientações.' },
+                ].map((item, i) => (
+                  <AccordionItem key={i} value={`tirz-${i}`} className="border border-border/50 rounded-xl px-5 bg-card">
+                    <AccordionTrigger className="text-sm font-medium text-left hover:text-primary">{item.q}</AccordionTrigger>
+                    <AccordionContent className="text-sm text-muted-foreground leading-relaxed">{item.a}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           )}
 
-          {/* FAQ Botox - Only for Luana */}
+          {/* FAQ Botox - Luana */}
           {profissional.id === 'luana' && (
-            <div className="mt-16">
-              <div className="bg-card rounded-2xl p-8 shadow-card-elegant">
-                <div className="flex items-center justify-center gap-3 mb-8">
-                  <HelpCircle className="w-8 h-8 text-pink-600 dark:text-pink-400" />
-                  <h3 className="text-3xl font-bold text-primary">Perguntas Frequentes sobre Botox</h3>
-                </div>
-                
-                <Accordion type="single" collapsible className="w-full space-y-4">
-                  <AccordionItem value="botox-1" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      O que é Botox (Toxina Botulínica)?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Botox é o nome comercial da toxina botulínica tipo A, um tratamento estético seguro e amplamente utilizado para suavizar rugas e linhas de expressão. É o procedimento não cirúrgico mais realizado no mundo para rejuvenescimento facial.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-2" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      Como funciona o Botox?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      A toxina botulínica age relaxando temporariamente os músculos faciais responsáveis pela formação de rugas dinâmicas (aquelas que aparecem quando você sorri, franze a testa, etc.). Com os músculos relaxados, a pele fica mais lisa e as rugas são suavizadas.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-3" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      Quais áreas podem ser tratadas?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      As áreas mais comuns são: testa (linhas horizontais), glabela (entre as sobrancelhas - "franzido"), pés de galinha (ao redor dos olhos), linhas de coelho (nariz), sorriso gengival, pescoço (bandas platismais) e rugas ao redor da boca.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-4" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      O resultado fica natural ou congelado?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Quando aplicado por profissional experiente, o resultado é natural e harmonioso. A ideia é suavizar as rugas mantendo a expressão facial, não "congelar" o rosto. A técnica de aplicação e a dosagem são fundamentais para resultados elegantes.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-5" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      Quanto tempo dura o efeito?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Os resultados começam a aparecer entre 3 a 7 dias após a aplicação e duram em média de 4 a 6 meses. Com aplicações regulares, a musculatura "aprende" a relaxar e o intervalo entre as aplicações pode aumentar.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-6" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      O procedimento dói?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      A aplicação é feita com agulhas muito finas e é bem tolerada pela maioria dos pacientes. Pode haver um leve desconforto momentâneo, mas não é necessária anestesia. Algumas clínicas oferecem anestésico tópico para maior conforto.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-7" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      Tem efeitos colaterais?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Efeitos colaterais graves são raros. Os mais comuns são leves e temporários: pequenos hematomas no local da aplicação, leve dor de cabeça nas primeiras 24h. Importante seguir todas as orientações pós-procedimento para evitar complicações.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-8" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      Posso fazer Botox para prevenir rugas?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Sim! O Botox preventivo é altamente recomendado para pessoas a partir dos 25-30 anos que começam a notar as primeiras linhas de expressão. Prevenir é mais fácil do que tratar rugas já instaladas profundamente na pele.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-9" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-pink-600 dark:hover:text-pink-400">
-                      Quais são os cuidados após a aplicação?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Nas primeiras 4 horas: não deitar, não abaixar a cabeça, não fazer exercícios intensos, não massagear a área. Nas primeiras 24-48 horas: evitar exposição ao calor excessivo (sauna, sol intenso), bebidas alcoólicas e exercícios físicos intensos.
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="botox-10" className="border rounded-lg px-6 bg-muted/30">
-                    <AccordionTrigger className="text-left font-semibold hover:text-[#58101b] dark:hover:text-rose-400">
-                      Como faço para agendar?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      Entre em contato via WhatsApp ou telefone para agendar uma avaliação. Durante a consulta, será feita análise facial detalhada, explicação do procedimento, esclarecimento de dúvidas e, se desejar, a aplicação pode ser feita no mesmo dia.
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+            <div className="mt-12">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-semibold text-primary">Perguntas sobre Botox</h3>
               </div>
+              
+              <Accordion type="single" collapsible className="space-y-2">
+                {[
+                  { q: 'O que é Botox?', a: 'Botox é o nome comercial da toxina botulínica tipo A, um tratamento estético seguro para suavizar rugas e linhas de expressão.' },
+                  { q: 'Como funciona?', a: 'A toxina relaxa temporariamente os músculos faciais responsáveis pelas rugas dinâmicas, deixando a pele mais lisa.' },
+                  { q: 'Quais áreas podem ser tratadas?', a: 'Testa, glabela, pés de galinha, linhas de coelho, sorriso gengival, pescoço e rugas ao redor da boca.' },
+                  { q: 'O resultado fica natural?', a: 'Sim, quando aplicado por profissional experiente. A ideia é suavizar rugas mantendo a expressão natural.' },
+                  { q: 'Quanto tempo dura o efeito?', a: 'Resultados aparecem em 3 a 7 dias e duram de 4 a 6 meses. Com aplicações regulares, o intervalo pode aumentar.' },
+                  { q: 'Dói?', a: 'A aplicação é feita com agulhas muito finas e é bem tolerada. Pode haver leve desconforto momentâneo.' },
+                  { q: 'Posso fazer para prevenir rugas?', a: 'Sim! O Botox preventivo é recomendado a partir dos 25-30 anos para quem começa a notar as primeiras linhas.' },
+                  { q: 'Quais os cuidados após?', a: 'Nas primeiras 4 horas: não deitar, não abaixar a cabeça, não fazer exercícios intensos. Evitar calor excessivo nas primeiras 48h.' },
+                ].map((item, i) => (
+                  <AccordionItem key={i} value={`botox-${i}`} className="border border-border/50 rounded-xl px-5 bg-card">
+                    <AccordionTrigger className="text-sm font-medium text-left hover:text-primary">{item.q}</AccordionTrigger>
+                    <AccordionContent className="text-sm text-muted-foreground leading-relaxed">{item.a}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           )}
 
-          {/* Contact Section */}
-          <div className="mt-16 text-center">
-            <div className="bg-card rounded-2xl p-8 shadow-card-elegant">
-              <h3 className="text-2xl font-bold text-primary mb-6">
-                Agende seu horário com {profissional.nome}
-              </h3>
+          {/* Contact */}
+          <div className="mt-16 text-center p-10 rounded-2xl bg-primary">
+            <h3 className="text-2xl font-semibold text-primary-foreground mb-3">
+              Agende com {profissional.nome}
+            </h3>
+            <p className="text-sm text-primary-foreground/60 mb-8 font-light">
+              Entre em contato para conhecer mais sobre os tratamentos.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href="https://api.whatsapp.com/send/?phone=5565996480484"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors"
+              >
+                <MessageCircle size={14} />
+                WhatsApp
+              </a>
               
-              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Entre em contato para agendar uma consulta e conhecer mais sobre os tratamentos oferecidos.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  className="gap-2"
-                  onClick={() => window.open('https://api.whatsapp.com/send/?phone=5565996480484&text&type=phone_number&app_absent=0', '_blank')}
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp da Clínica
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="gap-2"
-                  onClick={() => window.open('tel:+5565996480484', '_blank')}
-                >
-                  <Phone className="w-4 h-4" />
-                  Ligar para a Clínica
-                </Button>
-              </div>
+              <a
+                href="tel:+5565996480484"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/20 text-white text-sm font-medium hover:bg-white/10 transition-colors"
+              >
+                <Phone size={14} />
+                Ligar
+              </a>
             </div>
           </div>
         </div>
