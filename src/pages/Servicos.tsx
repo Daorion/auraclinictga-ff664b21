@@ -184,7 +184,7 @@ const SlideContent = ({
 
           <div className="w-8 h-[1px] bg-white/10 mb-7" />
 
-          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-[#58101b]/25 mb-4">
+          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-white/30 mb-4">
             Principais serviços
           </p>
 
