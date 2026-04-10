@@ -215,7 +215,7 @@ const SlideContent = ({
             {slide.categorias.map((cat, i) => (
               <span
                 key={i}
-                className="text-[8px] tracking-[0.15em] uppercase text-[#58101b]/20 font-medium px-3 py-1 rounded-full border border-[#58101b]/[0.06]"
+                className="text-[8px] tracking-[0.15em] uppercase text-white/25 font-medium px-3 py-1 rounded-full border border-white/[0.08]"
               >
                 {cat}
               </span>
