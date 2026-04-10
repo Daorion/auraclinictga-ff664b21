@@ -182,7 +182,7 @@ const SlideContent = ({
             {slide.bio}
           </p>
 
-          <div className="w-8 h-[1px] bg-[#58101b]/10 mb-7" />
+          <div className="w-8 h-[1px] bg-white/10 mb-7" />
 
           <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-[#58101b]/25 mb-4">
             Principais serviços
