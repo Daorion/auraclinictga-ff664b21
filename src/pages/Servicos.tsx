@@ -172,7 +172,7 @@ const SlideContent = ({
           </p>
 
           <p
-            className="text-[13.5px] text-[#555] leading-[1.8] mb-10 max-w-[420px]"
+            className="text-[13.5px] text-white/60 leading-[1.8] mb-10 max-w-[420px]"
             style={{
               opacity: visible ? 1 : 0,
               transform: visible ? 'translateY(0)' : 'translateY(16px)',
