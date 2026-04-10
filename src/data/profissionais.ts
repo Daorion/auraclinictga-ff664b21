@@ -35,7 +35,7 @@ export const profissionaisData: ProfissionalData[] = [
     destaque: true,
     bio: 'Profissional com mais de 10 anos de experiência em massoterapia e estética. Especializada em técnicas de relaxamento e tratamentos estéticos avançados.',
     experiencia: '10+ anos de experiência',
-    imagem: '/assets/profissionais/sirlei.jpg',
+    imagem: '/src/assets/sirlei-profile.png',
     secaoServicos: [
       {
         categoria: 'Massagens Relaxantes',
