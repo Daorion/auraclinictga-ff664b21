@@ -115,7 +115,7 @@ const Servicos = () => {
 
       {/* ── Bottom ── */}
       <div className="absolute bottom-0 left-0 right-0 z-20 px-12 pb-6">
-        <p className="text-[9px] text-[#58101b]/15 tracking-[0.3em] uppercase font-medium">
+        <p className="text-[9px] text-white/20 tracking-[0.3em] uppercase font-medium">
           Aura Clinic · Tangará da Serra
         </p>
       </div>
