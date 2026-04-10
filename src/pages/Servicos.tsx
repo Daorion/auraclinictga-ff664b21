@@ -57,7 +57,7 @@ const Servicos = () => {
   const upcoming = nextSlide !== null ? slides[nextSlide] : null;
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#FDFCFA] relative">
+    <div className="h-screen w-screen overflow-hidden relative" style={{ background: 'linear-gradient(160deg, hsl(351 86% 14%), hsl(351 70% 20%), hsl(351 86% 16%))' }}>
 
       {/* ── Current slide ── */}
       <div
