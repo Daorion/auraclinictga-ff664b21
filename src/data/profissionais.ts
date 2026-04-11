@@ -457,6 +457,77 @@ export const profissionaisData: ProfissionalData[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'nilce',
+    nome: 'Nilce Lopez',
+    especialidade: 'Cabelo',
+    descricao: 'Especialista em cortes, coloração e tratamentos capilares.',
+    destaque: false,
+    bio: 'Profissional dedicada à arte capilar, oferecendo cortes modernos, coloração personalizada e tratamentos para saúde dos fios.',
+    experiencia: '',
+    imagem: '/assets/profissionais/nilce.jpg',
+    secaoServicos: [
+      {
+        categoria: 'Serviços Capilares',
+        servicos: [
+          {
+            titulo: 'Corte Feminino',
+            descricao: 'Cortes personalizados que valorizam o formato do rosto e estilo pessoal.'
+          },
+          {
+            titulo: 'Coloração',
+            descricao: 'Técnicas de coloração modernas para um visual renovado e natural.'
+          },
+          {
+            titulo: 'Tratamentos Capilares',
+            descricao: 'Tratamentos para recuperação e saúde dos fios.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'zilma',
+    nome: 'Zilma Dias',
+    especialidade: 'Afrodite',
+    descricao: 'Especialista em tratamentos estéticos e bem-estar.',
+    destaque: false,
+    bio: 'Profissional especializada em cuidados estéticos e protocolos de beleza.',
+    experiencia: '',
+    imagem: '/assets/profissionais/zilma.jpg',
+    secaoServicos: [
+      {
+        categoria: 'Tratamentos Estéticos',
+        servicos: [
+          {
+            titulo: 'Tratamentos de Beleza',
+            descricao: 'Protocolos personalizados para realçar a beleza natural.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'camila',
+    nome: 'Camila Ferraz',
+    especialidade: 'Fisioterapeuta',
+    descricao: 'Fisioterapeuta especializada em tratamentos corporais e reabilitação estética.',
+    destaque: false,
+    bio: 'Fisioterapeuta com foco em tratamentos corporais, reabilitação e estética funcional.',
+    experiencia: '',
+    imagem: '/assets/profissionais/camila.jpg',
+    secaoServicos: [
+      {
+        categoria: 'Fisioterapia Estética',
+        servicos: [
+          {
+            titulo: 'Fisioterapia Dermato-Funcional',
+            descricao: 'Tratamentos fisioterapêuticos voltados para estética e funcionalidade corporal.'
+          }
+        ]
+      }
+    ]
   }
 ];
 
