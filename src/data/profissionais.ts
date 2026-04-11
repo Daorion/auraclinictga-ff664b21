@@ -29,8 +29,8 @@ export interface ProfissionalData {
 export const profissionaisData: ProfissionalData[] = [
   {
     id: 'sirlei',
-    nome: 'Sirlei',
-    especialidade: 'Massoterapia e Tratamentos Estéticos',
+    nome: 'Sirlei Glatz',
+    especialidade: 'Massoterapeuta',
     descricao: 'Especialista em massagens relaxantes, terapêuticas e estéticas. Oferece uma ampla gama de tratamentos para bem-estar e beleza.',
     destaque: true,
     bio: 'Profissional com mais de 10 anos de experiência em massoterapia e estética. Especializada em técnicas de relaxamento e tratamentos estéticos avançados.',
@@ -181,8 +181,8 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'simone',
-    nome: 'Simone',
-    especialidade: 'Nail Designer e Designer de Sobrancelhas',
+    nome: 'Simone Lima',
+    especialidade: 'Nail Designer',
     descricao: 'Especialista em alongamento de unhas, banho de gel, esmaltação em gel e design de sobrancelhas personalizado.',
     destaque: false,
     bio: 'Nail designer e designer de sobrancelhas especializada em técnicas avançadas de unhas em gel e design facial personalizado.',
@@ -236,8 +236,8 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'cleia',
-    nome: 'Cleia',
-    especialidade: 'Terapias e Estética',
+    nome: 'Cleia Oliveira',
+    especialidade: 'Massoterapeuta',
     descricao: 'Massagens relaxantes, pedras quentes, modeladora turbinada, microderme e bandagem.',
     destaque: false,
     bio: 'Terapeuta especializada em tratamentos corporais e faciais com técnicas diversificadas.',
@@ -274,8 +274,8 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'luana',
-    nome: 'Dra. Luana',
-    especialidade: 'Estética Facial Avançada e Emagrecimento',
+    nome: 'Dra. Luana Glatz',
+    especialidade: 'Biomédica',
     descricao: 'Especialista em tratamentos inovadores de emagrecimento com Tirzepatida, rejuvenescimento facial com Botox e terapias avançadas.',
     destaque: true,
     bio: 'Profissional com expertise em tratamentos faciais e corporais de alta performance. Especializada em protocolos de emagrecimento com Tirzepatida (Mounjaro®), rejuvenescimento facial com toxina botulínica, microagulhamento e terapias estéticas avançadas. Oferece acompanhamento personalizado focado em resultados reais e transformadores.',
@@ -317,8 +317,8 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'rayka',
-    nome: 'Rayka',
-    especialidade: 'Extensão de Cílios',
+    nome: 'Rayka Guedes',
+    especialidade: 'Lash Designer',
     descricao: 'Extensão de cílios em diversos volumes para um olhar mais marcante e natural.',
     destaque: false,
     bio: 'Especialista em extensão de cílios com técnicas que garantem naturalidade e durabilidade.',
@@ -346,7 +346,7 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'geisiane',
-    nome: 'Dra. Geisiane',
+    nome: 'Dra. Geisiane Pereira',
     especialidade: 'Biomédica',
     descricao: 'Massagem MAF, limpeza de pele e tratamentos específicos para gordura e flacidez.',
     destaque: false,
@@ -375,8 +375,8 @@ export const profissionaisData: ProfissionalData[] = [
   },
   {
     id: 'vanessa',
-    nome: 'Dra. Vanessa',
-    especialidade: 'Harmonização',
+    nome: 'Dra. Vanessa Gregório',
+    especialidade: 'Biomédica',
     descricao: 'Harmonização facial e corporal com técnicas modernas e seguras.',
     destaque: false,
     bio: 'Médica especializada em harmonização estética facial e corporal.',
@@ -405,7 +405,7 @@ export const profissionaisData: ProfissionalData[] = [
   {
     id: 'tatynara',
     nome: 'Tatynara Puka',
-    especialidade: 'Micropigmentadora & Especialista em Sobrancelhas',
+    especialidade: 'Especialista em Micropigmentação e Design Facial',
     descricao: 'Especialista em micropigmentação fio a fio, efeito henna, fios e sombra, micropigmentação labial e nos olhos, além de design de sobrancelhas.',
     destaque: false,
     bio: 'Micropigmentadora especializada em técnicas avançadas de sobrancelhas e lábios. Oferece resultados naturais e duradouros com pigmentos de alta qualidade e equipamentos de última geração.',
