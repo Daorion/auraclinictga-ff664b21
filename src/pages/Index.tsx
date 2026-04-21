@@ -75,28 +75,38 @@ const Index = () => {
       {/* Services */}
       <section className="py-24">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-3">Nossos Serviços</p>
-            <h2 className="text-4xl md:text-5xl font-semibold text-primary">
-              Cuidados Especializados
+      {/* Services */}
+      <section className="py-32 bg-gradient-elegant">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20">
+            <p className="text-[10px] font-medium tracking-[0.4em] uppercase text-muted-foreground mb-4">— Nossos Serviços —</p>
+            <h2 className="font-serif text-5xl md:text-6xl font-light text-primary tracking-tight">
+              Cuidados <span className="italic">especializados</span>
             </h2>
+            <div className="flex items-center justify-center mt-6">
+              <span className="h-px w-16 bg-primary/30" />
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {services.map((service, index) => (
               <div 
                 key={index}
-                className="group p-8 rounded-2xl bg-card border border-border/50 hover:border-primary/20 hover:shadow-elegant transition-all duration-300"
+                className="group relative p-10 bg-card/50 backdrop-blur-sm border border-border/40 hover:border-primary/30 transition-all duration-700 hover:-translate-y-1"
               >
-                <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center mb-5">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                </div>
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 
-                <h3 className="text-xl font-semibold text-primary mb-3">
+                <p className="font-serif text-5xl font-light text-primary/20 mb-6 italic">
+                  0{index + 1}
+                </p>
+                
+                <h3 className="font-serif text-2xl font-normal text-primary mb-4 tracking-tight">
                   {service.title}
                 </h3>
                 
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <div className="h-px w-8 bg-secondary mb-4 group-hover:w-16 transition-all duration-500" />
+                
+                <p className="text-sm text-muted-foreground leading-relaxed font-light">
                   {service.description}
                 </p>
               </div>
@@ -106,13 +116,19 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-primary">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-semibold text-primary-foreground mb-4">
-            Pronta para Transformar Sua Beleza?
+      <section className="py-28 bg-primary relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-secondary rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary rounded-full blur-3xl" />
+        </div>
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <p className="text-[10px] font-medium tracking-[0.4em] uppercase text-secondary mb-6">— Agende sua experiência —</p>
+          <h2 className="font-serif text-4xl md:text-6xl font-light text-primary-foreground mb-6 leading-tight tracking-tight">
+            Pronta para transformar
+            <span className="block italic text-secondary mt-1">sua beleza?</span>
           </h2>
           
-          <p className="text-base text-primary-foreground/70 mb-10 max-w-xl mx-auto font-light">
+          <p className="text-base text-primary-foreground/70 mb-12 max-w-xl mx-auto font-light leading-relaxed">
             Agende seu horário e descubra tratamentos exclusivos e personalizados.
           </p>
 
