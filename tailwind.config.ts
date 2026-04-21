@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
+        display: ['"Archivo Black"', '"Hind"', 'sans-serif'],
         serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Hind', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -38,6 +39,10 @@ export default {
         quaternary: {
           DEFAULT: "hsl(var(--quaternary))",
           foreground: "hsl(var(--quaternary-foreground))",
+        },
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          foreground: "hsl(var(--gold-foreground))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -74,6 +79,7 @@ export default {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-elegant': 'var(--gradient-elegant)',
         'gradient-hero': 'var(--gradient-hero)',
+        'gradient-gold': 'var(--gradient-gold)',
       },
       boxShadow: {
         'elegant': 'var(--shadow-elegant)',
