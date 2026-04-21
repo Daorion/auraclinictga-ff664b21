@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      generated_artworks: {
+        Row: {
+          ai_prompt: string | null
+          background_url: string
+          caption: string | null
+          created_at: string
+          created_by: string | null
+          final_url: string | null
+          format: string
+          hashtags: string | null
+          id: string
+          overlay_data: Json | null
+          service_id: string | null
+          service_name: string
+          updated_at: string
+        }
+        Insert: {
+          ai_prompt?: string | null
+          background_url: string
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          final_url?: string | null
+          format: string
+          hashtags?: string | null
+          id?: string
+          overlay_data?: Json | null
+          service_id?: string | null
+          service_name: string
+          updated_at?: string
+        }
+        Update: {
+          ai_prompt?: string | null
+          background_url?: string
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          final_url?: string | null
+          format?: string
+          hashtags?: string | null
+          id?: string
+          overlay_data?: Json | null
+          service_id?: string | null
+          service_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_artworks_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
