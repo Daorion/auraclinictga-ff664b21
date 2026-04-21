@@ -37,30 +37,36 @@ const Index = () => {
           <div className="absolute inset-0 bg-gradient-hero" />
         </div>
         
-        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
+        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto animate-fade-in">
           <img 
             src={auraLogo} 
             alt="Aura Clinic" 
-            className="h-20 md:h-24 w-auto mx-auto mb-10 drop-shadow-2xl"
+            className="h-16 md:h-20 w-auto mx-auto mb-12 drop-shadow-2xl opacity-95"
           />
+
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <span className="h-px w-12 bg-secondary/60" />
+            <p className="text-[10px] md:text-xs font-medium tracking-[0.4em] uppercase text-secondary/90">Aura Clinic · Estética Avançada</p>
+            <span className="h-px w-12 bg-secondary/60" />
+          </div>
           
-          <h1 className="text-5xl md:text-7xl font-semibold text-white mb-6 leading-[1.1]">
-            Desperte Sua
-            <span className="block italic text-secondary">Beleza Natural</span>
+          <h1 className="font-serif text-6xl md:text-8xl font-light text-white mb-8 leading-[0.95] tracking-tight">
+            Desperte sua
+            <span className="block italic font-normal text-secondary mt-2">beleza natural</span>
           </h1>
           
-          <p className="text-base md:text-lg text-white/80 mb-10 leading-relaxed max-w-xl mx-auto font-light">
-            Tratamentos estéticos exclusivos em Tangará da Serra. 
-            Elegância e bem-estar em cada detalhe.
+          <p className="text-base md:text-lg text-white/75 mb-12 leading-relaxed max-w-lg mx-auto font-light tracking-wide">
+            Tratamentos estéticos exclusivos em Tangará da Serra.
+            <span className="block mt-1 italic text-white/60">Elegância e bem-estar em cada detalhe.</span>
           </p>
           
           <Button 
             asChild 
-            className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 rounded-full px-8 py-5 text-sm font-medium tracking-wide uppercase transition-all duration-300"
+            className="bg-transparent backdrop-blur-md border border-white/30 text-white hover:bg-white hover:text-primary rounded-none px-10 py-6 text-[11px] font-medium tracking-[0.3em] uppercase transition-all duration-500"
           >
-            <Link to="/profissionais" className="flex items-center gap-3">
+            <Link to="/profissionais" className="flex items-center gap-4">
               <span>Conheça Nossa Equipe</span>
-              <ArrowRight size={16} />
+              <ArrowRight size={14} />
             </Link>
           </Button>
         </div>
