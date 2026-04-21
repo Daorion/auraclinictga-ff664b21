@@ -1,4 +1,5 @@
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import SocialButtons from '@/components/SocialButtons';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Award, HeartHandshake, ShieldCheck, Star, Quote } from 'lucide-react';
@@ -323,6 +324,7 @@ const Index = () => {
           <SocialButtons />
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
