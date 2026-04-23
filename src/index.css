@@ -6,51 +6,58 @@
 
 @layer base {
   :root {
-    --primary: 351 86% 20%;
-    --primary-foreground: 30 25% 96%;
-    
-    --secondary: 30 35% 73%;
-    --secondary-foreground: 351 86% 20%;
-    
-    --tertiary: 30 25% 82%;
-    --tertiary-foreground: 351 86% 20%;
-    
-    --quaternary: 30 25% 92%;
-    --quaternary-foreground: 351 86% 20%;
+    /* Brand palette:
+       #59101C vinho escuro  → 352 70% 21%
+       #CCB8A6 bege quente   → 30 24% 73%
+       #D1C7BD bege claro    → 32 15% 78%
+       #EAE4DF off-white     → 30 16% 90%
+    */
+    --primary: 352 70% 21%;
+    --primary-foreground: 30 16% 95%;
 
-    --background: 30 20% 97%;
-    --foreground: 0 0% 15%;
+    --secondary: 30 24% 73%;
+    --secondary-foreground: 352 70% 21%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --tertiary: 32 15% 78%;
+    --tertiary-foreground: 352 70% 21%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --quaternary: 30 16% 90%;
+    --quaternary-foreground: 352 70% 21%;
 
-    --muted: 30 15% 94%;
-    --muted-foreground: 0 0% 40%;
+    --background: 30 16% 95%;
+    --foreground: 352 40% 14%;
 
-    --accent: 30 25% 90%;
-    --accent-foreground: 351 86% 20%;
+    --card: 30 20% 98%;
+    --card-foreground: 352 40% 14%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --popover: 30 20% 98%;
+    --popover-foreground: 352 40% 14%;
 
-    --border: 30 15% 90%;
-    --input: 30 15% 92%;
-    --ring: 351 86% 20%;
-    
-    --gold: 43 55% 54%;
-    --gold-foreground: 351 86% 20%;
-    
-    --gradient-primary: linear-gradient(135deg, hsl(351 86% 20%), hsl(351 70% 28%));
-    --gradient-elegant: linear-gradient(180deg, hsl(30 20% 97%), hsl(30 15% 94%));
-    --gradient-hero: linear-gradient(135deg, hsl(351 86% 12% / 0.88), hsl(351 60% 18% / 0.78));
-    --gradient-gold: linear-gradient(135deg, hsl(43 55% 54%), hsl(43 65% 70%));
-    
-    --shadow-elegant: 0 4px 20px -6px hsl(351 86% 20% / 0.12);
-    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.04), 0 1px 2px -1px hsl(0 0% 0% / 0.04);
-    --shadow-glow: 0 0 30px hsl(351 86% 20% / 0.12);
+    --muted: 30 16% 90%;
+    --muted-foreground: 352 15% 35%;
+
+    --accent: 30 24% 73%;
+    --accent-foreground: 352 70% 21%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 30 16% 95%;
+
+    --border: 32 15% 78%;
+    --input: 30 16% 90%;
+    --ring: 352 70% 21%;
+
+    /* "Gold" token kept for compatibility — mapped to warm beige accent */
+    --gold: 30 24% 73%;
+    --gold-foreground: 352 70% 21%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(352 70% 21%), hsl(352 60% 28%));
+    --gradient-elegant: linear-gradient(180deg, hsl(30 16% 95%), hsl(32 15% 88%));
+    --gradient-hero: linear-gradient(135deg, hsl(352 70% 14% / 0.88), hsl(352 55% 20% / 0.78));
+    --gradient-gold: linear-gradient(135deg, hsl(30 24% 73%), hsl(32 28% 82%));
+
+    --shadow-elegant: 0 4px 20px -6px hsl(352 70% 21% / 0.18);
+    --shadow-card: 0 1px 3px 0 hsl(352 40% 14% / 0.06), 0 1px 2px -1px hsl(352 40% 14% / 0.04);
+    --shadow-glow: 0 0 30px hsl(352 70% 21% / 0.15);
 
     --radius: 0.75rem;
 
