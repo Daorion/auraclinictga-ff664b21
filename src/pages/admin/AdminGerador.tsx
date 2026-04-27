@@ -16,6 +16,7 @@ interface Service {
   name: string;
   description: string | null;
   category: string | null;
+  image_url: string | null;
 }
 
 const FORMATS: { value: Format; label: string; icon: any; size: string; w: number; h: number }[] = [
@@ -60,7 +61,7 @@ const AdminGerador = () => {
   useEffect(() => {
     supabase
       .from("services")
-      .select("id, name, description, category")
+      .select("id, name, description, category, image_url")
       .eq("active", true)
       .order("display_order")
       .then(({ data }) => setServices(data || []));
@@ -85,6 +86,7 @@ const AdminGerador = () => {
             serviceDescription: selectedService.description,
             format,
             customPrompt: customPrompt || undefined,
+            existingBackgroundUrl: selectedService.image_url || undefined,
           }),
         },
       );
