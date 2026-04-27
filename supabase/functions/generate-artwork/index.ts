@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { serviceId, serviceName, serviceDescription, format, customPrompt, slideIndex } = await req.json();
+    const { serviceId, serviceName, serviceDescription, format, customPrompt, slideIndex, existingBackgroundUrl } = await req.json();
 
     if (!serviceName || !format || !FORMAT_DIMENSIONS[format]) {
       return new Response(JSON.stringify({ error: "Parâmetros inválidos" }), {
@@ -64,57 +64,66 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
-    // 1. Gerar imagem de fundo (sem texto — texto será sobreposto pelo editor)
-    const imagePrompt = customPrompt || `Luxurious aesthetic spa/clinic background for "${serviceName}". ${serviceDescription || ""}. Style: elegant, premium, marsala (#58101b) and gold accents, soft lighting, blurred bokeh, marble or silk textures, sophisticated minimalism. ${FORMAT_DIMENSIONS[format]}. NO TEXT, NO LOGOS, NO PEOPLE FACES — only ambient background suitable for overlaying text on top. Professional editorial quality.`;
+    let backgroundUrl = "";
+    let imagePrompt = "";
 
-    const imageResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: imagePrompt }],
-        modalities: ["image", "text"],
-      }),
-    });
+    if (existingBackgroundUrl) {
+      // Pular IA — usar imagem cadastrada do procedimento como fundo direto
+      backgroundUrl = existingBackgroundUrl;
+      imagePrompt = "Imagem do procedimento cadastrada manualmente";
+    } else {
+      // 1. Gerar imagem de fundo via IA (sem texto — texto será sobreposto pelo editor)
+      imagePrompt = customPrompt || `Luxurious aesthetic spa/clinic background for "${serviceName}". ${serviceDescription || ""}. Style: elegant, premium, marsala (#58101b) and gold accents, soft lighting, blurred bokeh, marble or silk textures, sophisticated minimalism. ${FORMAT_DIMENSIONS[format]}. NO TEXT, NO LOGOS, NO PEOPLE FACES — only ambient background suitable for overlaying text on top. Professional editorial quality.`;
 
-    if (!imageResp.ok) {
-      const errText = await imageResp.text();
-      console.error("Image gen error:", imageResp.status, errText);
-      if (imageResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de uso atingido. Tente novamente em alguns minutos." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const imageResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-image",
+          messages: [{ role: "user", content: imagePrompt }],
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!imageResp.ok) {
+        const errText = await imageResp.text();
+        console.error("Image gen error:", imageResp.status, errText);
+        if (imageResp.status === 429) {
+          return new Response(JSON.stringify({ error: "Limite de uso atingido. Tente novamente em alguns minutos." }), {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (imageResp.status === 402) {
+          return new Response(JSON.stringify({ error: "Créditos esgotados. Adicione créditos no workspace Lovable." }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw new Error("Falha ao gerar imagem");
       }
-      if (imageResp.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos esgotados. Adicione créditos no workspace Lovable." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error("Falha ao gerar imagem");
+
+      const imageData = await imageResp.json();
+      const base64Url = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!base64Url) throw new Error("Imagem não retornada pela IA");
+
+      // 2. Upload para storage
+      const base64 = base64Url.split(",")[1];
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const fileName = `${format}/${Date.now()}-${crypto.randomUUID()}.png`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("artworks")
+        .upload(fileName, bytes, { contentType: "image/png", upsert: false });
+
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage.from("artworks").getPublicUrl(fileName);
+      backgroundUrl = urlData.publicUrl;
     }
-
-    const imageData = await imageResp.json();
-    const base64Url = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    if (!base64Url) throw new Error("Imagem não retornada pela IA");
-
-    // 2. Upload para storage
-    const base64 = base64Url.split(",")[1];
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const fileName = `${format}/${Date.now()}-${crypto.randomUUID()}.png`;
-
-    const { error: uploadErr } = await supabase.storage
-      .from("artworks")
-      .upload(fileName, bytes, { contentType: "image/png", upsert: false });
-
-    if (uploadErr) throw uploadErr;
-
-    const { data: urlData } = supabase.storage.from("artworks").getPublicUrl(fileName);
-    const backgroundUrl = urlData.publicUrl;
 
     // 3. Gerar legenda + hashtags
     const captionResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

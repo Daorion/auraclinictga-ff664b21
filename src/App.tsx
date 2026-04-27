@@ -13,6 +13,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminServicos from "./pages/admin/AdminServicos";
+import AdminImagens from "./pages/admin/AdminImagens";
 import AdminGerador from "./pages/admin/AdminGerador";
 import AdminHistorico from "./pages/admin/AdminHistorico";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="servicos" element={<AdminServicos />} />
+              <Route path="imagens" element={<AdminImagens />} />
               <Route path="gerador" element={<AdminGerador />} />
               <Route path="historico" element={<AdminHistorico />} />
             </Route>
