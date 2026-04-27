@@ -380,10 +380,22 @@ const AdminGerador = () => {
               <button
                 key={s.id}
                 onClick={() => setSelectedService(s)}
-                className={`text-left p-3 rounded-lg border transition-colors ${selectedService?.id === s.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted"}`}
+                className={`text-left p-3 rounded-lg border transition-colors relative ${selectedService?.id === s.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted"}`}
               >
-                <p className="font-medium text-sm">{s.name}</p>
-                {s.category && <p className="text-xs text-muted-foreground mt-0.5">{s.category}</p>}
+                <div className="flex items-start gap-2">
+                  {s.image_url && (
+                    <img src={s.image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{s.name}</p>
+                    {s.category && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.category}</p>}
+                    {s.image_url ? (
+                      <span className="text-[10px] text-primary uppercase tracking-wider">Imagem própria</span>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Fundo por IA</span>
+                    )}
+                  </div>
+                </div>
               </button>
             ))}
             {services.length === 0 && (
