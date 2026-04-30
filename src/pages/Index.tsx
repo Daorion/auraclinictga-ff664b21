@@ -42,34 +42,34 @@ const Index = () => {
 
   const depoimentos = [
     {
-      nome: 'Mariana S.',
-      texto: 'Simplesmente a melhor clínica de Tangará! Ambiente sofisticado, atendimento impecável e profissionais extremamente qualificadas. Saí me sentindo outra mulher.',
-      servico: 'Harmonização Facial',
+      nome: 'Willian Garcia',
+      texto: 'Clínica maravilhosa, um ambiente lindo, um atendimento incrível, as meninas super profissionais! E a qualidade do serviço impecável! Super indicado AURA Clinic.',
+      servico: 'Avaliação Google',
     },
     {
-      nome: 'Patrícia L.',
-      texto: 'O carinho e o cuidado de toda equipe é único. Cada detalhe é pensado para o bem-estar do cliente. Virei cliente de casa, recomendo de olhos fechados!',
-      servico: 'Tratamentos Faciais',
+      nome: 'Liliam Albuquerque',
+      texto: 'A Sirlei e a Flor são simplesmente espetaculares. Profissionais competentes e cuidadosas. Saí de lá super leve. Local super limpo, amplo e aconchegante. Tratamento VIP.',
+      servico: 'Avaliação Google',
     },
     {
-      nome: 'Renata M.',
-      texto: 'Lugar lindo, sofisticado e acolhedor. Cada visita é uma experiência completa de beleza e bem-estar. Os resultados falam por si.',
-      servico: 'Estética Avançada',
+      nome: 'Romualdo Dias',
+      texto: 'Já fiz tratamento para emagrecer em vários lugares, mas com a Sirlei e a Luana está sendo incrível. A cada sessão um resultado alcançado. Super recomendo.',
+      servico: 'Emagrecimento',
     },
     {
-      nome: 'Camila R.',
-      texto: 'Estrutura impecável, profissionais qualificadíssimas e resultado surpreendente. A Aura Clinic superou todas as minhas expectativas!',
-      servico: 'Bioestimulador',
+      nome: 'Renata Gonçalves',
+      texto: 'Um lugar maravilhoso e aconchegante, fui muito bem recebida e satisfeita com os procedimentos realizados aqui no estúdio! Super indico!',
+      servico: 'Avaliação Google',
     },
     {
-      nome: 'Juliana A.',
-      texto: 'Atendimento de altíssimo nível! Me senti em uma clínica de São Paulo. As profissionais são atualizadíssimas com as melhores técnicas do mercado.',
-      servico: 'Botox',
+      nome: 'Gislaine Santos',
+      texto: 'Experiência maravilhosa!! Excelentes profissionais, lugar aconchegante. Ameiii!!!! Super indico!',
+      servico: 'Avaliação Google',
     },
     {
-      nome: 'Fernanda B.',
-      texto: 'Indico de coração! Equipe atenciosa, ambiente sofisticado e resultados naturais. Não troco a Aura Clinic por nenhuma outra em Tangará.',
-      servico: 'Limpeza de Pele',
+      nome: 'Gustavo',
+      texto: 'Ambiente clean, recém reformado, com um atendimento incrível.',
+      servico: 'Avaliação Google',
     },
   ];
 
