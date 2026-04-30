@@ -1,0 +1,1 @@
+DELETE FROM services WHERE professional_slug = 'camila' OR professional_name ILIKE '%camila ferraz%';

@@ -276,9 +276,9 @@ export const profissionaisData: ProfissionalData[] = [
     id: 'luana',
     nome: 'Dra. Luana Glatz',
     especialidade: 'Biomédica',
-    descricao: 'Especialista em tratamentos inovadores de emagrecimento com Tirzepatida, rejuvenescimento facial com Botox e terapias avançadas.',
+    descricao: 'Biomédica pós-graduada em Estética Avançada, especializada em procedimentos injetáveis, emagrecimento e contorno corporal com abordagem personalizada.',
     destaque: true,
-    bio: 'Profissional com expertise em tratamentos faciais e corporais de alta performance. Especializada em protocolos de emagrecimento com Tirzepatida (Mounjaro®), rejuvenescimento facial com toxina botulínica, microagulhamento e terapias estéticas avançadas. Oferece acompanhamento personalizado focado em resultados reais e transformadores.',
+    bio: 'Com cerca de seis anos de atuação na estética, Luana é biomédica e pós-graduada em Estética Avançada, unindo conhecimento científico à prática clínica para resultados seguros e naturais. Atua com procedimentos injetáveis e protocolos para emagrecimento e contorno corporal, incluindo toxina botulínica, enzimas, PEIM e eletroterapia, sempre com abordagem personalizada. Seu trabalho valoriza a harmonia facial e corporal de forma equilibrada, acompanhando a evolução da estética com técnicas modernas e um olhar refinado para a beleza natural.',
     experiencia: '6+ anos de experiência',
     imagem: '/assets/profissionais/luana.jpg',
     secaoServicos: [
@@ -415,27 +415,6 @@ export const profissionaisData: ProfissionalData[] = [
       }
     ]
   },
-  {
-    id: 'camila',
-    nome: 'Camila Ferraz',
-    especialidade: 'Fisioterapeuta',
-    descricao: 'Fisioterapeuta especializada em tratamentos corporais e reabilitação estética.',
-    destaque: false,
-    bio: 'Fisioterapeuta com foco em tratamentos corporais, reabilitação e estética funcional.',
-    experiencia: '',
-    imagem: '/assets/profissionais/camila.jpg',
-    secaoServicos: [
-      {
-        categoria: 'Fisioterapia Estética',
-        servicos: [
-          {
-            titulo: 'Fisioterapia Dermato-Funcional',
-            descricao: 'Tratamentos fisioterapêuticos voltados para estética e funcionalidade corporal.'
-          }
-        ]
-      }
-    ]
-  }
 ];
 
 export const getProfissionalById = (id: string): ProfissionalData | undefined => {
