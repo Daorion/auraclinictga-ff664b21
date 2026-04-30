@@ -425,6 +425,52 @@ export const profissionaisData: ProfissionalData[] = [
       }
     ]
   },
+  {
+    id: 'camila',
+    nome: 'Camila Ferraz',
+    especialidade: 'Fisioterapeuta Estética',
+    descricao: 'Fisioterapeuta estética especializada em refinamento corporal, tratamentos faciais avançados e drenagem linfática manual.',
+    destaque: false,
+    bio: 'Fisioterapeuta com formação em estética avançada, Camila une o conhecimento técnico da fisioterapia à expertise em procedimentos estéticos. Atua com refinamento corporal, tratamentos faciais e drenagem linfática manual, sempre com abordagem personalizada e foco em resultados naturais e seguros.',
+    experiencia: 'Fisioterapeuta Estética',
+    imagem: '/assets/profissionais/camila.jpg',
+    secaoServicos: [
+      {
+        categoria: 'Tratamentos Corporais',
+        servicos: [
+          {
+            titulo: 'Refinamento Corporal',
+            descricao: 'Protocolo personalizado para modelagem e definição do contorno corporal, combinando técnicas manuais e tecnologias para resultados visíveis e duradouros.'
+          },
+          {
+            titulo: 'Drenagem Linfática Manual',
+            descricao: 'Técnica suave e rítmica que ativa o sistema linfático, combatendo inchaços, retenção de líquidos e toxinas. Promove leveza, definição e bem-estar corporal.'
+          },
+          {
+            titulo: 'Secagem de Vasinhos',
+            descricao: 'Tratamento injetável para eliminação de vasinhos e telangiectasias nas pernas, devolvendo a uniformidade e beleza da pele.'
+          }
+        ]
+      },
+      {
+        categoria: 'Tratamentos Faciais',
+        servicos: [
+          {
+            titulo: 'Limpeza de Pele',
+            descricao: 'Limpeza profunda que remove cravos, impurezas e células mortas, desobstruindo poros e deixando a pele renovada, saudável e pronta para absorver tratamentos.'
+          },
+          {
+            titulo: 'Microagulhamento Facial',
+            descricao: 'Estimulação do colágeno através de microperfurações controladas. Melhora a textura da pele, atenua cicatrizes, manchas e sinais de envelhecimento.'
+          },
+          {
+            titulo: 'Bioestimulador de Colágeno',
+            descricao: 'Estímulo natural à produção de colágeno para firmeza, sustentação e rejuvenescimento da pele, com resultados progressivos e duradouros.'
+          }
+        ]
+      }
+    ]
+  },
 ];
 
 export const getProfissionalById = (id: string): ProfissionalData | undefined => {
