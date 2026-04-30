@@ -156,24 +156,25 @@ const SlideContent = ({
             transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s',
           }}
         >
-          <p className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[#CCB8A6] mb-5">
+          <p className="text-[10px] font-semibold tracking-[0.3em] uppercase mb-5" style={{ color: 'hsl(28 55% 42%)' }}>
             {slide.especialidade}
           </p>
 
           <h1
-            className="text-[clamp(3rem,5vw,4.5rem)] font-bold text-white leading-[0.9] tracking-[-0.03em] mb-4"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            className="text-[clamp(3rem,5vw,4.5rem)] font-bold leading-[0.9] tracking-[-0.03em] mb-4"
+            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: 'hsl(351 86% 14%)' }}
           >
             {slide.nome}
           </h1>
 
-          <p className="text-[11px] text-white/40 font-medium tracking-[0.15em] uppercase mb-8">
+          <p className="text-[11px] font-medium tracking-[0.15em] uppercase mb-8" style={{ color: 'hsl(351 86% 14% / 0.45)' }}>
             {slide.experiencia} · {slide.totalServicos} procedimentos
           </p>
 
           <p
-            className="text-[13.5px] text-white/60 leading-[1.8] mb-10 max-w-[420px]"
+            className="text-[13.5px] leading-[1.8] mb-10 max-w-[420px]"
             style={{
+              color: 'hsl(351 30% 22% / 0.78)',
               opacity: visible ? 1 : 0,
               transform: visible ? 'translateY(0)' : 'translateY(16px)',
               transition: 'all 1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s',
@@ -182,9 +183,9 @@ const SlideContent = ({
             {slide.bio}
           </p>
 
-          <div className="w-8 h-[1px] bg-white/10 mb-7" />
+          <div className="w-8 h-[1px] mb-7" style={{ background: 'hsl(351 86% 14% / 0.2)' }} />
 
-          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase text-white/30 mb-4">
+          <p className="text-[9px] font-semibold tracking-[0.3em] uppercase mb-4" style={{ color: 'hsl(351 86% 14% / 0.5)' }}>
             Principais serviços
           </p>
 
@@ -199,8 +200,8 @@ const SlideContent = ({
                   transition: `all 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${600 + i * 100}ms`,
                 }}
               >
-                <div className="w-1 h-1 rounded-full bg-[#CCB8A6]/60" />
-                <p className="text-[11.5px] text-white/70 font-medium">{titulo}</p>
+                <div className="w-1 h-1 rounded-full" style={{ background: 'hsl(28 55% 42%)' }} />
+                <p className="text-[11.5px] font-medium" style={{ color: 'hsl(351 40% 22% / 0.85)' }}>{titulo}</p>
               </div>
             ))}
           </div>
@@ -215,7 +216,8 @@ const SlideContent = ({
             {slide.categorias.map((cat, i) => (
               <span
                 key={i}
-                className="text-[8px] tracking-[0.15em] uppercase text-white/25 font-medium px-3 py-1 rounded-full border border-white/[0.08]"
+                className="text-[8px] tracking-[0.15em] uppercase font-medium px-3 py-1 rounded-full"
+                style={{ color: 'hsl(351 86% 14% / 0.55)', border: '1px solid hsl(351 86% 14% / 0.15)' }}
               >
                 {cat}
               </span>
