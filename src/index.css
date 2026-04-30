@@ -6,58 +6,58 @@
 
 @layer base {
   :root {
-    /* Brand palette:
-       #59101C vinho escuro  → 352 70% 21%
-       #CCB8A6 bege quente   → 30 24% 73%
-       #D1C7BD bege claro    → 32 15% 78%
-       #EAE4DF off-white     → 30 16% 90%
+    /* Brand palette (suavizada — marsala mais leve e elegante):
+       Marsala suave  → 352 38% 34%
+       Bege quente    → 30 24% 73%
+       Bege claro     → 32 15% 78%
+       Off-white      → 30 16% 90%
     */
-    --primary: 352 70% 21%;
-    --primary-foreground: 30 16% 95%;
+    --primary: 352 38% 34%;
+    --primary-foreground: 30 16% 96%;
 
     --secondary: 30 24% 73%;
-    --secondary-foreground: 352 70% 21%;
+    --secondary-foreground: 352 38% 34%;
 
     --tertiary: 32 15% 78%;
-    --tertiary-foreground: 352 70% 21%;
+    --tertiary-foreground: 352 38% 34%;
 
     --quaternary: 30 16% 90%;
-    --quaternary-foreground: 352 70% 21%;
+    --quaternary-foreground: 352 38% 34%;
 
-    --background: 30 16% 95%;
-    --foreground: 352 40% 14%;
+    --background: 30 16% 96%;
+    --foreground: 352 25% 22%;
 
     --card: 30 20% 98%;
-    --card-foreground: 352 40% 14%;
+    --card-foreground: 352 25% 22%;
 
     --popover: 30 20% 98%;
-    --popover-foreground: 352 40% 14%;
+    --popover-foreground: 352 25% 22%;
 
-    --muted: 30 16% 90%;
-    --muted-foreground: 352 15% 35%;
+    --muted: 30 16% 92%;
+    --muted-foreground: 352 12% 42%;
 
     --accent: 30 24% 73%;
-    --accent-foreground: 352 70% 21%;
+    --accent-foreground: 352 38% 34%;
 
-    --destructive: 0 70% 45%;
-    --destructive-foreground: 30 16% 95%;
+    --destructive: 0 60% 48%;
+    --destructive-foreground: 30 16% 96%;
 
-    --border: 32 15% 78%;
-    --input: 30 16% 90%;
-    --ring: 352 70% 21%;
+    --border: 32 15% 80%;
+    --input: 30 16% 92%;
+    --ring: 352 38% 34%;
 
     /* "Gold" token kept for compatibility — mapped to warm beige accent */
-    --gold: 30 24% 73%;
-    --gold-foreground: 352 70% 21%;
+    --gold: 30 28% 70%;
+    --gold-foreground: 352 38% 34%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(352 70% 21%), hsl(352 60% 28%));
-    --gradient-elegant: linear-gradient(180deg, hsl(30 16% 95%), hsl(32 15% 88%));
-    --gradient-hero: linear-gradient(135deg, hsl(352 70% 14% / 0.88), hsl(352 55% 20% / 0.78));
-    --gradient-gold: linear-gradient(135deg, hsl(30 24% 73%), hsl(32 28% 82%));
+    --gradient-primary: linear-gradient(135deg, hsl(352 38% 34%), hsl(352 32% 42%));
+    --gradient-elegant: linear-gradient(180deg, hsl(30 16% 96%), hsl(32 15% 90%));
+    --gradient-hero: linear-gradient(135deg, hsl(352 35% 22% / 0.78), hsl(352 30% 32% / 0.68));
+    --gradient-gold: linear-gradient(135deg, hsl(30 28% 70%), hsl(32 32% 80%));
 
-    --shadow-elegant: 0 4px 20px -6px hsl(352 70% 21% / 0.18);
-    --shadow-card: 0 1px 3px 0 hsl(352 40% 14% / 0.06), 0 1px 2px -1px hsl(352 40% 14% / 0.04);
-    --shadow-glow: 0 0 30px hsl(352 70% 21% / 0.15);
+    --shadow-elegant: 0 4px 20px -6px hsl(352 38% 34% / 0.14);
+    --shadow-card: 0 1px 3px 0 hsl(352 25% 22% / 0.05), 0 1px 2px -1px hsl(352 25% 22% / 0.03);
+    --shadow-glow: 0 0 30px hsl(352 38% 34% / 0.12);
 
     --radius: 0.75rem;
 
