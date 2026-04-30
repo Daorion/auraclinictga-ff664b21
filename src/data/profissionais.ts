@@ -362,11 +362,11 @@ export const profissionaisData: ProfissionalData[] = [
   {
     id: 'tatynara',
     nome: 'Tatynara Puka',
-    especialidade: 'Especialista em Micropigmentação e Design Facial',
-    descricao: 'Especialista em micropigmentação fio a fio, efeito henna, fios e sombra, micropigmentação labial e nos olhos, além de design de sobrancelhas.',
-    destaque: false,
-    bio: 'Micropigmentadora especializada em técnicas avançadas de sobrancelhas e lábios. Oferece resultados naturais e duradouros com pigmentos de alta qualidade e equipamentos de última geração.',
-    experiencia: '5+ anos de experiência',
+    especialidade: 'Especialista em Dermopigmentação de Alta Performance',
+    descricao: 'Referência em dermopigmentação de alta performance, com 12 anos de trajetória e mais de 19 certificações nacionais e internacionais em Colorimetria e Micropigmentação Avançada.',
+    destaque: true,
+    bio: 'Com 12 anos de trajetória dedicada à beleza e autoestima, Tatynara Puka é referência em dermopigmentação de alta performance. Com mais de 19 certificações nacionais e internacionais em áreas cruciais como Colorimetria e Micropigmentação Avançada, Tatynara une o domínio técnico à ciência da regeneração. Especialista em procedimentos que realçam a beleza natural, seu portfólio inclui Micropigmentação Labial, de Olhos e Design de Sobrancelhas. Atualmente, destaca-se na vanguarda do mercado com a Royal Exo Therapy, uma terapia regenerativa folicular pioneira para a reconstrução e saúde dos fios. Seu compromisso é entregar resultados personalizados, seguros e sofisticados para cada cliente.',
+    experiencia: '12+ anos de experiência',
     imagem: '/assets/profissionais/tatynara.png',
     secaoServicos: [
       {
