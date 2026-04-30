@@ -236,12 +236,12 @@ const ProfissionalDetail = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { text: 'A Sirlei tem mãos abençoadas! A massagem modeladora dela é simplesmente perfeita, perdi medidas e me sinto outra pessoa. Atendimento humanizado e ambiente impecável.', name: 'A.C.', type: 'Massagem Modeladora' },
-                  { text: 'Faço drenagem linfática com a Sirlei há meses e o resultado é incrível. Ela é extremamente profissional, atenciosa e domina cada técnica que aplica. Indico de olhos fechados!', name: 'L.M.', type: 'Drenagem Linfática' },
-                  { text: 'A massagem com pedras quentes da Sirlei é uma experiência única. Saio relaxada, leve e renovada. Sem dúvida a melhor massoterapeuta de Tangará da Serra.', name: 'B.S.', type: 'Pedras Quentes' },
-                  { text: 'Fiz pós-operatório com a Sirlei e a recuperação foi muito mais rápida e tranquila. Profissional dedicada, técnica impecável e cuidado em cada detalhe. Gratidão!', name: 'D.R.', type: 'Pós-operatório' },
-                  { text: 'A radiofrequência e o protocolo de glúteos transformaram meu corpo e minha autoestima. A Sirlei entende muito do que faz e personaliza tudo para cada cliente.', name: 'F.O.', type: 'PAMP Glúteos' },
-                  { text: 'Nunca tinha feito limpeza de pele com tanto carinho e cuidado. A Sirlei é uma profissional completa, recomendo todos os serviços dela de coração!', name: 'V.T.', type: 'Limpeza de Pele' },
+                  { text: 'Sirlei é uma mulher incrível tanto no profissional quanto no pessoal. Seu atendimento é maravilhoso, seu profissionalismo é ótimo, uma pessoa que sabe o que faz.', name: 'Jose Renato Rodrigues', type: 'Avaliação Google' },
+                  { text: 'As melhores massagens que já recebi na vida. Mãos mágicas. Recomendo muito as massagens, prometo que você não vai se arrepender. Aproveite!', name: 'Cyril Derreumaux', type: 'Massagem' },
+                  { text: 'A Sirlei e a Flor são simplesmente espetaculares. Profissionais competentes e cuidadosas. Saí de lá super leve. Local super limpo, amplo e aconchegante. Tratamento VIP.', name: 'Liliam Albuquerque', type: 'Massoterapia' },
+                  { text: 'Já fiz tratamento para emagrecer em vários lugares, mas com a Sirlei e a Luana está sendo incrível. A cada sessão um resultado alcançado. Super recomendo.', name: 'Romualdo Dias', type: 'Emagrecimento' },
+                  { text: 'A massagem foi incrível, você tem mãos de fada. Recomendo a todos que precisam relaxar e cuidar da saúde.', name: 'Magali Soletti', type: 'Massagem Relaxante' },
+                  { text: 'Penso que todo mundo deveria ter uma massoterapeuta na vida!! Estou amando, a profissional, os resultados...', name: 'Jakeline Silva Alves', type: 'Massoterapia' },
                 ].map((t, i) => (
                   <div key={i} className="p-6 rounded-xl bg-card border border-border/50">
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">"{t.text}"</p>
