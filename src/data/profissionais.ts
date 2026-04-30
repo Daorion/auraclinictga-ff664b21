@@ -316,64 +316,6 @@ export const profissionaisData: ProfissionalData[] = [
     ]
   },
   {
-    id: 'rayka',
-    nome: 'Rayka Guedes',
-    especialidade: 'Lash Designer',
-    descricao: 'Extensão de cílios em diversos volumes para um olhar mais marcante e natural.',
-    destaque: false,
-    bio: 'Especialista em extensão de cílios com técnicas que garantem naturalidade e durabilidade.',
-    experiencia: '4+ anos de experiência',
-    imagem: '/assets/profissionais/rayka.jpg',
-    secaoServicos: [
-      {
-        categoria: 'Extensão de Cílios',
-        servicos: [
-          {
-            titulo: 'Volume Brasileiro',
-            descricao: 'Técnica brasileira que oferece volume e naturalidade perfeitos para um olhar marcante.'
-          },
-          {
-            titulo: 'Glamour/Egípcio',
-            descricao: 'Estilo glamouroso e sofisticado inspirado na beleza egípcia, com volume intenso e dramático.'
-          },
-          {
-            titulo: 'Hyper 30+',
-            descricao: 'Técnica de mega volume com mais de 30 fios por cílio natural, para resultado ultra volumoso.'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'geisiane',
-    nome: 'Dra. Geisiane Pereira',
-    especialidade: 'Biomédica',
-    descricao: 'Massagem MAF, limpeza de pele e tratamentos específicos para gordura e flacidez.',
-    destaque: false,
-    bio: 'Biomédica especializada em tratamentos corporais estéticos e funcionais.',
-    experiencia: '9+ anos de experiência',
-    imagem: '/assets/profissionais/geisiane.jpg',
-    secaoServicos: [
-      {
-        categoria: 'Tratamentos Corporais Avançados',
-        servicos: [
-          {
-            titulo: 'Massagem MAF',
-            descricao: 'É uma técnica de drenagem linfática manual que combina manobras específicas com alongamentos, posturas e respirações. Seus benefícios incluem a redução de inchaço, celulite e medidas, além de promover relaxamento, melhorar a circulação sanguínea e intestinal e auxiliar na cicatrização e imunidade.'
-          },
-          {
-            titulo: 'Tratamento para Gordura Localizada',
-            descricao: 'Protocolos específicos para redução de gordura localizada.'
-          },
-          {
-            titulo: 'Tratamento Anti-Flacidez',
-            descricao: 'Técnicas avançadas para firmeza e elasticidade da pele.'
-          }
-        ]
-      }
-    ]
-  },
-  {
     id: 'vanessa',
     nome: 'Dra. Vanessa Gregório',
     especialidade: 'Biomédica',
@@ -468,56 +410,6 @@ export const profissionaisData: ProfissionalData[] = [
           {
             titulo: 'Design com Henna',
             descricao: 'Design completo com aplicação de henna para realçar e definir as sobrancelhas. Cor natural e suave com duração de até 4 semanas.'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'nilce',
-    nome: 'Nilce Lopez',
-    especialidade: 'Cabelo',
-    descricao: 'Especialista em cortes, coloração e tratamentos capilares.',
-    destaque: false,
-    bio: 'Profissional dedicada à arte capilar, oferecendo cortes modernos, coloração personalizada e tratamentos para saúde dos fios.',
-    experiencia: '',
-    imagem: '/assets/profissionais/nilce.jpg',
-    secaoServicos: [
-      {
-        categoria: 'Serviços Capilares',
-        servicos: [
-          {
-            titulo: 'Corte Feminino',
-            descricao: 'Cortes personalizados que valorizam o formato do rosto e estilo pessoal.'
-          },
-          {
-            titulo: 'Coloração',
-            descricao: 'Técnicas de coloração modernas para um visual renovado e natural.'
-          },
-          {
-            titulo: 'Tratamentos Capilares',
-            descricao: 'Tratamentos para recuperação e saúde dos fios.'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'zilma',
-    nome: 'Zilma Dias',
-    especialidade: 'Afrodite',
-    descricao: 'Especialista em tratamentos estéticos e bem-estar.',
-    destaque: false,
-    bio: 'Profissional especializada em cuidados estéticos e protocolos de beleza.',
-    experiencia: '',
-    imagem: '/assets/profissionais/zilma.jpg',
-    secaoServicos: [
-      {
-        categoria: 'Tratamentos Estéticos',
-        servicos: [
-          {
-            titulo: 'Tratamentos de Beleza',
-            descricao: 'Protocolos personalizados para realçar a beleza natural.'
           }
         ]
       }
