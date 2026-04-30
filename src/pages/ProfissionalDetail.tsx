@@ -86,18 +86,54 @@ const ProfissionalDetail = () => {
             </div>
           )}
 
-          {/* Luana Special Banner */}
-          {profissional.id === 'luana' && (
-            <div className="mb-16 rounded-2xl bg-primary p-10 text-center">
-              <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-primary-foreground/60 mb-3">Tratamentos Premium</p>
-              <h2 className="text-3xl font-semibold text-primary-foreground mb-3">
-                Transformação com Ciência e Técnica
-              </h2>
-              <p className="text-sm text-primary-foreground/70 max-w-lg mx-auto font-light">
-                Emagrecimento com Tirzepatida e rejuvenescimento facial com Botox. Resultados comprovados.
-              </p>
-            </div>
-          )}
+          {/* Premium Banner - per professional */}
+          {(() => {
+            const banners: Record<string, { eyebrow: string; title: string; desc: string }> = {
+              luana: {
+                eyebrow: 'Tratamentos Premium',
+                title: 'Transformação com Ciência e Técnica',
+                desc: 'Emagrecimento com Tirzepatida e rejuvenescimento facial com Botox. Resultados comprovados.',
+              },
+              vanessa: {
+                eyebrow: 'Estética Avançada',
+                title: 'Harmonização Facial e Corporal de Alta Performance',
+                desc: 'Botox, preenchimentos, bioestimuladores, lasers e protocolos corporais com técnicas modernas e seguras.',
+              },
+              sirlei: {
+                eyebrow: 'Massoterapia & Estética',
+                title: 'Bem-estar e Beleza em Cada Toque',
+                desc: 'Mais de 30 técnicas entre massagens relaxantes, terapêuticas, modeladoras e tratamentos faciais e corporais.',
+              },
+              tatynara: {
+                eyebrow: 'Dermopigmentação Premium',
+                title: 'Beleza Natural com Alta Performance',
+                desc: '12 anos de trajetória, +19 certificações e a exclusiva Royal Exo Therapy — terapia regenerativa folicular pioneira.',
+              },
+              cleia: {
+                eyebrow: 'Cuidado & Modelagem',
+                title: 'Corpo e Pele em Equilíbrio',
+                desc: 'Massagens terapêuticas, modeladora turbinada e tratamentos estéticos com técnicas diversificadas.',
+              },
+              simone: {
+                eyebrow: 'Unhas & Sobrancelhas',
+                title: 'Detalhes que Realçam a sua Beleza',
+                desc: 'Alongamento em gel, esmaltação duradoura e design de sobrancelhas personalizado para o seu rosto.',
+              },
+            };
+            const banner = banners[profissional.id];
+            if (!banner) return null;
+            return (
+              <div className="mb-16 rounded-2xl bg-primary p-10 text-center">
+                <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-primary-foreground/60 mb-3">{banner.eyebrow}</p>
+                <h2 className="text-3xl font-semibold text-primary-foreground mb-3">
+                  {banner.title}
+                </h2>
+                <p className="text-sm text-primary-foreground/70 max-w-lg mx-auto font-light">
+                  {banner.desc}
+                </p>
+              </div>
+            );
+          })()}
 
           {/* Services */}
           <div className="space-y-12">
