@@ -119,6 +119,11 @@ const ProfissionalDetail = () => {
                 title: 'Detalhes que Realçam a sua Beleza',
                 desc: 'Alongamento em gel, esmaltação duradoura e design de sobrancelhas personalizado para o seu rosto.',
               },
+              camila: {
+                eyebrow: 'Fisioterapia Estética',
+                title: 'Refinamento Corporal e Cuidado Facial',
+                desc: 'Drenagem linfática, refinamento corporal, microagulhamento, bioestimulador e protocolos faciais personalizados.',
+              },
             };
             const banner = banners[profissional.id];
             if (!banner) return null;
