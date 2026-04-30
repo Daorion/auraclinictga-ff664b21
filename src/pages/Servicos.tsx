@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { profissionaisData } from '@/data/profissionais';
 import auraLogo from '@/assets/aura-logo.png';
 
+const DURATION = 10000;          // tempo total de cada slide (ms)
+const TRANSITION_DURATION = 1800; // crossfade (ms)
+
 const Servicos = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [nextSlide, setNextSlide] = useState<number | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [progress, setProgress] = useState(0);
   const rafRef = useRef<number>(0);
-
-  const DURATION = 10000;
-  const TRANSITION_DURATION = 1500;
+  const slideStartRef = useRef<number>(Date.now());
 
   const slides = profissionaisData.map(prof => ({
     nome: prof.nome,
@@ -23,51 +24,66 @@ const Servicos = () => {
     destaques: prof.secaoServicos.flatMap(s => s.servicos.map(sv => sv.titulo)).slice(0, 6),
   }));
 
-  // Progress bar
+  // Preload all images once to avoid pop-in during crossfade
   useEffect(() => {
-    if (transitioning) return;
+    slides.forEach(s => {
+      const img = new Image();
+      img.src = s.imagem;
+    });
+  }, []);
+
+  // Single RAF loop drives both progress bar and Ken Burns (continuous, no jump)
+  useEffect(() => {
+    slideStartRef.current = Date.now();
     setProgress(0);
-    const start = Date.now();
     const frame = () => {
-      const p = Math.min((Date.now() - start) / DURATION, 1);
+      const p = Math.min((Date.now() - slideStartRef.current) / DURATION, 1);
       setProgress(p);
-      if (p < 1) rafRef.current = requestAnimationFrame(frame);
+      rafRef.current = requestAnimationFrame(frame);
     };
     rafRef.current = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [currentSlide, transitioning]);
+  }, [currentSlide]);
 
   // Auto advance with crossfade
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
       const next = (currentSlide + 1) % slides.length;
       setNextSlide(next);
-      setTransitioning(true);
+      // start crossfade on next frame so the incoming layer mounts at opacity 0
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setTransitioning(true));
+      });
 
-      setTimeout(() => {
+      const swap = setTimeout(() => {
         setCurrentSlide(next);
         setNextSlide(null);
         setTransitioning(false);
       }, TRANSITION_DURATION);
+
+      return () => clearTimeout(swap);
     }, DURATION);
-    return () => clearInterval(timer);
+    return () => clearTimeout(timer);
   }, [currentSlide, slides.length]);
 
   const current = slides[currentSlide];
   const upcoming = nextSlide !== null ? slides[nextSlide] : null;
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative" style={{ background: 'linear-gradient(160deg, hsl(36 40% 94%), hsl(34 35% 90%), hsl(32 38% 92%))' }}>
-
+    <div
+      className="h-screen w-screen overflow-hidden relative"
+      style={{ background: 'linear-gradient(160deg, hsl(36 40% 94%), hsl(34 35% 90%), hsl(32 38% 92%))' }}
+    >
       {/* ── Current slide ── */}
       <div
         className="absolute inset-0 flex"
         style={{
           opacity: transitioning ? 0 : 1,
           transition: `opacity ${TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+          willChange: 'opacity',
         }}
       >
-        <SlideContent slide={current} progress={progress} visible={!transitioning} />
+        <SlideContent slide={current} progress={progress} entering={!transitioning} />
       </div>
 
       {/* ── Next slide (crossfade in) ── */}
@@ -77,9 +93,11 @@ const Servicos = () => {
           style={{
             opacity: transitioning ? 1 : 0,
             transition: `opacity ${TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            willChange: 'opacity',
           }}
         >
-          <SlideContent slide={upcoming} progress={0} visible={transitioning} />
+          {/* incoming slide: text starts visible (entering=true), Ken Burns from 0 */}
+          <SlideContent slide={upcoming} progress={0} entering={true} />
         </div>
       )}
 
@@ -105,6 +123,7 @@ const Servicos = () => {
                     background: 'hsl(351 86% 14% / 0.6)',
                     transform: `scaleX(${progress})`,
                     transformOrigin: 'left',
+                    willChange: 'transform',
                   }}
                 />
               )}
@@ -127,7 +146,7 @@ const Servicos = () => {
 const SlideContent = ({
   slide,
   progress,
-  visible,
+  entering,
 }: {
   slide: {
     nome: string;
@@ -140,10 +159,10 @@ const SlideContent = ({
     destaques: string[];
   };
   progress: number;
-  visible: boolean;
+  entering: boolean;
 }) => {
-  // Ken Burns: slow zoom from 1.0 → 1.08 over the slide duration
-  const kenBurnsScale = 1 + progress * 0.08;
+  // Ken Burns: smooth zoom from 1.02 → 1.10 over the slide duration
+  const kenBurnsScale = 1.02 + progress * 0.08;
 
   return (
     <>
@@ -151,9 +170,9 @@ const SlideContent = ({
       <div className="w-[50%] h-full flex flex-col justify-center px-14">
         <div
           style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s',
+            opacity: entering ? 1 : 0,
+            transform: entering ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s, transform 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s',
           }}
         >
           <p className="text-[10px] font-semibold tracking-[0.3em] uppercase mb-5" style={{ color: 'hsl(28 55% 42%)' }}>
@@ -173,12 +192,7 @@ const SlideContent = ({
 
           <p
             className="text-[13.5px] leading-[1.8] mb-10 max-w-[420px]"
-            style={{
-              color: 'hsl(351 30% 22% / 0.78)',
-              opacity: visible ? 1 : 0,
-              transform: visible ? 'translateY(0)' : 'translateY(16px)',
-              transition: 'all 1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s',
-            }}
+            style={{ color: 'hsl(351 30% 22% / 0.78)' }}
           >
             {slide.bio}
           </p>
@@ -191,28 +205,14 @@ const SlideContent = ({
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-2">
             {slide.destaques.map((titulo, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3"
-                style={{
-                  opacity: visible ? 1 : 0,
-                  transform: visible ? 'translateX(0)' : 'translateX(-16px)',
-                  transition: `all 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${600 + i * 100}ms`,
-                }}
-              >
+              <div key={i} className="flex items-center gap-3">
                 <div className="w-1 h-1 rounded-full" style={{ background: 'hsl(28 55% 42%)' }} />
                 <p className="text-[11.5px] font-medium" style={{ color: 'hsl(351 40% 22% / 0.85)' }}>{titulo}</p>
               </div>
             ))}
           </div>
 
-          <div
-            className="flex flex-wrap gap-2 mt-8"
-            style={{
-              opacity: visible ? 1 : 0,
-              transition: 'opacity 1s ease 1s',
-            }}
-          >
+          <div className="flex flex-wrap gap-2 mt-8">
             {slide.categorias.map((cat, i) => (
               <span
                 key={i}
@@ -228,21 +228,17 @@ const SlideContent = ({
 
       {/* Right photo with Ken Burns */}
       <div className="w-[50%] h-full p-5">
-        <div
-          className="w-full h-full rounded-[32px] overflow-hidden"
-          style={{
-            opacity: visible ? 1 : 0,
-            transition: `opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s`,
-          }}
-        >
+        <div className="w-full h-full rounded-[32px] overflow-hidden bg-[hsl(34_35%_88%)]">
           <img
             src={slide.imagem}
             alt={slide.nome}
             className="w-full h-full object-cover"
             style={{
               transform: `scale(${kenBurnsScale})`,
-              transition: 'none',
+              transformOrigin: 'center center',
+              willChange: 'transform',
             }}
+            draggable={false}
           />
         </div>
       </div>
