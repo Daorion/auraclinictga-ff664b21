@@ -226,7 +226,41 @@ const ProfissionalDetail = () => {
             </div>
           )}
 
-          {/* FAQ Tirzepatida - Luana */}
+          {/* Testimonials - Sirlei */}
+          {profissional.id === 'sirlei' && (
+            <div className="mt-16">
+              <div className="text-center mb-8">
+                <p className="text-xs font-medium tracking-[0.2em] uppercase text-muted-foreground mb-2">Depoimentos</p>
+                <h3 className="text-2xl font-semibold text-primary">O que dizem as clientes da Sirlei</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { text: 'A Sirlei tem mãos abençoadas! A massagem modeladora dela é simplesmente perfeita, perdi medidas e me sinto outra pessoa. Atendimento humanizado e ambiente impecável.', name: 'A.C.', type: 'Massagem Modeladora' },
+                  { text: 'Faço drenagem linfática com a Sirlei há meses e o resultado é incrível. Ela é extremamente profissional, atenciosa e domina cada técnica que aplica. Indico de olhos fechados!', name: 'L.M.', type: 'Drenagem Linfática' },
+                  { text: 'A massagem com pedras quentes da Sirlei é uma experiência única. Saio relaxada, leve e renovada. Sem dúvida a melhor massoterapeuta de Tangará da Serra.', name: 'B.S.', type: 'Pedras Quentes' },
+                  { text: 'Fiz pós-operatório com a Sirlei e a recuperação foi muito mais rápida e tranquila. Profissional dedicada, técnica impecável e cuidado em cada detalhe. Gratidão!', name: 'D.R.', type: 'Pós-operatório' },
+                  { text: 'A radiofrequência e o protocolo de glúteos transformaram meu corpo e minha autoestima. A Sirlei entende muito do que faz e personaliza tudo para cada cliente.', name: 'F.O.', type: 'PAMP Glúteos' },
+                  { text: 'Nunca tinha feito limpeza de pele com tanto carinho e cuidado. A Sirlei é uma profissional completa, recomendo todos os serviços dela de coração!', name: 'V.T.', type: 'Limpeza de Pele' },
+                ].map((t, i) => (
+                  <div key={i} className="p-6 rounded-xl bg-card border border-border/50">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">"{t.text}"</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                        <div className="flex gap-0.5 mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">{t.type}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {profissional.id === 'luana' && (
             <div className="mt-16">
               <div className="text-center mb-8">
