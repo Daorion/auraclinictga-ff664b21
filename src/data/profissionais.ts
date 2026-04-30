@@ -370,6 +370,16 @@ export const profissionaisData: ProfissionalData[] = [
     imagem: '/assets/profissionais/tatynara.png',
     secaoServicos: [
       {
+        categoria: 'Terapia Regenerativa Capilar',
+        servicos: [
+          {
+            titulo: 'Royal Exo Therapy',
+            descricao: 'Terapia regenerativa folicular pioneira para a reconstrução e saúde dos fios. Tratamento de vanguarda que atua na revitalização do couro cabeludo e na regeneração capilar, promovendo fios mais fortes, saudáveis e com vitalidade renovada. Procedimento exclusivo, seguro e personalizado.',
+            destaque: true
+          }
+        ]
+      },
+      {
         categoria: 'Micropigmentação de Sobrancelhas',
         servicos: [
           {
