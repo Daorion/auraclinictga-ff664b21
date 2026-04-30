@@ -57,7 +57,7 @@ const Servicos = () => {
   const upcoming = nextSlide !== null ? slides[nextSlide] : null;
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative" style={{ background: 'linear-gradient(160deg, hsl(351 86% 14%), hsl(351 70% 20%), hsl(351 86% 16%))' }}>
+    <div className="h-screen w-screen overflow-hidden relative" style={{ background: 'linear-gradient(160deg, hsl(36 40% 94%), hsl(34 35% 90%), hsl(32 38% 92%))' }}>
 
       {/* ── Current slide ── */}
       <div
@@ -85,7 +85,7 @@ const Servicos = () => {
 
       {/* ── Top bar (always visible) ── */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-12 pt-8">
-        <img src={auraLogo} alt="Aura Clinic" className="h-8" style={{ filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+        <img src={auraLogo} alt="Aura Clinic" className="h-8" style={{ opacity: 0.95 }} />
         <div className="flex items-center gap-1.5">
           {slides.map((_, i) => (
             <div
@@ -94,7 +94,7 @@ const Servicos = () => {
               style={{
                 width: i === currentSlide ? 36 : 6,
                 height: 3,
-                background: 'rgba(255, 255, 255, 0.15)',
+                background: 'hsl(351 86% 14% / 0.15)',
                 transition: 'width 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
               }}
             >
@@ -102,7 +102,7 @@ const Servicos = () => {
                 <div
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.5)',
+                    background: 'hsl(351 86% 14% / 0.6)',
                     transform: `scaleX(${progress})`,
                     transformOrigin: 'left',
                   }}
@@ -115,7 +115,7 @@ const Servicos = () => {
 
       {/* ── Bottom ── */}
       <div className="absolute bottom-0 left-0 right-0 z-20 px-12 pb-6">
-        <p className="text-[9px] text-white/20 tracking-[0.3em] uppercase font-medium">
+        <p className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: 'hsl(351 86% 14% / 0.35)' }}>
           Aura Clinic · Tangará da Serra
         </p>
       </div>
