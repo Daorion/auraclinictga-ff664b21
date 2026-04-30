@@ -384,20 +384,35 @@ export const profissionaisData: ProfissionalData[] = [
     imagem: '/assets/profissionais/vanessa.jpg',
     secaoServicos: [
       {
-        categoria: 'Harmonização Estética',
+        categoria: 'Tratamentos Faciais',
         servicos: [
-          {
-            titulo: 'Harmonização Facial',
-            descricao: 'Procedimentos para equilibrio e simetria facial.'
-          },
-          {
-            titulo: 'Harmonização Corporal',
-            descricao: 'Tratamentos para contorno e proporção corporal.'
-          },
-          {
-            titulo: 'Procedimentos Minimamente Invasivos',
-            descricao: 'Técnicas avançadas com recovery rápido.'
-          }
+          { titulo: 'Peeling', descricao: 'Renovação celular e melhora da textura da pele.' },
+          { titulo: 'Botox', descricao: 'Suavização de linhas de expressão e rugas.' },
+          { titulo: 'Preenchimento', descricao: 'Restauração de volume e contorno facial com ácido hialurônico.' },
+          { titulo: 'Bioestimulador de Colágeno', descricao: 'Estímulo natural à produção de colágeno para firmeza e rejuvenescimento.' },
+          { titulo: 'Jato de Plasma', descricao: 'Tecnologia avançada para rejuvenescimento e tratamento de imperfeições.' }
+        ]
+      },
+      {
+        categoria: 'Lasers & Tecnologias',
+        servicos: [
+          { titulo: 'Laser de CO2', descricao: 'Tratamento fracionado para renovação profunda da pele e cicatrizes.' },
+          { titulo: 'Depilação a Laser', descricao: 'Redução pelos com tecnologia segura e eficaz.' }
+        ]
+      },
+      {
+        categoria: 'Tratamentos Corporais',
+        servicos: [
+          { titulo: 'Criolipólise', descricao: 'Redução de gordura localizada por congelamento controlado.' },
+          { titulo: 'Aplicação de Enzimas', descricao: 'Tratamento injetável para gordura localizada.' },
+          { titulo: 'Aplicação de Pein', descricao: 'Tratamento injetável para vasinhos das pernas.' }
+        ]
+      },
+      {
+        categoria: 'Tratamentos Especiais',
+        servicos: [
+          { titulo: 'Tratamento Capilar', descricao: 'Protocolos para fortalecimento, queda e saúde do couro cabeludo.' },
+          { titulo: 'Tratamento Íntimo', descricao: 'Cuidados estéticos e funcionais da região íntima feminina.' }
         ]
       }
     ]
