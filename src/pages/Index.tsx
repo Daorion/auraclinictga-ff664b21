@@ -43,18 +43,33 @@ const Index = () => {
   const depoimentos = [
     {
       nome: 'Mariana S.',
-      texto: 'Saí da Aura Clinic me sentindo outra mulher. Atendimento impecável e resultado natural maravilhoso.',
+      texto: 'Simplesmente a melhor clínica de Tangará! Ambiente sofisticado, atendimento impecável e profissionais extremamente qualificadas. Saí me sentindo outra mulher.',
       servico: 'Harmonização Facial',
     },
     {
       nome: 'Patrícia L.',
-      texto: 'O carinho e o cuidado de toda equipe é único. Virei cliente de casa, recomendo de olhos fechados.',
+      texto: 'O carinho e o cuidado de toda equipe é único. Cada detalhe é pensado para o bem-estar do cliente. Virei cliente de casa, recomendo de olhos fechados!',
       servico: 'Tratamentos Faciais',
     },
     {
       nome: 'Renata M.',
-      texto: 'Lugar sofisticado, profissionais excelentes. Cada visita é uma experiência completa de bem-estar.',
-      servico: 'Massoterapia',
+      texto: 'Lugar lindo, sofisticado e acolhedor. Cada visita é uma experiência completa de beleza e bem-estar. Os resultados falam por si.',
+      servico: 'Estética Avançada',
+    },
+    {
+      nome: 'Camila R.',
+      texto: 'Estrutura impecável, profissionais qualificadíssimas e resultado surpreendente. A Aura Clinic superou todas as minhas expectativas!',
+      servico: 'Bioestimulador',
+    },
+    {
+      nome: 'Juliana A.',
+      texto: 'Atendimento de altíssimo nível! Me senti em uma clínica de São Paulo. As profissionais são atualizadíssimas com as melhores técnicas do mercado.',
+      servico: 'Botox',
+    },
+    {
+      nome: 'Fernanda B.',
+      texto: 'Indico de coração! Equipe atenciosa, ambiente sofisticado e resultados naturais. Não troco a Aura Clinic por nenhuma outra em Tangará.',
+      servico: 'Limpeza de Pele',
     },
   ];
 
