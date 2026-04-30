@@ -2,7 +2,6 @@ import Header from '@/components/Header';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProfissionaisBasicos } from '@/data/profissionais';
-import teamPhoto from '@/assets/profissionais.jpg';
 
 const Profissionais = () => {
   const profissionais = getProfissionaisBasicos();
@@ -12,58 +11,44 @@ const Profissionais = () => {
       <Header />
 
       <main className="pt-24 pb-32">
-        {/* HERO — editorial, sóbrio */}
+        {/* HERO — editorial centralizado, sem imagem */}
         <section className="border-b border-border/60">
-          <div className="container mx-auto px-6 py-20 md:py-28">
-            <div className="grid lg:grid-cols-12 gap-16 items-end max-w-7xl mx-auto">
-              <div className="lg:col-span-7">
-                <p className="font-sans-display text-[10px] text-muted-foreground mb-8">
-                  — Equipe Aura Clinic
-                </p>
-                <h1 className="font-display text-5xl md:text-7xl lg:text-[5.5rem] text-primary leading-[1.02] tracking-tight mb-10">
-                  Especialistas dedicadas
-                  <br />
-                  <span className="font-italic-serif text-primary/80">à sua confiança.</span>
-                </h1>
-                <div className="max-w-xl">
-                  <p className="text-base md:text-lg text-muted-foreground font-light leading-[1.75]">
-                    Uma equipe multidisciplinar formada por profissionais certificadas,
-                    unidas por um único compromisso: oferecer o cuidado mais ético, técnico
-                    e refinado para cada cliente.
+          <div className="container mx-auto px-6 py-24 md:py-32">
+            <div className="max-w-4xl mx-auto text-center">
+              <p className="font-sans-display text-[10px] text-muted-foreground mb-8">
+                — Equipe Aura Clinic
+              </p>
+              <h1 className="font-display text-5xl md:text-7xl lg:text-[6rem] text-primary leading-[1.02] tracking-tight mb-10">
+                Especialistas dedicadas
+                <br />
+                <span className="font-italic-serif text-primary/80">à sua confiança.</span>
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground font-light leading-[1.85] max-w-2xl mx-auto">
+                Uma equipe multidisciplinar formada por profissionais certificadas,
+                unidas por um único compromisso: oferecer o cuidado mais ético, técnico
+                e refinado para cada cliente.
+              </p>
+
+              <div className="grid grid-cols-3 gap-8 mt-20 pt-12 border-t border-border/60 max-w-2xl mx-auto">
+                <div>
+                  <p className="font-display text-4xl md:text-5xl text-primary leading-none">
+                    {profissionais.length.toString().padStart(2, '0')}
+                  </p>
+                  <p className="font-sans-display text-[9px] text-muted-foreground mt-3">
+                    Especialistas
                   </p>
                 </div>
-
-                <div className="grid grid-cols-3 gap-8 mt-16 pt-10 border-t border-border/60 max-w-2xl">
-                  <div>
-                    <p className="font-display text-4xl md:text-5xl text-primary leading-none">
-                      {profissionais.length.toString().padStart(2, '0')}
-                    </p>
-                    <p className="font-sans-display text-[9px] text-muted-foreground mt-3">
-                      Especialistas
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-display text-4xl md:text-5xl text-primary leading-none">10+</p>
-                    <p className="font-sans-display text-[9px] text-muted-foreground mt-3">
-                      Anos de mercado
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-display text-4xl md:text-5xl text-primary leading-none">5K+</p>
-                    <p className="font-sans-display text-[9px] text-muted-foreground mt-3">
-                      Clientes atendidos
-                    </p>
-                  </div>
+                <div>
+                  <p className="font-display text-4xl md:text-5xl text-primary leading-none">10+</p>
+                  <p className="font-sans-display text-[9px] text-muted-foreground mt-3">
+                    Anos de mercado
+                  </p>
                 </div>
-              </div>
-
-              <div className="lg:col-span-5">
-                <div className="portrait-frame aspect-[4/5] w-full max-w-md mx-auto">
-                  <img
-                    src={teamPhoto}
-                    alt="Equipe Aura Clinic"
-                    className="w-full h-full object-cover"
-                  />
+                <div>
+                  <p className="font-display text-4xl md:text-5xl text-primary leading-none">5K+</p>
+                  <p className="font-sans-display text-[9px] text-muted-foreground mt-3">
+                    Clientes atendidos
+                  </p>
                 </div>
               </div>
             </div>
