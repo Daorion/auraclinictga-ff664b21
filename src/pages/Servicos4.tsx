@@ -314,11 +314,11 @@ const Servicos4 = () => {
           </div>
         </div>
 
-        {/* Tile 5: Citação editorial */}
+        {/* Tile 5: Citação editorial — agora ocupa a linha inteira */}
         <div
-          className="aura-tile rounded-[28px] p-6 flex flex-col justify-center"
+          className="aura-tile rounded-[28px] px-10 py-8 flex flex-col justify-center"
           style={{
-            gridColumn: 'span 5',
+            gridColumn: 'span 12',
             gridRow: 'span 2',
             background: 'hsl(36 45% 94% / 0.6)',
             backdropFilter: 'blur(10px)',
@@ -333,90 +333,17 @@ const Servicos4 = () => {
             Aura Clinic
           </p>
           <p
-            className="leading-[1.15] tracking-[-0.01em]"
+            className="leading-[1.15] tracking-[-0.01em] max-w-[80%]"
             style={{
               fontFamily: "'Cormorant Garamond', Georgia, serif",
               color: 'hsl(351 86% 14%)',
               fontWeight: 500,
-              fontSize: 'clamp(1.1rem, 1.6vw, 1.6rem)',
+              fontSize: 'clamp(1.4rem, 2.2vw, 2.4rem)',
               fontStyle: 'italic',
             }}
           >
             "Beleza autêntica nasce do cuidado feito com presença."
           </p>
-        </div>
-
-        {/* Tile 6: Mosaico de equipe (clicável) */}
-        <div
-          className="aura-tile rounded-[28px] p-5 flex flex-col"
-          style={{
-            gridColumn: 'span 7',
-            gridRow: 'span 2',
-            background: 'hsl(36 45% 96% / 0.85)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid hsl(351 86% 14% / 0.08)',
-            animationDelay: '0.2s',
-          }}
-        >
-          <p
-            className="text-[10px] font-semibold tracking-[0.3em] uppercase mb-3"
-            style={{ color: 'hsl(28 55% 42%)' }}
-          >
-            Equipe
-          </p>
-          <div className="flex-1 flex items-center gap-2.5 overflow-x-auto">
-            {profissionaisData.map((p, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl pl-1.5 pr-4 py-1.5 transition-all"
-                style={{
-                  background:
-                    i === focusIdx ? 'hsl(351 86% 14%)' : 'hsl(36 40% 92%)',
-                  color:
-                    i === focusIdx
-                      ? 'hsl(36 45% 96%)'
-                      : 'hsl(351 86% 14% / 0.85)',
-                  border:
-                    i === focusIdx
-                      ? '1px solid hsl(351 86% 14%)'
-                      : '1px solid hsl(351 86% 14% / 0.08)',
-                }}
-              >
-                <div
-                  className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0"
-                  style={{
-                    border:
-                      i === focusIdx
-                        ? '2px solid hsl(28 55% 65%)'
-                        : '1px solid hsl(351 86% 14% / 0.1)',
-                  }}
-                >
-                  <img
-                    src={p.imagem}
-                    alt={p.nome}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="text-left">
-                  <p
-                    className="text-[11px] leading-tight whitespace-nowrap"
-                    style={{
-                      fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {p.nome.split(' ').slice(0, 2).join(' ')}
-                  </p>
-                  <p
-                    className="text-[8px] tracking-[0.2em] uppercase font-medium opacity-70 whitespace-nowrap"
-                  >
-                    {p.especialidade}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
