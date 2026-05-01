@@ -325,7 +325,7 @@ const PhotoLayer = ({
     {/* Foto à direita, ocupando ~55% */}
     <div
       key={animKey}
-      className="absolute right-0 top-0 h-full"
+      className="absolute right-0 top-0 h-full overflow-hidden"
       style={{ width: '55%' }}
     >
       <img
