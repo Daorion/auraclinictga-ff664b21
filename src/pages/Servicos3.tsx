@@ -133,62 +133,6 @@ const Servicos3 = () => {
         <PhotoLayer prof={next} animKey={`next-${animKey}`} />
       </div>
 
-      {/* Tickers diagonais no fundo */}
-      <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
-        <div
-          className="absolute whitespace-nowrap"
-          style={{
-            top: '18%',
-            left: 0,
-            transform: 'rotate(-6deg)',
-            width: '200%',
-          }}
-        >
-          <div className="aura-ticker-left flex gap-12">
-            {tickerA.map((t, i) => (
-              <span
-                key={i}
-                className="text-[64px] leading-none uppercase tracking-tight"
-                style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
-                  fontWeight: 700,
-                  color: 'hsl(351 86% 14% / 0.06)',
-                  WebkitTextStroke: '1px hsl(351 86% 14% / 0.18)',
-                }}
-              >
-                {t} ·
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div
-          className="absolute whitespace-nowrap"
-          style={{
-            bottom: '12%',
-            left: 0,
-            transform: 'rotate(4deg)',
-            width: '200%',
-          }}
-        >
-          <div className="aura-ticker-right flex gap-12">
-            {tickerB.map((t, i) => (
-              <span
-                key={i}
-                className="text-[52px] leading-none uppercase tracking-tight"
-                style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
-                  fontWeight: 600,
-                  color: 'hsl(28 55% 42% / 0.10)',
-                }}
-              >
-                {t} ·
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Conteúdo principal */}
       <div className="absolute inset-0 z-20 flex flex-col">
         {/* Top */}
