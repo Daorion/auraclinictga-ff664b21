@@ -1,12 +1,14 @@
 User-agent: Googlebot
 Allow: /
 Disallow: /servicos
-Disallow: /servicos-vitrine
+Disallow: /servicos2
+Disallow: /servicos3
 
 User-agent: Bingbot
 Allow: /
 Disallow: /servicos
-Disallow: /servicos-vitrine
+Disallow: /servicos2
+Disallow: /servicos3
 
 User-agent: Twitterbot
 Allow: /
@@ -17,4 +19,5 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /servicos
-Disallow: /servicos-vitrine
+Disallow: /servicos2
+Disallow: /servicos3
