@@ -2,6 +2,21 @@ import { useState, useEffect, useRef } from 'react';
 import { profissionaisData } from '@/data/profissionais';
 import auraLogo from '@/assets/aura-logo.png';
 
+const useNoIndex = (title: string) => {
+  useEffect(() => {
+    const prev = document.title;
+    document.title = title;
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, nofollow';
+    document.head.appendChild(meta);
+    return () => {
+      document.title = prev;
+      document.head.removeChild(meta);
+    };
+  }, [title]);
+};
+
 const DURATION = 10000;          // tempo total de cada slide (ms)
 const TRANSITION_DURATION = 1800; // crossfade (ms)
 
