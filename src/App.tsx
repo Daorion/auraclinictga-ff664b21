@@ -11,6 +11,7 @@ import Servicos from "./pages/Servicos";
 import ServicosVitrine from "./pages/ServicosVitrine";
 import Servicos3 from "./pages/Servicos3";
 import Servicos4 from "./pages/Servicos4";
+import Servicos5 from "./pages/Servicos5";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/servicos2" element={<ServicosVitrine />} />
             <Route path="/servicos3" element={<Servicos3 />} />
             <Route path="/servicos4" element={<Servicos4 />} />
+            <Route path="/servicos5" element={<Servicos5 />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />

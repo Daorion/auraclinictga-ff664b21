@@ -4,6 +4,7 @@ Disallow: /servicos
 Disallow: /servicos2
 Disallow: /servicos3
 Disallow: /servicos4
+Disallow: /servicos5
 
 User-agent: Bingbot
 Allow: /
@@ -11,6 +12,7 @@ Disallow: /servicos
 Disallow: /servicos2
 Disallow: /servicos3
 Disallow: /servicos4
+Disallow: /servicos5
 
 User-agent: Twitterbot
 Allow: /
@@ -24,3 +26,4 @@ Disallow: /servicos
 Disallow: /servicos2
 Disallow: /servicos3
 Disallow: /servicos4
+Disallow: /servicos5
