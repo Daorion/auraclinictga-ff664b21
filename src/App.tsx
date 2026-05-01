@@ -10,6 +10,7 @@ import ProfissionalDetail from "./pages/ProfissionalDetail";
 import Servicos from "./pages/Servicos";
 import ServicosVitrine from "./pages/ServicosVitrine";
 import Servicos3 from "./pages/Servicos3";
+import Servicos4 from "./pages/Servicos4";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
