@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useEffect, useState } from 'react';
 import { profissionaisData } from '@/data/profissionais';
 import auraLogo from '@/assets/aura-logo.png';
 
