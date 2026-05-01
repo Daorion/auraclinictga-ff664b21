@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Profissionais from "./pages/Profissionais";
 import ProfissionalDetail from "./pages/ProfissionalDetail";
 import Servicos from "./pages/Servicos";
+import ServicosVitrine from "./pages/ServicosVitrine";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/profissionais" element={<Profissionais />} />
             <Route path="/profissional/:id" element={<ProfissionalDetail />} />
             <Route path="/servicos" element={<Servicos />} />
+            <Route path="/servicos-vitrine" element={<ServicosVitrine />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
