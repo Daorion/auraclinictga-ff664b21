@@ -210,9 +210,9 @@ const Servicos5 = () => {
           {reveal && (
             <div
               key={`band-${animKey}`}
-              className="aura-curtain w-full max-w-[88%] mx-auto mb-10 overflow-hidden rounded-sm"
+              className="aura-curtain w-full max-w-[78%] mx-auto mb-10 overflow-hidden rounded-sm"
               style={{
-                aspectRatio: '16 / 4',
+                aspectRatio: '16 / 7',
                 boxShadow: '0 30px 80px hsl(351 86% 14% / 0.18)',
               }}
             >
@@ -221,7 +221,7 @@ const Servicos5 = () => {
                 alt={current.nome}
                 draggable={false}
                 className="w-full h-full object-cover"
-                style={{ objectPosition: 'center 30%' }}
+                style={{ objectPosition: 'center 18%' }}
               />
             </div>
           )}
@@ -242,6 +242,8 @@ const Servicos5 = () => {
             style={{
               fontSize: 'clamp(3.5rem, 8vw, 8rem)',
               backgroundImage: `url(${current.imagem})`,
+              backgroundPosition: 'center 20%',
+              backgroundSize: 'cover',
               animation: `auraMaskSlide 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards`,
               maxWidth: '90%',
             }}
