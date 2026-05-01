@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/servicos" element={<Servicos />} />
             <Route path="/servicos2" element={<ServicosVitrine />} />
             <Route path="/servicos3" element={<Servicos3 />} />
+            <Route path="/servicos4" element={<Servicos4 />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
