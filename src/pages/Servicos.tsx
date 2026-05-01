@@ -39,7 +39,9 @@ const Servicos = () => {
     destaques: prof.secaoServicos.flatMap(s => s.servicos.map(sv => sv.titulo)).slice(0, 6),
   }));
 
-  // Preload all images once to avoid pop-in during crossfade
+  useNoIndex('Serviços — Aura Clinic');
+
+
   useEffect(() => {
     slides.forEach(s => {
       const img = new Image();
