@@ -52,14 +52,24 @@ const ServicosVitrine = () => {
     return () => clearInterval(t);
   }, []);
 
+  // SEO: noindex
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = 'Vitrine de Serviços — Aura Clinic';
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, nofollow';
+    document.head.appendChild(meta);
+    return () => {
+      document.title = prevTitle;
+      document.head.removeChild(meta);
+    };
+  }, []);
+
   const focus = profissionaisData[focusIdx];
 
   return (
     <>
-      <Helmet>
-        <title>Vitrine de Serviços — Aura Clinic</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
 
       <style>{`
         @keyframes auraScrollUp {
