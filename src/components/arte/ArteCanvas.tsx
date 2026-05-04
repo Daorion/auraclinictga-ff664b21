@@ -50,7 +50,10 @@ const shapeClipPath = (style: DesignTokens['shapeStyle']): CSSProperties => {
 };
 
 export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
-  ({ template, tokens, block, photoUrl, photoLabel, whatsapp, instagram }, ref) => {
+  ({ template, tokens, block, photoUrl, photoLabel, whatsapp, instagram, variant }, ref) => {
+    const v = variant || defaultVariantFor(template.id);
+    const titleScale = v.titleScale;
+    const objPos = photoObjectPosition(v.photoFocus);
     const baseStyle: CSSProperties = {
       width: template.size.w,
       height: template.size.h,
