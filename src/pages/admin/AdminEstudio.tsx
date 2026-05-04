@@ -258,7 +258,7 @@ const AdminEstudio = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
         <aside className="space-y-6">
           {/* Templates */}
           <section>
@@ -311,7 +311,7 @@ const AdminEstudio = () => {
               </TabsList>
 
               <TabsContent value="all" className="mt-2">
-                <ScrollArea className="h-[280px] pr-2">
+                <ScrollArea className="h-[320px] pr-2">
                   {favorites.length > 0 && (
                     <>
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 mt-1">Favoritos</p>
@@ -336,7 +336,7 @@ const AdminEstudio = () => {
               </TabsContent>
 
               <TabsContent value="fav" className="mt-2">
-                <ScrollArea className="h-[280px] pr-2">
+                <ScrollArea className="h-[320px] pr-2">
                   {favorites.length === 0 ? (
                     <p className="text-xs text-muted-foreground p-2">
                       Nenhum favorito ainda. Passe o mouse num estilo e clique na ⭐ para salvar para sempre.
@@ -350,7 +350,7 @@ const AdminEstudio = () => {
               </TabsContent>
 
               <TabsContent value="history" className="mt-2">
-                <ScrollArea className="h-[280px] pr-2">
+                <ScrollArea className="h-[320px] pr-2">
                   {history.length === 0 ? (
                     <p className="text-xs text-muted-foreground p-2">
                       Histórico vazio. Clique em "Gerar 6 com IA" para começar.
@@ -364,121 +364,170 @@ const AdminEstudio = () => {
               </TabsContent>
             </Tabs>
           </section>
-
-          {/* Conteúdo */}
-          <section>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">Conteúdo</p>
-            <Tabs defaultValue="curated">
-              <TabsList className="grid grid-cols-2 w-full h-8">
-                <TabsTrigger value="curated" className="text-xs">Curados</TabsTrigger>
-                <TabsTrigger value="services" className="text-xs">Serviços</TabsTrigger>
-              </TabsList>
-              <TabsContent value="curated" className="mt-2">
-                <ScrollArea className="h-[220px] pr-2">
-                  <div className="space-y-1.5">
-                    {arteBlocksCurados.map((b) => (
-                      <button
-                        key={b.id}
-                        onClick={() => setBlock(b)}
-                        className={`w-full text-left rounded-lg border p-2.5 transition ${
-                          b.id === block.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
-                        }`}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{b.eyebrow}</p>
-                        <p className="text-xs font-medium mt-0.5 line-clamp-1">{b.title.replace(/\*/g, '')}</p>
-                      </button>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-              <TabsContent value="services" className="mt-2">
-                <ScrollArea className="h-[220px] pr-2">
-                  <div className="space-y-1.5">
-                    {services.length === 0 && (
-                      <p className="text-xs text-muted-foreground p-2">Nenhum serviço cadastrado</p>
-                    )}
-                    {services.map((s) => {
-                      const sb = serviceToBlock(s);
-                      return (
-                        <button
-                          key={s.id}
-                          onClick={() => setBlock(sb)}
-                          className={`w-full text-left rounded-lg border p-2.5 transition ${
-                            sb.id === block.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
-                          }`}
-                        >
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            {s.category || 'Serviço'}
-                          </p>
-                          <p className="text-xs font-medium mt-0.5 line-clamp-1">{s.name}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
-          </section>
-
-          {/* Foto */}
-          <section>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">Foto</p>
-            <ScrollArea className="h-[200px] pr-2">
-              <div className="grid grid-cols-3 gap-2">
-                {photoOptions.map((p, i) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPhotoIdx(i)}
-                    title={p.label}
-                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition ${
-                      i === photoIdx ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <img src={p.url} alt={p.label} className="w-full h-full object-cover" />
-                    <div className="absolute top-1 left-1">
-                      {p.kind === 'professional' ? (
-                        <User className="w-3 h-3 text-white drop-shadow" />
-                      ) : (
-                        <ImageIcon className="w-3 h-3 text-white drop-shadow" />
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </section>
         </aside>
 
-        {/* Preview */}
-        <section className="flex flex-col items-center">
-          <div className="mb-3 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            <span>{template.name}</span><span>·</span>
-            <span>{template.size.w} × {template.size.h}</span><span>·</span>
-            <span>{tokens.name}</span>
-          </div>
-          <div
-            className="relative rounded-3xl bg-card shadow-2xl ring-1 ring-border/50 overflow-hidden"
-            style={{ width: template.size.w * scale, height: template.size.h * scale }}
-          >
+        {/* Main column: Preview + Conteúdo/Foto lado a lado */}
+        <section className="space-y-5">
+          <div className="flex flex-col items-center">
+            <div className="mb-3 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <span>{template.name}</span><span>·</span>
+              <span>{template.size.w} × {template.size.h}</span><span>·</span>
+              <span>{tokens.name}</span>
+            </div>
             <div
-              style={{
-                transform: `scale(${scale})`, transformOrigin: 'top left',
-                width: template.size.w, height: template.size.h,
-              }}
+              className="relative rounded-3xl bg-card shadow-2xl ring-1 ring-border/50 overflow-hidden"
+              style={{ width: template.size.w * scale, height: template.size.h * scale }}
             >
-              <ArteCanvas
-                ref={canvasRef}
-                template={template}
-                tokens={tokens}
-                block={block}
-                photoUrl={photo?.url}
-                photoLabel={photo?.label}
-                whatsapp={WHATSAPP}
-                instagram={INSTAGRAM}
-              />
+              <div
+                style={{
+                  transform: `scale(${scale})`, transformOrigin: 'top left',
+                  width: template.size.w, height: template.size.h,
+                }}
+              >
+                <ArteCanvas
+                  ref={canvasRef}
+                  template={template}
+                  tokens={tokens}
+                  block={block}
+                  photoUrl={photo?.url}
+                  photoLabel={photo?.label}
+                  whatsapp={WHATSAPP}
+                  instagram={INSTAGRAM}
+                />
+              </div>
             </div>
           </div>
-          <p className="mt-4 max-w-md text-center text-xs text-muted-foreground">
+
+          {/* Conteúdo + Foto lado a lado */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl border border-border/60 bg-card/40 p-4">
+            {/* Conteúdo */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">Conteúdo</p>
+              <Tabs defaultValue="services">
+                <TabsList className="grid grid-cols-2 w-full h-8">
+                  <TabsTrigger value="services" className="text-xs">Serviços</TabsTrigger>
+                  <TabsTrigger value="curated" className="text-xs">Curados</TabsTrigger>
+                </TabsList>
+                <TabsContent value="services" className="mt-2">
+                  <ScrollArea className="h-[260px] pr-2">
+                    <div className="space-y-1.5">
+                      {services.length === 0 && (
+                        <p className="text-xs text-muted-foreground p-2">Nenhum serviço cadastrado</p>
+                      )}
+                      {services.map((s) => {
+                        const sb = serviceToBlock(s);
+                        const matchingPhoto = s.image_url
+                          ? photoOptions.findIndex((p) => p.id === `svc-${s.id}`)
+                          : -1;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => {
+                              setBlock(sb);
+                              if (matchingPhoto >= 0) setPhotoIdx(matchingPhoto);
+                            }}
+                            className={`w-full text-left rounded-lg border p-2.5 transition flex items-center gap-2.5 ${
+                              sb.id === block.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                            }`}
+                          >
+                            {s.image_url ? (
+                              <img src={s.image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+                            ) : (
+                              <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                                <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                {s.category || 'Serviço'}
+                              </p>
+                              <p className="text-xs font-medium mt-0.5 truncate">{s.name}</p>
+                            </div>
+                            {matchingPhoto >= 0 && (
+                              <span className="text-[9px] text-primary uppercase tracking-wider shrink-0">foto</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                <TabsContent value="curated" className="mt-2">
+                  <ScrollArea className="h-[260px] pr-2">
+                    <div className="space-y-1.5">
+                      {arteBlocksCurados.map((b) => (
+                        <button
+                          key={b.id}
+                          onClick={() => setBlock(b)}
+                          className={`w-full text-left rounded-lg border p-2.5 transition ${
+                            b.id === block.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                          }`}
+                        >
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{b.eyebrow}</p>
+                          <p className="text-xs font-medium mt-0.5 line-clamp-1">{b.title.replace(/\*/g, '')}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Foto */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">Foto</p>
+              <Tabs defaultValue="all">
+                <TabsList className="grid grid-cols-3 w-full h-8">
+                  <TabsTrigger value="all" className="text-xs">Tudo</TabsTrigger>
+                  <TabsTrigger value="pro" className="text-xs gap-1"><User className="w-3 h-3" />Profissionais</TabsTrigger>
+                  <TabsTrigger value="svc" className="text-xs gap-1"><ImageIcon className="w-3 h-3" />Serviços</TabsTrigger>
+                </TabsList>
+                {(['all', 'pro', 'svc'] as const).map((tab) => {
+                  const filtered = photoOptions
+                    .map((p, i) => ({ p, i }))
+                    .filter(({ p }) =>
+                      tab === 'all' ? true : tab === 'pro' ? p.kind === 'professional' : p.kind === 'service',
+                    );
+                  return (
+                    <TabsContent key={tab} value={tab} className="mt-2">
+                      <ScrollArea className="h-[260px] pr-2">
+                        {filtered.length === 0 ? (
+                          <p className="text-xs text-muted-foreground p-2">Nenhuma foto disponível</p>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-2">
+                            {filtered.map(({ p, i }) => (
+                              <button
+                                key={p.id}
+                                onClick={() => setPhotoIdx(i)}
+                                title={p.label}
+                                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition ${
+                                  i === photoIdx ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
+                                }`}
+                              >
+                                <img src={p.url} alt={p.label} className="w-full h-full object-cover" />
+                                <div className="absolute top-1 left-1">
+                                  {p.kind === 'professional' ? (
+                                    <User className="w-3 h-3 text-white drop-shadow" />
+                                  ) : (
+                                    <ImageIcon className="w-3 h-3 text-white drop-shadow" />
+                                  )}
+                                </div>
+                                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-1 py-1">
+                                  <p className="text-[9px] text-white font-medium truncate leading-tight">{p.label}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </TabsContent>
+                  );
+                })}
+              </Tabs>
+            </div>
+          </div>
+
+          <p className="max-w-2xl text-center mx-auto text-xs text-muted-foreground">
             Clique em <strong>Gerar 6 com IA</strong> para novos estilos. Use a ⭐ para fixar os favoritos —
             o resto entra no histórico rotativo (últimos {HISTORY_KEEP}).
           </p>
