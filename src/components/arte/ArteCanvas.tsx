@@ -1,6 +1,6 @@
 import { forwardRef, CSSProperties } from 'react';
 import { ArteBlock, renderTitle } from '@/lib/arteContent';
-import { TemplateId, TemplateMeta, DesignTokens } from '@/lib/arteTemplates';
+import { TemplateId, TemplateMeta, DesignTokens, TemplateVariant, defaultVariantFor } from '@/lib/arteTemplates';
 import auraLogo from '@/assets/aura-logo.png';
 
 interface Props {
@@ -8,10 +8,19 @@ interface Props {
   tokens: DesignTokens;
   block: ArteBlock;
   photoUrl?: string;
-  photoLabel?: string; // ex: "Dra. Luana" ou "Limpeza de pele"
+  photoLabel?: string;
   whatsapp?: string;
   instagram?: string;
+  variant?: TemplateVariant;
 }
+
+const photoObjectPosition = (focus: TemplateVariant['photoFocus']) => {
+  switch (focus) {
+    case 'face': return 'center 18%';
+    case 'wide': return 'center center';
+    default: return 'center 30%';
+  }
+};
 
 const Title = ({ text, style }: { text: string; style?: CSSProperties }) => (
   <h1 style={style}>
