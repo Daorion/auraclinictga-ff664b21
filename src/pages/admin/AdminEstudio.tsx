@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { toPng } from 'html-to-image';
-import { Shuffle, Download, Sparkles, Loader2, RefreshCw, Image as ImageIcon, User, Palette } from 'lucide-react';
+import {
+  Shuffle, Download, Sparkles, Loader2, RefreshCw, Image as ImageIcon, User, Palette, Star, Trash2, Plus,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -8,13 +10,14 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ArteCanvas } from '@/components/arte/ArteCanvas';
 import { arteBlocksCurados, ArteBlock, serviceToBlock, ServiceLite } from '@/lib/arteContent';
-import { templates, designPresets, DesignTokens, TemplateMeta } from '@/lib/arteTemplates';
+import { templates, designPresets, DesignTokens } from '@/lib/arteTemplates';
 import { profissionaisData } from '@/data/profissionais';
 
 const PREVIEW_MAX_W = 540;
 const PREVIEW_MAX_H = 720;
 const WHATSAPP = '(65) 99696-6685';
 const INSTAGRAM = 'auraclinictga';
+const HISTORY_KEEP = 12; // máximo de não-favoritos mantidos no histórico
 
 interface PhotoOption {
   id: string;
@@ -23,11 +26,19 @@ interface PhotoOption {
   kind: 'professional' | 'service';
 }
 
+interface SavedDesignRow {
+  id: string;
+  name: string;
+  tokens: DesignTokens;
+  is_favorite: boolean;
+  created_at: string;
+}
+
 const AdminEstudio = () => {
   const [templateIdx, setTemplateIdx] = useState(0);
   const [block, setBlock] = useState<ArteBlock>(arteBlocksCurados[0]);
   const [tokens, setTokens] = useState<DesignTokens>(designPresets[0]);
-  const [aiVariants, setAiVariants] = useState<DesignTokens[]>([]);
+  const [saved, setSaved] = useState<SavedDesignRow[]>([]);
   const [aiBusy, setAiBusy] = useState(false);
   const [downloadBusy, setDownloadBusy] = useState(false);
   const [services, setServices] = useState<ServiceLite[]>([]);
@@ -36,50 +47,52 @@ const AdminEstudio = () => {
 
   const template = templates[templateIdx];
 
-  // Carrega serviços
   useEffect(() => {
     supabase
       .from('services')
       .select('id, name, description, professional_name, category, image_url')
       .eq('active', true)
       .order('display_order', { ascending: true })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error(error);
-          return;
-        }
-        setServices((data as ServiceLite[]) || []);
-      });
+      .then(({ data }) => setServices((data as ServiceLite[]) || []));
   }, []);
 
-  // Lista de fotos: profissionais + serviços com imagem
+  const loadSaved = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('saved_design_tokens')
+      .select('id, name, tokens, is_favorite, created_at')
+      .order('is_favorite', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error(error);
+      return;
+    }
+    setSaved((data as unknown as SavedDesignRow[]) || []);
+  }, []);
+
+  useEffect(() => {
+    loadSaved();
+  }, [loadSaved]);
+
   const photoOptions: PhotoOption[] = useMemo(() => {
     const pros: PhotoOption[] = profissionaisData.map((p) => ({
-      id: `pro-${p.id}`,
-      label: p.nome,
-      url: p.imagem,
-      kind: 'professional',
+      id: `pro-${p.id}`, label: p.nome, url: p.imagem, kind: 'professional',
     }));
-    const svc: PhotoOption[] = services
-      .filter((s) => !!s.image_url)
-      .map((s) => ({
-        id: `svc-${s.id}`,
-        label: s.name,
-        url: s.image_url!,
-        kind: 'service',
-      }));
+    const svc: PhotoOption[] = services.filter((s) => !!s.image_url).map((s) => ({
+      id: `svc-${s.id}`, label: s.name, url: s.image_url!, kind: 'service',
+    }));
     return [...pros, ...svc];
   }, [services]);
-
   const photo = photoOptions[photoIdx] || photoOptions[0];
 
-  // Lista combinada de blocos: curados + serviços
   const allBlocks: ArteBlock[] = useMemo(
-    () => [...arteBlocksCurados, ...services.map(serviceToBlock)],
-    [services],
+    () => [...arteBlocksCurados, ...services.map(serviceToBlock)], [services],
   );
 
-  // Escala de preview
+  const allTokens: DesignTokens[] = useMemo(
+    () => [...saved.map((s) => s.tokens), ...designPresets],
+    [saved],
+  );
+
   const scale = useMemo(
     () => Math.min(PREVIEW_MAX_W / template.size.w, PREVIEW_MAX_H / template.size.h),
     [template],
@@ -88,23 +101,46 @@ const AdminEstudio = () => {
   const shuffle = () => {
     setTemplateIdx(Math.floor(Math.random() * templates.length));
     setBlock(allBlocks[Math.floor(Math.random() * allBlocks.length)]);
-    const allTokens = [...designPresets, ...aiVariants];
     setTokens(allTokens[Math.floor(Math.random() * allTokens.length)]);
     if (photoOptions.length) setPhotoIdx(Math.floor(Math.random() * photoOptions.length));
   };
 
-  const generateAiVariants = async () => {
+  // Gera novos estilos via IA, salva no banco e roda a poda do histórico (mantém favoritos)
+  const generateMore = async (count = 6) => {
     setAiBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-design-template', {
-        body: { count: 4, vibe: 'editorial luxuoso' },
+        body: { count, vibe: 'editorial luxuoso, varie o máximo possível' },
       });
       if (error) throw error;
-      if (data?.variants?.length) {
-        setAiVariants(data.variants);
-        setTokens(data.variants[0]);
-        toast.success(`${data.variants.length} novas variações de design geradas`);
+      const variants: DesignTokens[] = data?.variants || [];
+      if (!variants.length) throw new Error('Nenhuma variação gerada');
+
+      const rows = variants.map((v) => ({
+        name: v.name || 'Sem nome',
+        tokens: v as unknown as Record<string, unknown>,
+        is_favorite: false,
+      }));
+      const { data: inserted, error: insErr } = await supabase
+        .from('saved_design_tokens')
+        .insert(rows)
+        .select('id, name, tokens, is_favorite, created_at');
+      if (insErr) throw insErr;
+
+      // Poda: deleta não-favoritos antigos além de HISTORY_KEEP
+      const { data: nonFav } = await supabase
+        .from('saved_design_tokens')
+        .select('id')
+        .eq('is_favorite', false)
+        .order('created_at', { ascending: false });
+      if (nonFav && nonFav.length > HISTORY_KEEP) {
+        const toDelete = nonFav.slice(HISTORY_KEEP).map((r) => r.id);
+        await supabase.from('saved_design_tokens').delete().in('id', toDelete);
       }
+
+      await loadSaved();
+      if (inserted?.[0]) setTokens((inserted[0] as unknown as SavedDesignRow).tokens);
+      toast.success(`${variants.length} novos estilos gerados`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Falha ao gerar';
       toast.error(msg);
@@ -113,15 +149,29 @@ const AdminEstudio = () => {
     }
   };
 
+  const toggleFavorite = async (row: SavedDesignRow) => {
+    const { error } = await supabase
+      .from('saved_design_tokens')
+      .update({ is_favorite: !row.is_favorite })
+      .eq('id', row.id);
+    if (error) return toast.error('Falha ao favoritar');
+    toast.success(row.is_favorite ? 'Removido dos favoritos' : 'Favoritado — ficará salvo');
+    loadSaved();
+  };
+
+  const deleteSaved = async (row: SavedDesignRow) => {
+    const { error } = await supabase.from('saved_design_tokens').delete().eq('id', row.id);
+    if (error) return toast.error('Falha ao excluir');
+    loadSaved();
+  };
+
   const download = async () => {
     if (!canvasRef.current) return;
     setDownloadBusy(true);
     try {
       const dataUrl = await toPng(canvasRef.current, {
-        pixelRatio: 1,
-        cacheBust: true,
-        width: template.size.w,
-        height: template.size.h,
+        pixelRatio: 1, cacheBust: true,
+        width: template.size.w, height: template.size.h,
         style: { transform: 'none' },
       });
       const link = document.createElement('a');
@@ -131,17 +181,59 @@ const AdminEstudio = () => {
       toast.success('Arte exportada em alta resolução');
     } catch (e) {
       console.error(e);
-      toast.error('Falha ao exportar. Verifique se a imagem permite CORS.');
+      toast.error('Falha ao exportar.');
     } finally {
       setDownloadBusy(false);
     }
   };
 
-  useEffect(() => {
-    if ('fonts' in document) (document as Document & { fonts: { ready: Promise<unknown> } }).fonts.ready;
-  }, []);
+  const favorites = saved.filter((s) => s.is_favorite);
+  const history = saved.filter((s) => !s.is_favorite);
 
-  const allTokens = [...designPresets, ...aiVariants];
+  const renderTokenCard = (dt: DesignTokens, opts: { row?: SavedDesignRow; isPreset?: boolean }) => {
+    const active = tokens.name === dt.name;
+    const row = opts.row;
+    return (
+      <div
+        key={`${dt.name}-${row?.id || 'preset'}`}
+        className={`group relative rounded-xl border p-2 transition ${
+          active ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
+        }`}
+      >
+        <button onClick={() => setTokens(dt)} className="w-full text-left">
+          <div className="flex gap-1 mb-2 h-8 rounded overflow-hidden">
+            <div style={{ background: dt.bg }} className="flex-1" />
+            <div style={{ background: dt.bgAccent }} className="flex-1" />
+            <div style={{ background: dt.accent }} className="flex-1" />
+          </div>
+          <p className="text-[11px] font-medium truncate pr-10">{dt.name}</p>
+        </button>
+        {row && (
+          <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleFavorite(row); }}
+              className="p-1 rounded bg-background/80 hover:bg-background"
+              title={row.is_favorite ? 'Desfavoritar' : 'Favoritar'}
+            >
+              <Star
+                className={`w-3 h-3 ${row.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
+              />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); deleteSaved(row); }}
+              className="p-1 rounded bg-background/80 hover:bg-destructive hover:text-destructive-foreground"
+              title="Excluir"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+        {row?.is_favorite && (
+          <Star className="absolute top-1 right-1 w-3 h-3 fill-yellow-500 text-yellow-500 group-hover:opacity-0 transition" />
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -150,8 +242,8 @@ const AdminEstudio = () => {
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Aura Clinic</p>
           <h1 className="text-3xl font-bold mt-1">Estúdio de Artes</h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-            Combine templates editoriais, paletas (presets ou geradas por IA) e fotos da clínica. Exporte PNG em
-            altíssima resolução pronto para Instagram.
+            Gere novos estilos com IA, favorite os que você ama (ficam salvos para sempre) e mantenha um histórico
+            rotativo dos últimos {HISTORY_KEEP} para revisitar.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -166,7 +258,6 @@ const AdminEstudio = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
-        {/* Painel de controle */}
         <aside className="space-y-6">
           {/* Templates */}
           <section>
@@ -194,38 +285,83 @@ const AdminEstudio = () => {
             </div>
           </section>
 
-          {/* Design (paletas) */}
+          {/* Design tokens */}
           <section>
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                <Palette className="w-3 h-3 inline mr-1" /> Design
+                <Palette className="w-3 h-3 inline mr-1" /> Estilos
               </p>
-              <Button size="sm" variant="ghost" onClick={generateAiVariants} disabled={aiBusy} className="h-7 gap-1.5 text-xs">
-                {aiBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                IA
+              <Button
+                size="sm" onClick={() => generateMore(6)} disabled={aiBusy}
+                className="h-7 gap-1.5 text-xs"
+              >
+                {aiBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                Gerar 6 com IA
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {allTokens.map((dt, i) => {
-                const active = tokens.name === dt.name;
-                return (
-                  <button
-                    key={`${dt.name}-${i}`}
-                    onClick={() => setTokens(dt)}
-                    className={`rounded-xl border p-2 transition text-left ${
-                      active ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex gap-1 mb-2 h-8 rounded overflow-hidden">
-                      <div style={{ background: dt.bg }} className="flex-1" />
-                      <div style={{ background: dt.bgAccent }} className="flex-1" />
-                      <div style={{ background: dt.accent }} className="flex-1" />
+
+            <Tabs defaultValue="all">
+              <TabsList className="grid grid-cols-3 w-full h-8">
+                <TabsTrigger value="all" className="text-xs">Tudo</TabsTrigger>
+                <TabsTrigger value="fav" className="text-xs gap-1">
+                  <Star className="w-3 h-3" />{favorites.length}
+                </TabsTrigger>
+                <TabsTrigger value="history" className="text-xs">Histórico</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all" className="mt-2">
+                <ScrollArea className="h-[280px] pr-2">
+                  {favorites.length > 0 && (
+                    <>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 mt-1">Favoritos</p>
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {favorites.map((s) => renderTokenCard(s.tokens, { row: s }))}
+                      </div>
+                    </>
+                  )}
+                  {history.length > 0 && (
+                    <>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Histórico recente</p>
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {history.map((s) => renderTokenCard(s.tokens, { row: s }))}
+                      </div>
+                    </>
+                  )}
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Presets da casa</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {designPresets.map((dt) => renderTokenCard(dt, { isPreset: true }))}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="fav" className="mt-2">
+                <ScrollArea className="h-[280px] pr-2">
+                  {favorites.length === 0 ? (
+                    <p className="text-xs text-muted-foreground p-2">
+                      Nenhum favorito ainda. Passe o mouse num estilo e clique na ⭐ para salvar para sempre.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {favorites.map((s) => renderTokenCard(s.tokens, { row: s }))}
                     </div>
-                    <p className="text-[11px] font-medium truncate">{dt.name}</p>
-                  </button>
-                );
-              })}
-            </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="history" className="mt-2">
+                <ScrollArea className="h-[280px] pr-2">
+                  {history.length === 0 ? (
+                    <p className="text-xs text-muted-foreground p-2">
+                      Histórico vazio. Clique em "Gerar 6 com IA" para começar.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {history.map((s) => renderTokenCard(s.tokens, { row: s }))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </section>
 
           {/* Conteúdo */}
@@ -237,7 +373,7 @@ const AdminEstudio = () => {
                 <TabsTrigger value="services" className="text-xs">Serviços</TabsTrigger>
               </TabsList>
               <TabsContent value="curated" className="mt-2">
-                <ScrollArea className="h-[260px] pr-2">
+                <ScrollArea className="h-[220px] pr-2">
                   <div className="space-y-1.5">
                     {arteBlocksCurados.map((b) => (
                       <button
@@ -255,7 +391,7 @@ const AdminEstudio = () => {
                 </ScrollArea>
               </TabsContent>
               <TabsContent value="services" className="mt-2">
-                <ScrollArea className="h-[260px] pr-2">
+                <ScrollArea className="h-[220px] pr-2">
                   <div className="space-y-1.5">
                     {services.length === 0 && (
                       <p className="text-xs text-muted-foreground p-2">Nenhum serviço cadastrado</p>
@@ -315,10 +451,8 @@ const AdminEstudio = () => {
         {/* Preview */}
         <section className="flex flex-col items-center">
           <div className="mb-3 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            <span>{template.name}</span>
-            <span>·</span>
-            <span>{template.size.w} × {template.size.h}</span>
-            <span>·</span>
+            <span>{template.name}</span><span>·</span>
+            <span>{template.size.w} × {template.size.h}</span><span>·</span>
             <span>{tokens.name}</span>
           </div>
           <div
@@ -327,10 +461,8 @@ const AdminEstudio = () => {
           >
             <div
               style={{
-                transform: `scale(${scale})`,
-                transformOrigin: 'top left',
-                width: template.size.w,
-                height: template.size.h,
+                transform: `scale(${scale})`, transformOrigin: 'top left',
+                width: template.size.w, height: template.size.h,
               }}
             >
               <ArteCanvas
@@ -346,8 +478,8 @@ const AdminEstudio = () => {
             </div>
           </div>
           <p className="mt-4 max-w-md text-center text-xs text-muted-foreground">
-            Use <strong>Randomizar</strong> para combinações novas, gere paletas com a <strong>IA</strong> e clique em
-            <strong> Baixar PNG</strong> para exportar em alta resolução.
+            Clique em <strong>Gerar 6 com IA</strong> para novos estilos. Use a ⭐ para fixar os favoritos —
+            o resto entra no histórico rotativo (últimos {HISTORY_KEEP}).
           </p>
         </section>
       </div>
