@@ -94,6 +94,36 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_design_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_favorite: boolean
+          name: string
+          tokens: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_favorite?: boolean
+          name: string
+          tokens: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_favorite?: boolean
+          name?: string
+          tokens?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           active: boolean
