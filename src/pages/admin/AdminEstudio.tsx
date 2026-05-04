@@ -118,7 +118,8 @@ const AdminEstudio = () => {
 
       const rows = variants.map((v) => ({
         name: v.name || 'Sem nome',
-        tokens: v as unknown as Record<string, unknown>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tokens: v as any,
         is_favorite: false,
       }));
       const { data: inserted, error: insErr } = await supabase
