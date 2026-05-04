@@ -87,7 +87,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
                   text={block.title}
                   style={{
                     fontFamily: tokens.displayFont,
-                    fontSize: 64,
+                    fontSize: 64 * titleScale,
                     lineHeight: 1.02,
                     letterSpacing: '-0.02em',
                     fontWeight: 700,
@@ -141,7 +141,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
                 text={block.title}
                 style={{
                   fontFamily: tokens.displayFont,
-                  fontSize: 120,
+                  fontSize: 120 * titleScale,
                   lineHeight: 0.92,
                   letterSpacing: '-0.03em',
                   fontWeight: 700,
@@ -176,7 +176,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
               text={block.title}
               style={{
                 fontFamily: tokens.displayFont,
-                fontSize: 92,
+                fontSize: 92 * titleScale,
                 lineHeight: 0.95,
                 letterSpacing: '-0.025em',
                 fontWeight: 700,
@@ -230,7 +230,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
               text={block.title}
               style={{
                 fontFamily: tokens.displayFont,
-                fontSize: 80,
+                fontSize: 80 * titleScale,
                 lineHeight: 0.95,
                 letterSpacing: '-0.025em',
                 fontWeight: 700,
@@ -277,7 +277,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
                 text={block.title}
                 style={{
                   fontFamily: tokens.displayFont,
-                  fontSize: 88,
+                  fontSize: 88 * titleScale,
                   lineHeight: 0.95,
                   letterSpacing: '-0.025em',
                   fontWeight: 700,
@@ -328,7 +328,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
               text={block.title}
               style={{
                 fontFamily: tokens.displayFont,
-                fontSize: 64,
+                fontSize: 64 * titleScale,
                 lineHeight: 0.98,
                 letterSpacing: '-0.025em',
                 fontWeight: 700,
