@@ -1,6 +1,6 @@
 import { forwardRef, CSSProperties } from 'react';
 import { ArteBlock, renderTitle } from '@/lib/arteContent';
-import { TemplateId, TemplateMeta, DesignTokens } from '@/lib/arteTemplates';
+import { TemplateId, TemplateMeta, DesignTokens, TemplateVariant, defaultVariantFor } from '@/lib/arteTemplates';
 import auraLogo from '@/assets/aura-logo.png';
 
 interface Props {
@@ -8,10 +8,19 @@ interface Props {
   tokens: DesignTokens;
   block: ArteBlock;
   photoUrl?: string;
-  photoLabel?: string; // ex: "Dra. Luana" ou "Limpeza de pele"
+  photoLabel?: string;
   whatsapp?: string;
   instagram?: string;
+  variant?: TemplateVariant;
 }
+
+const photoObjectPosition = (focus: TemplateVariant['photoFocus']) => {
+  switch (focus) {
+    case 'face': return 'center 18%';
+    case 'wide': return 'center center';
+    default: return 'center 30%';
+  }
+};
 
 const Title = ({ text, style }: { text: string; style?: CSSProperties }) => (
   <h1 style={style}>
@@ -41,7 +50,10 @@ const shapeClipPath = (style: DesignTokens['shapeStyle']): CSSProperties => {
 };
 
 export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
-  ({ template, tokens, block, photoUrl, photoLabel, whatsapp, instagram }, ref) => {
+  ({ template, tokens, block, photoUrl, photoLabel, whatsapp, instagram, variant }, ref) => {
+    const v = variant || defaultVariantFor(template.id);
+    const titleScale = v.titleScale;
+    const objPos = photoObjectPosition(v.photoFocus);
     const baseStyle: CSSProperties = {
       width: template.size.w,
       height: template.size.h,
@@ -62,7 +74,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
             <div style={{ padding: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.bg }}>
               {photoUrl && (
                 <div style={{ width: '100%', aspectRatio: '4/5', overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,.18)', ...photoShape }}>
-                  <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
+                  <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: objPos }} />
                 </div>
               )}
             </div>
@@ -75,7 +87,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
                   text={block.title}
                   style={{
                     fontFamily: tokens.displayFont,
-                    fontSize: 64,
+                    fontSize: 64 * titleScale,
                     lineHeight: 1.02,
                     letterSpacing: '-0.02em',
                     fontWeight: 700,
@@ -129,7 +141,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
                 text={block.title}
                 style={{
                   fontFamily: tokens.displayFont,
-                  fontSize: 120,
+                  fontSize: 120 * titleScale,
                   lineHeight: 0.92,
                   letterSpacing: '-0.03em',
                   fontWeight: 700,
@@ -164,7 +176,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
               text={block.title}
               style={{
                 fontFamily: tokens.displayFont,
-                fontSize: 92,
+                fontSize: 92 * titleScale,
                 lineHeight: 0.95,
                 letterSpacing: '-0.025em',
                 fontWeight: 700,
@@ -197,7 +209,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
       return (
         <div ref={ref} style={baseStyle}>
           {photoUrl && (
-            <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%' }} />
+            <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: objPos }} />
           )}
           <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${tokens.bgAccent}33 0%, transparent 30%, ${tokens.bgAccent}ee 100%)` }} />
 
@@ -218,7 +230,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
               text={block.title}
               style={{
                 fontFamily: tokens.displayFont,
-                fontSize: 80,
+                fontSize: 80 * titleScale,
                 lineHeight: 0.95,
                 letterSpacing: '-0.025em',
                 fontWeight: 700,
@@ -265,7 +277,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
                 text={block.title}
                 style={{
                   fontFamily: tokens.displayFont,
-                  fontSize: 88,
+                  fontSize: 88 * titleScale,
                   lineHeight: 0.95,
                   letterSpacing: '-0.025em',
                   fontWeight: 700,
@@ -301,7 +313,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
           <div style={{ position: 'relative', aspectRatio: '1/1', maxWidth: '100%' }}>
             <div style={{ position: 'absolute', inset: 0, background: tokens.bgAccent, ...photoShape, overflow: 'hidden' }}>
               {photoUrl && (
-                <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
+                <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: objPos }} />
               )}
             </div>
             <div style={{ position: 'absolute', bottom: -12, right: -12, padding: '14px 22px', background: tokens.accent, color: tokens.bgAccent, fontFamily: tokens.displayFont, fontSize: 56, fontWeight: 800, lineHeight: 1, ...(tokens.shapeStyle === 'circle' ? { borderRadius: '50%', width: 130, height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center' } : { borderRadius: 8 }) }}>
@@ -316,7 +328,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
               text={block.title}
               style={{
                 fontFamily: tokens.displayFont,
-                fontSize: 64,
+                fontSize: 64 * titleScale,
                 lineHeight: 0.98,
                 letterSpacing: '-0.025em',
                 fontWeight: 700,

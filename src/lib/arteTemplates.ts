@@ -93,6 +93,31 @@ export interface DesignTokens {
   vibe: 'editorial' | 'magazine' | 'minimal' | 'dramatic';
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Template variants — variações cosméticas leves aplicadas sobre os
+// templates base (titleScale, marcador, foco da foto, alinhamento).
+// IA gera novos com a mesma UX dos design tokens.
+// ─────────────────────────────────────────────────────────────────────
+export interface TemplateVariant {
+  name: string;
+  baseTemplateId: TemplateId;
+  titleScale: number;            // 0.85 - 1.25
+  bulletStyle: 'dot' | 'square' | 'bar' | 'arrow';
+  photoFocus: 'face' | 'center' | 'wide'; // controla object-position
+  align: 'left' | 'center';
+  overlayIntensity: 'soft' | 'medium' | 'strong'; // só nos templates com foto cobertura
+}
+
+export const defaultVariantFor = (id: TemplateId): TemplateVariant => ({
+  name: 'Padrão da Casa',
+  baseTemplateId: id,
+  titleScale: 1,
+  bulletStyle: 'dot',
+  photoFocus: 'face',
+  align: 'left',
+  overlayIntensity: 'medium',
+});
+
 export const designPresets: DesignTokens[] = [
   {
     name: 'Marsala Clássico',

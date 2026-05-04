@@ -100,6 +100,7 @@ export type Database = {
           created_by: string | null
           id: string
           is_favorite: boolean
+          kind: string
           name: string
           tokens: Json
           updated_at: string
@@ -109,6 +110,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_favorite?: boolean
+          kind?: string
           name: string
           tokens: Json
           updated_at?: string
@@ -118,6 +120,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_favorite?: boolean
+          kind?: string
           name?: string
           tokens?: Json
           updated_at?: string
