@@ -74,7 +74,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
             <div style={{ padding: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.bg }}>
               {photoUrl && (
                 <div style={{ width: '100%', aspectRatio: '4/5', overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,.18)', ...photoShape }}>
-                  <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
+                  <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: objPos }} />
                 </div>
               )}
             </div>
@@ -209,7 +209,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
       return (
         <div ref={ref} style={baseStyle}>
           {photoUrl && (
-            <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%' }} />
+            <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: objPos }} />
           )}
           <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${tokens.bgAccent}33 0%, transparent 30%, ${tokens.bgAccent}ee 100%)` }} />
 
@@ -313,7 +313,7 @@ export const ArteCanvas = forwardRef<HTMLDivElement, Props>(
           <div style={{ position: 'relative', aspectRatio: '1/1', maxWidth: '100%' }}>
             <div style={{ position: 'absolute', inset: 0, background: tokens.bgAccent, ...photoShape, overflow: 'hidden' }}>
               {photoUrl && (
-                <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
+                <img src={photoUrl} alt="" crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: objPos }} />
               )}
             </div>
             <div style={{ position: 'absolute', bottom: -12, right: -12, padding: '14px 22px', background: tokens.accent, color: tokens.bgAccent, fontFamily: tokens.displayFont, fontSize: 56, fontWeight: 800, lineHeight: 1, ...(tokens.shapeStyle === 'circle' ? { borderRadius: '50%', width: 130, height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center' } : { borderRadius: 8 }) }}>
