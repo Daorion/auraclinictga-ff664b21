@@ -81,6 +81,17 @@ const AdminEstudio = () => {
     () => [...arteBlocksCurados, ...services.map(serviceToBlock)], [services],
   );
 
+  // Agrupa serviços com o mesmo nome (ex: "Depilação a Laser" feita por várias profissionais)
+  const serviceGroups = useMemo(() => {
+    const map = new Map<string, { key: string; name: string; items: ServiceLite[] }>();
+    services.forEach((s) => {
+      const key = s.name.trim().toLowerCase();
+      if (!map.has(key)) map.set(key, { key, name: s.name, items: [] });
+      map.get(key)!.items.push(s);
+    });
+    return Array.from(map.values());
+  }, [services]);
+
   const scale = useMemo(
     () => Math.min(PREVIEW_MAX_W / template.size.w, PREVIEW_MAX_H / template.size.h),
     [template],
