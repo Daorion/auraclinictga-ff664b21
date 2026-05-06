@@ -38,6 +38,7 @@ const AdminEstudio = () => {
   const [downloadBusy, setDownloadBusy] = useState(false);
   const [services, setServices] = useState<ServiceLite[]>([]);
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const template = templates[templateIdx];
@@ -79,6 +80,17 @@ const AdminEstudio = () => {
   const allBlocks: ArteBlock[] = useMemo(
     () => [...arteBlocksCurados, ...services.map(serviceToBlock)], [services],
   );
+
+  // Agrupa serviços com o mesmo nome (ex: "Depilação a Laser" feita por várias profissionais)
+  const serviceGroups = useMemo(() => {
+    const map = new Map<string, { key: string; name: string; items: ServiceLite[] }>();
+    services.forEach((s) => {
+      const key = s.name.trim().toLowerCase();
+      if (!map.has(key)) map.set(key, { key, name: s.name, items: [] });
+      map.get(key)!.items.push(s);
+    });
+    return Array.from(map.values());
+  }, [services]);
 
   const scale = useMemo(
     () => Math.min(PREVIEW_MAX_W / template.size.w, PREVIEW_MAX_H / template.size.h),
@@ -508,39 +520,89 @@ const AdminEstudio = () => {
                       {services.length === 0 && (
                         <p className="text-xs text-muted-foreground p-2">Nenhum serviço cadastrado</p>
                       )}
-                      {services.map((s) => {
-                        const sb = serviceToBlock(s);
-                        const matchingPhoto = s.image_url
-                          ? photoOptions.findIndex((p) => p.id === `svc-${s.id}`)
-                          : -1;
+                      {serviceGroups.map((group) => {
+                        const isOpen = expandedGroup === group.key;
+                        const isMulti = group.items.length > 1;
+                        const groupActive = group.items.some((s) => `svc-${s.id}` === block.id);
+                        const firstWithImg = group.items.find((s) => s.image_url);
                         return (
-                          <button
-                            key={s.id}
-                            onClick={() => {
-                              setBlock(sb);
-                              if (matchingPhoto >= 0) setPhotoIdx(matchingPhoto);
-                            }}
-                            className={`w-full text-left rounded-lg border p-2.5 transition flex items-center gap-2.5 ${
-                              sb.id === block.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
-                            }`}
-                          >
-                            {s.image_url ? (
-                              <img src={s.image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
-                            ) : (
-                              <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-                                <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                          <div key={group.key} className="space-y-1">
+                            <button
+                              onClick={() => {
+                                if (isMulti) {
+                                  setExpandedGroup(isOpen ? null : group.key);
+                                } else {
+                                  const s = group.items[0];
+                                  setBlock(serviceToBlock(s));
+                                  const idx = photoOptions.findIndex((p) => p.id === `svc-${s.id}`);
+                                  if (idx >= 0) setPhotoIdx(idx);
+                                }
+                              }}
+                              className={`w-full text-left rounded-lg border p-2.5 transition flex items-center gap-2.5 ${
+                                groupActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                              }`}
+                            >
+                              {firstWithImg?.image_url ? (
+                                <img src={firstWithImg.image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+                              ) : (
+                                <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                                  <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  {group.items[0].category || 'Serviço'}
+                                </p>
+                                <p className="text-xs font-medium mt-0.5 truncate">{group.name}</p>
+                                {isMulti && (
+                                  <p className="text-[9px] text-primary mt-0.5">
+                                    {group.items.length} profissionais — clique para escolher
+                                  </p>
+                                )}
+                              </div>
+                              {isMulti && (
+                                <span className="text-[10px] font-medium text-primary shrink-0">
+                                  {isOpen ? '▾' : '▸'}
+                                </span>
+                              )}
+                            </button>
+                            {isMulti && isOpen && (
+                              <div className="ml-4 pl-3 border-l-2 border-primary/20 space-y-1">
+                                {group.items.map((s) => {
+                                  const sb = serviceToBlock(s);
+                                  const matchingPhoto = s.image_url
+                                    ? photoOptions.findIndex((p) => p.id === `svc-${s.id}`)
+                                    : -1;
+                                  return (
+                                    <button
+                                      key={s.id}
+                                      onClick={() => {
+                                        setBlock(sb);
+                                        if (matchingPhoto >= 0) setPhotoIdx(matchingPhoto);
+                                      }}
+                                      className={`w-full text-left rounded-lg border p-2 transition flex items-center gap-2 ${
+                                        sb.id === block.id ? 'border-primary bg-primary/5' : 'border-border/60 hover:border-primary/40'
+                                      }`}
+                                    >
+                                      {s.image_url ? (
+                                        <img src={s.image_url} alt="" className="w-7 h-7 rounded object-cover shrink-0" />
+                                      ) : (
+                                        <div className="w-7 h-7 rounded bg-muted flex items-center justify-center shrink-0">
+                                          <User className="w-3 h-3 text-muted-foreground" />
+                                        </div>
+                                      )}
+                                      <p className="text-[11px] flex-1 truncate">
+                                        {s.professional_name || 'Profissional'}
+                                      </p>
+                                      {matchingPhoto >= 0 && (
+                                        <span className="text-[9px] text-primary uppercase tracking-wider shrink-0">foto</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             )}
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {s.category || 'Serviço'}
-                              </p>
-                              <p className="text-xs font-medium mt-0.5 truncate">{s.name}</p>
-                            </div>
-                            {matchingPhoto >= 0 && (
-                              <span className="text-[9px] text-primary uppercase tracking-wider shrink-0">foto</span>
-                            )}
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
