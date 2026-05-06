@@ -38,6 +38,7 @@ const AdminEstudio = () => {
   const [downloadBusy, setDownloadBusy] = useState(false);
   const [services, setServices] = useState<ServiceLite[]>([]);
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const template = templates[templateIdx];
