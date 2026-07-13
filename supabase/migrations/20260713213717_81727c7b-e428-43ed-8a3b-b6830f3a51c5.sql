@@ -1,0 +1,2 @@
+REVOKE SELECT ON public.professionals FROM anon;
+GRANT SELECT (id, user_id, slug, name, title, bio, photo_url, commission_percent, active, display_order, created_at, updated_at) ON public.professionals TO anon;
