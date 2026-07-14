@@ -59,5 +59,5 @@ export const auraApi = {
 };
 
 export function isNotConfigured(r: AuraProxyResult): boolean {
-  return !r.ok && r.error === "not_configured";
+  return r.ok === false && r.error === "not_configured";
 }

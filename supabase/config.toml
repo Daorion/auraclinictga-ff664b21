@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.invite-professional]
 verify_jwt = true
+
+[functions.aura-proxy]
+verify_jwt = true
+
+[functions.aura-webhook]
+verify_jwt = false
