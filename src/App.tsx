@@ -26,6 +26,10 @@ import AdminProfissionais from "./pages/admin/AdminProfissionais";
 import AdminProfissionalDetail from "./pages/admin/AdminProfissionalDetail";
 import AdminAgenda from "./pages/admin/AdminAgenda";
 import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
+import AdminAtendimentos from "./pages/admin/AdminAtendimentos";
+import AdminIntegracoes from "./pages/admin/AdminIntegracoes";
+import AdminAurora from "./pages/admin/AdminAurora";
+import AdminAuditoria from "./pages/admin/AdminAuditoria";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +52,10 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="atendimentos" element={<AdminAtendimentos />} />
+              <Route path="aurora" element={<AdminAurora />} />
+              <Route path="integracoes" element={<AdminIntegracoes />} />
+              <Route path="auditoria" element={<AdminAuditoria />} />
               <Route path="agenda" element={<AdminAgenda />} />
               <Route path="financeiro" element={<AdminFinanceiro />} />
               <Route path="servicos" element={<AdminServicos />} />

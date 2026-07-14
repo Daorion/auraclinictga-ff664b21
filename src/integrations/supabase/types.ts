@@ -87,6 +87,39 @@ export type Database = {
           },
         ]
       }
+      ai_settings: {
+        Row: {
+          action_key: string
+          config: Json
+          created_at: string
+          id: string
+          label: string
+          mode: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          action_key: string
+          config?: Json
+          created_at?: string
+          id?: string
+          label: string
+          mode?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          action_key?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          label?: string
+          mode?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       appointment_history: {
         Row: {
           appointment_id: string
@@ -207,6 +240,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_user_id: string | null
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip?: string | null
+        }
+        Relationships: []
       }
       cash_sessions: {
         Row: {
@@ -470,6 +539,142 @@ export type Database = {
           },
         ]
       }
+      contacts: {
+        Row: {
+          client_id: string | null
+          consent_at: string | null
+          consent_marketing: boolean
+          created_at: string
+          first_seen_at: string
+          id: string
+          landing_page: string | null
+          last_seen_at: string
+          metadata: Json
+          name: string | null
+          origin: string | null
+          phone: string
+          updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          consent_at?: string | null
+          consent_marketing?: boolean
+          created_at?: string
+          first_seen_at?: string
+          id?: string
+          landing_page?: string | null
+          last_seen_at?: string
+          metadata?: Json
+          name?: string | null
+          origin?: string | null
+          phone: string
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          consent_at?: string | null
+          consent_marketing?: boolean
+          created_at?: string
+          first_seen_at?: string
+          id?: string
+          landing_page?: string | null
+          last_seen_at?: string
+          metadata?: Json
+          name?: string | null
+          origin?: string | null
+          phone?: string
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          ai_enabled: boolean
+          assigned_to: Database["public"]["Enums"]["conv_assignee"]
+          assigned_user_id: string | null
+          channel: string
+          contact_id: string
+          created_at: string
+          external_session: string | null
+          id: string
+          interest: string | null
+          internal_notes: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          metadata: Json
+          stage: Database["public"]["Enums"]["conv_stage"]
+          status: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          ai_enabled?: boolean
+          assigned_to?: Database["public"]["Enums"]["conv_assignee"]
+          assigned_user_id?: string | null
+          channel?: string
+          contact_id: string
+          created_at?: string
+          external_session?: string | null
+          id?: string
+          interest?: string | null
+          internal_notes?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          metadata?: Json
+          stage?: Database["public"]["Enums"]["conv_stage"]
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          ai_enabled?: boolean
+          assigned_to?: Database["public"]["Enums"]["conv_assignee"]
+          assigned_user_id?: string | null
+          channel?: string
+          contact_id?: string
+          created_at?: string
+          external_session?: string | null
+          id?: string
+          interest?: string | null
+          internal_notes?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          metadata?: Json
+          stage?: Database["public"]["Enums"]["conv_stage"]
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_categories: {
         Row: {
           active: boolean
@@ -670,40 +875,64 @@ export type Database = {
       }
       messages: {
         Row: {
+          author: string
+          author_user_id: string | null
           body: string | null
           channel: string
           client_id: string | null
+          contact_id: string | null
+          conversation_id: string | null
           created_at: string
           direction: string
+          error: string | null
           external_id: string | null
           id: string
+          is_draft: boolean
           media_url: string | null
+          metadata: Json
+          msg_type: string
           sent_at: string
           status: string | null
           updated_at: string
         }
         Insert: {
+          author?: string
+          author_user_id?: string | null
           body?: string | null
           channel?: string
           client_id?: string | null
+          contact_id?: string | null
+          conversation_id?: string | null
           created_at?: string
           direction: string
+          error?: string | null
           external_id?: string | null
           id?: string
+          is_draft?: boolean
           media_url?: string | null
+          metadata?: Json
+          msg_type?: string
           sent_at?: string
           status?: string | null
           updated_at?: string
         }
         Update: {
+          author?: string
+          author_user_id?: string | null
           body?: string | null
           channel?: string
           client_id?: string | null
+          contact_id?: string | null
+          conversation_id?: string | null
           created_at?: string
           direction?: string
+          error?: string | null
           external_id?: string | null
           id?: string
+          is_draft?: boolean
           media_url?: string | null
+          metadata?: Json
+          msg_type?: string
           sent_at?: string
           status?: string | null
           updated_at?: string
@@ -714,6 +943,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -743,6 +986,45 @@ export type Database = {
           display_order?: number
           id?: string
           name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      procedures_pricing: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          name: string
+          notes: string | null
+          pricing_json: Json
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name: string
+          notes?: string | null
+          pricing_json?: Json
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name?: string
+          notes?: string | null
+          pricing_json?: Json
           slug?: string
           updated_at?: string
         }
@@ -1012,6 +1294,45 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          last_error: string | null
+          last_qr_at: string | null
+          last_status_at: string
+          metadata: Json
+          phone_number: string | null
+          session_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_qr_at?: string | null
+          last_status_at?: string
+          metadata?: Json
+          phone_number?: string | null
+          session_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_qr_at?: string | null
+          last_status_at?: string
+          metadata?: Json
+          phone_number?: string | null
+          session_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1031,6 +1352,18 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "profissional"
+      conv_assignee: "aurora" | "sirlei"
+      conv_stage:
+        | "novo_contato"
+        | "em_qualificacao"
+        | "interessado"
+        | "aguardando_resposta"
+        | "solicitou_horario"
+        | "agendado"
+        | "confirmado"
+        | "em_atendimento"
+        | "cliente_recorrente"
+        | "encerrado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1159,6 +1492,19 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "profissional"],
+      conv_assignee: ["aurora", "sirlei"],
+      conv_stage: [
+        "novo_contato",
+        "em_qualificacao",
+        "interessado",
+        "aguardando_resposta",
+        "solicitou_horario",
+        "agendado",
+        "confirmado",
+        "em_atendimento",
+        "cliente_recorrente",
+        "encerrado",
+      ],
     },
   },
 } as const
