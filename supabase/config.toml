@@ -2,3 +2,6 @@ project_id = "okizljseegzvhdpywzpr"
 
 [functions.generate-artwork]
 verify_jwt = false
+
+[functions.invite-professional]
+verify_jwt = true
