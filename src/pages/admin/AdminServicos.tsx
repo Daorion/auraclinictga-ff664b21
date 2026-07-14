@@ -14,7 +14,6 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { profissionaisData } from "@/data/profissionais";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 
@@ -26,8 +25,12 @@ interface Service {
   professional_name: string | null;
   category: string | null;
   duration: string | null;
+  duration_minutes: number | null;
+  price_cents: number | null;
   active: boolean;
 }
+
+interface Prof { id: string; slug: string; name: string; title: string | null; }
 
 const serviceSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
@@ -43,11 +46,17 @@ const empty = {
   professional_slug: "",
   category: "",
   duration: "",
+  duration_minutes: 60,
+  price_reais: "",
   active: true,
 };
 
+const brl = (cents?: number | null) =>
+  typeof cents === "number" ? (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "";
+
 const AdminServicos = () => {
   const [services, setServices] = useState<Service[]>([]);
+  const [profs, setProfs] = useState<Prof[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
@@ -56,12 +65,13 @@ const AdminServicos = () => {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("services")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data: svc, error }, { data: pr }] = await Promise.all([
+      supabase.from("services").select("*").order("created_at", { ascending: false }),
+      supabase.from("professionals").select("id,slug,name,title").order("display_order").order("name"),
+    ]);
     if (error) toast.error("Erro ao carregar serviços");
-    else setServices(data as Service[]);
+    else setServices(svc as Service[]);
+    setProfs((pr as Prof[]) ?? []);
     setLoading(false);
   };
 
@@ -81,6 +91,8 @@ const AdminServicos = () => {
       professional_slug: s.professional_slug ?? "",
       category: s.category ?? "",
       duration: s.duration ?? "",
+      duration_minutes: s.duration_minutes ?? 60,
+      price_reais: s.price_cents != null ? (s.price_cents / 100).toFixed(2) : "",
       active: s.active,
     });
     setOpen(true);
@@ -92,15 +104,18 @@ const AdminServicos = () => {
       toast.error(parsed.error.errors[0].message);
       return;
     }
-    const prof = profissionaisData.find((p) => p.id === form.professional_slug);
+    const prof = profs.find((p) => p.slug === form.professional_slug);
     setSaving(true);
+    const priceNum = form.price_reais ? Math.round(Number(form.price_reais.replace(",", ".")) * 100) : null;
     const payload = {
       name: parsed.data.name,
       description: parsed.data.description || null,
       professional_slug: parsed.data.professional_slug,
-      professional_name: prof?.nome ?? null,
+      professional_name: prof?.name ?? null,
       category: parsed.data.category || null,
       duration: parsed.data.duration || null,
+      duration_minutes: form.duration_minutes || null,
+      price_cents: priceNum,
       active: form.active,
     };
     const op = editing
@@ -138,7 +153,7 @@ const AdminServicos = () => {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Serviços</h1>
-          <p className="text-muted-foreground mt-1">Cardápio editável da clínica</p>
+          <p className="text-muted-foreground mt-1">Cardápio editável — preços visíveis apenas no painel</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -161,9 +176,9 @@ const AdminServicos = () => {
                 >
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
-                    {profissionaisData.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.nome} <span className="text-muted-foreground">— {p.especialidade}</span>
+                    {profs.map((p) => (
+                      <SelectItem key={p.id} value={p.slug}>
+                        {p.name} <span className="text-muted-foreground">— {p.title}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -179,11 +194,30 @@ const AdminServicos = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Duração</Label>
+                  <Label>Rótulo de duração</Label>
                   <Input
                     placeholder="Ex: 60 min"
                     value={form.duration}
                     onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Duração (minutos)</Label>
+                  <Input
+                    type="number"
+                    min={5}
+                    step={5}
+                    value={form.duration_minutes}
+                    onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Preço (R$)</Label>
+                  <Input
+                    inputMode="decimal"
+                    placeholder="150,00"
+                    value={form.price_reais}
+                    onChange={(e) => setForm({ ...form, price_reais: e.target.value })}
                   />
                 </div>
               </div>
@@ -230,9 +264,11 @@ const AdminServicos = () => {
                   <h3 className="font-semibold truncate">{s.name}</h3>
                   {!s.active && <Badge variant="secondary">Inativo</Badge>}
                   {s.category && <Badge variant="outline">{s.category}</Badge>}
+                  {s.price_cents != null && <Badge>{brl(s.price_cents)}</Badge>}
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {s.professional_name}{s.duration && ` • ${s.duration}`}
+                  {s.professional_name}
+                  {s.duration_minutes ? ` • ${s.duration_minutes} min` : s.duration ? ` • ${s.duration}` : ""}
                 </p>
                 {s.description && (
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>
