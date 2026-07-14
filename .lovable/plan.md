@@ -1,116 +1,91 @@
+# Plano — Aura Clinic: Central de Atendimento + Aurora IA
 
-# Sistema de Administração — Aura Clinic
+## Situação atual (após análise)
 
-Sistema interno completo em `/admin`, com base preparada para expansões futuras (salas, WhatsApp, IA de atendimento).
+O projeto já tem:
+- Site público completo (Marsala/Cormorant/Inter) — **preservado 100%**
+- Painel `/admin` com auth real (Supabase), roles `admin`/`profissional`
+- Módulos: Dashboard, Agenda, Clientes, Profissionais, Financeiro, Serviços, Estúdio de Artes
+- Tabelas base já existentes: `clients`, `appointments`, `services`, `professionals`, `messages`, `ai_conversations`, `ai_messages` (usadas parcialmente)
 
-## Módulos da Fase 1
+Portanto **não vamos reconstruir** — vamos **expandir** o admin e criar a ponte com a API intermediária + WAHA + Gemini.
 
-### 1. Clientes (CRM)
-- Cadastro: nome, telefone/WhatsApp, e-mail, nascimento, CPF, endereço, observações, tags
-- Histórico de atendimentos automático (linkado à agenda)
-- Ficha de anamnese em texto livre + upload de fotos (bucket `client-photos`)
-- Busca por nome/telefone
-- Contador de visitas e ticket médio
-
-### 2. Agenda & Atendimentos
-- Calendário semanal e diário, com filtro por profissional
-- Marcação: cliente + profissional + serviço + data/hora + sala (opcional já, para preparar módulo futuro) + valor + observação
-- Status: agendado, confirmado, realizado, faltou, cancelado
-- Bloqueio automático de conflito (mesmo profissional/horário)
-- Ao marcar como "realizado", gera lançamento financeiro automaticamente
-
-### 3. Financeiro Intermediário
-- **Caixa diário**: entradas e saídas por dia, saldo, fechamento
-- **Contas a receber**: gerado dos atendimentos realizados; status pago/pendente; formas de pagamento (dinheiro, pix, débito, crédito à vista, crédito parcelado)
-- **Contas a pagar**: cadastro manual (aluguel, insumos, salários), com vencimento e recorrência simples
-- **Comissões por profissional**: percentual configurável por profissional (ou por serviço); relatório do período
-- **Relatórios**: faturamento por período, por profissional, por serviço, por forma de pagamento
-
-## Controle de Acesso
-
-Dois papéis via `user_roles` (já existente): `admin` e `profissional` (novo valor no enum).
-
-- **Admin**: acesso total a tudo
-- **Profissional**: vê apenas própria agenda, próprios clientes atendidos, próprias comissões. Sem acesso a caixa/contas a pagar/relatórios gerais.
-
-Cada usuário `profissional` fica ligado a um registro na tabela `professionals` via `user_id`.
-
-## Estrutura de Dados (fase 1 + base para futuro)
+## Arquitetura (sem chaves no frontend)
 
 ```text
-clients            → dados pessoais + observações
-client_notes       → anamnese/evolução (múltiplas entradas com data)
-client_photos      → antes/depois (storage)
-
-professionals      → migra src/data/profissionais.ts para o banco
-                     + user_id (fk auth.users), commission_percent, active
-service_catalog    → refina services atual: add price_cents, duration_minutes
-professional_services → n:n (quem faz o quê, com preço/comissão específicos opcionais)
-
-rooms              → id, nome, ativo   (base pro módulo salas futuro)
-
-appointments       → client_id, professional_id, service_id, room_id?,
-                     start_at, end_at, status, price_cents, notes
-appointment_history → log de mudanças de status (auditoria)
-
-payment_methods    → dinheiro, pix, débito, crédito…
-finance_entries    → tipo(receita/despesa), origem(appointment/manual),
-                     appointment_id?, category_id, amount_cents, paid_at,
-                     due_at, status, method_id, installments
-finance_categories → plano de contas simples
-commissions        → appointment_id, professional_id, percent, amount_cents,
-                     status(pendente/pago), paid_at
-
-cash_sessions      → abertura/fechamento de caixa diário
+[Site + Painel Lovable]  ⇄  [Edge Functions Lovable Cloud]  ⇄  [API intermediária VPS]
+                                                                    ├─ WAHA (Docker)
+                                                                    ├─ PostgreSQL
+                                                                    ├─ Redis + fila
+                                                                    └─ Gemini
 ```
 
-Todas com RLS: admin acesso total; profissional só enxerga linhas onde `professional_id` = seu registro (via `has_role` + função `is_own_professional`). Todas com GRANT explícito para `authenticated` e `service_role`.
+- Frontend chama **apenas** Edge Functions (`aura-proxy`, `aura-webhook`).
+- Edge Functions guardam `AURA_API_URL`, `AURA_API_TOKEN`, `WAHA_WEBHOOK_SECRET` como secrets do Cloud.
+- **Nenhuma** credencial de WAHA/Gemini/JWT aparece no bundle.
+- Conversas/mensagens ficam espelhadas no Postgres do Cloud (para o painel ler em tempo real via Realtime) e a fonte de verdade das trocas com WhatsApp fica na VPS.
 
-## Base para o Futuro (sem construir agora, só preparado)
+## Etapas de entrega
 
-- **Salas**: tabela `rooms` já criada + campo `room_id` em `appointments`; UI de gestão entra na fase 2.
-- **WhatsApp**: campo `whatsapp_phone` no cliente + tabela `messages` (client_id, direction, body, sent_at, external_id) já modelada para receber Twilio/WhatsApp Business depois; edge function `whatsapp-webhook` fica como stub.
-- **IA de atendimento**: tabela `ai_conversations` + `ai_messages` com role/content, ligadas ao cliente; edge function `ai-agent` como stub usando Lovable AI Gateway; base pronta para agendar via chat.
-- **Portal do cliente / auto-agendamento**: schema já suporta (basta expor rotas públicas depois).
+### Etapa 1 — Fundação (esta rodada)
+1. **Schema**: expandir `messages`, `ai_conversations` e adicionar:
+   - `conversations` (thread por contato: status, etapa, responsável Aurora/Sirlei, unread_count, last_message_at)
+   - `contacts` (telefone único, vínculo opcional com `clients`, origem/UTM)
+   - `ai_settings` (modo global e por ação: automático / revisão / desativado)
+   - `audit_log` (quem, o quê, quando)
+   - `procedures_pricing` (base oficial editável — massagem, drenagem, limpeza, eletroterapia, drenomodeladora, combo)
+   - `whatsapp_sessions` (status, número conectado, last_qr_at)
+   - RLS + GRANT em todas
+2. **Edge Functions** (stubs com contrato pronto, chamam `AURA_API_URL` quando disponível, retornam erro claro quando não):
+   - `aura-proxy` — repassa `GET /conversations`, `PATCH /conversations/:id`, `POST /messages`, `POST /ai/reply`, `GET /whatsapp/status`, `POST /whatsapp/start`, `GET /whatsapp/qr`
+   - `aura-webhook` — recebe eventos do WAHA (via API intermediária), valida `WEBHOOK_SECRET`, idempotência por `external_id`, insere em `messages` + atualiza `conversations`
+3. **Camada de serviço no frontend**: `src/lib/auraApi.ts` — ponto único, nenhum componente chama Supabase functions diretamente.
+4. **Secrets** (pedir ao usuário quando ele tiver a VPS pronta): `AURA_API_URL`, `AURA_API_TOKEN`, `WAHA_WEBHOOK_SECRET`. Sem eles, o painel mostra estado "API intermediária não configurada" — nada de mock apresentado como real.
+5. **Seed** da tabela `procedures_pricing` com os valores oficiais informados.
 
-## UI
+### Etapa 2 — Caixa de entrada (Atendimentos)
+- Página `/admin/atendimentos`: lista de conversas + painel de mensagens (Realtime), busca, filtros por etapa/responsável, unread, indicador Aurora/Sirlei.
+- Ações: enviar resposta manual, "Preparar resposta com IA", "Assumir conversa" (pausa Aurora nesta thread), "Devolver para Aurora".
+- Anotações internas, interesse, origem, etapa comercial.
 
-Painel `/admin` atual é reaproveitado. Novos itens no menu:
-- Dashboard (KPIs: agendamentos do dia, faturamento do mês, próximos aniversariantes)
-- Agenda (calendário)
-- Clientes
-- Atendimentos (lista)
-- Financeiro (caixa, receber, pagar, comissões, relatórios)
-- Profissionais (migra o roster estático para o banco)
-- Serviços (mantém, refinado com preço e duração)
-- Configurações (formas de pagamento, categorias, salas)
+### Etapa 3 — Aurora (IA)
+- Página `/admin/aurora`: prompt/persona (bloqueado, editável só com senha admin), modos por ação (automático / revisão / desativado), base de conhecimento = `procedures_pricing` + FAQs.
+- Guardrails do system prompt (não diagnostica, não inventa preço/horário, transfere em casos sensíveis).
+- Endpoint `aura-proxy → /ai/reply` envia histórico + contexto do contato + preços atuais do banco.
 
-Design mantém a identidade Marsala + Cormorant/Inter, glassmorphism sutil no painel.
+### Etapa 4 — WhatsApp (WAHA)
+- Página `/admin/integracoes`: status da sessão, botão "Conectar", exibição de QR (polling), reiniciar sessão, número conectado, erros legíveis.
+- Toda comunicação via `aura-proxy`.
 
-## Entrega em ondas dentro da Fase 1
+### Etapa 5 — Visão Geral + IA transversal
+- Dashboard novo com KPIs pedidos (conversas do dia, resposta média, Aurora vs Sirlei, top procedimentos, status WAHA/API/IA).
+- Resumos automáticos, classificação de etapa, sugestão de próxima ação, follow-ups — chamados sob demanda via `/ai/*`.
 
-Para não travar tudo em uma migration gigante, sugiro esta ordem:
+### Etapa 6 — Agenda + Site + Auditoria + LGPD
+- Aurora consulta disponibilidade real (usa `appointments`), nunca confirma sem checar.
+- Formulários do site gravam origem/UTM em `contacts`.
+- Página `/admin/auditoria` lê `audit_log`.
+- Consentimento LGPD + exclusão/anonimização de contato.
 
-1. **Migration 1** — schema completo (todas as tabelas acima) + RLS + GRANT + enum `profissional`
-2. **Onda A** — Clientes (CRUD + notas + fotos)
-3. **Onda B** — Profissionais no banco + Serviços refinados + vínculo user↔profissional
-4. **Onda C** — Agenda (calendário + CRUD + conflitos)
-5. **Onda D** — Financeiro (caixa, receber gerado da agenda, pagar, comissões, relatórios)
-6. **Onda E** — Dashboard consolidado
+## Detalhes técnicos
 
-Cada onda entra em uma mensagem separada, verificável no preview antes da próxima.
+- **Realtime**: `ALTER PUBLICATION supabase_realtime ADD TABLE messages, conversations` para atualizar caixa de entrada ao vivo.
+- **Idempotência**: `messages.external_id UNIQUE` — webhook nunca duplica.
+- **Pausar Aurora por thread**: `conversations.ai_enabled boolean` + `assigned_to` (`aurora`/`sirlei`); worker da VPS respeita esse flag antes de responder.
+- **Rate limit**: por IP na Edge Function do webhook + validação de assinatura HMAC.
+- **Modo de IA**: `ai_settings.mode` em `automatico | revisar | desativado`, checado a cada ação; ações em "revisar" viram rascunhos na conversa.
+- **Sem mock em produção**: quando `AURA_API_URL` não estiver configurada, cada tela mostra banner "Aguardando configuração da API intermediária" — nunca dados falsos.
+- **Preços**: só no admin, tabela editável; Aurora recebe via contexto, nunca hardcoded no prompt.
+- **Segredos**: `AURA_API_URL`, `AURA_API_TOKEN`, `WAHA_WEBHOOK_SECRET`, `GEMINI_API_KEY` (opcional — só se você quiser rodar IA também dentro do Cloud como fallback). Adicionados via ferramenta segura, nunca no `.env` do Vite.
 
-## Detalhes Técnicos
+## O que **não** muda
 
-- Valores monetários em `bigint` (centavos) para evitar erro de float
-- `updated_at` com trigger `touch_updated_at` já existente
-- Calendário: `react-big-calendar` ou implementação custom leve com date-fns (já no projeto)
-- Fotos de clientes: novo bucket privado `client-photos` com policy por admin/profissional dono
-- Relatórios: queries agregadas + gráficos com `recharts` (já disponível)
-- Sem preços expostos no site público (regra da casa mantida) — preços vivem só no admin
+Site público, identidade visual, textos, SEO, formulários visuais, rotas `/servicos*`, `/profissionais`, módulos admin já existentes (Clientes, Profissionais, Financeiro, Estúdio) — todos preservados. Novos itens entram como abas adicionais no menu do admin.
 
-## Confirmações antes de começar
+## Pergunta antes de começar a Etapa 1
 
-1. Migração dos dados estáticos: OK levar as profissionais atuais (`src/data/profissionais.ts`) para a tabela `professionals` na Onda B? A página pública continua funcionando lendo do banco.
-2. Cada profissional terá login próprio? Se sim, na Onda B eu crio um fluxo do admin para "convidar profissional" (cria user + role + vincula).
-3. Começo pela **Migration 1 + Onda A (Clientes)** nesta próxima mensagem?
+Para você aprovar o plano com clareza:
+
+1. **A VPS + API intermediária + WAHA já existem**, ou preciso entregar o painel funcionando com as Edge Functions prontas para plugar assim que você subir a VPS? (define se peço os secrets agora ou na Etapa 4)
+2. Confirmo que a IA (Gemini) sempre vai ser chamada **pela VPS** (nunca pela Edge Function)? Se sim, o Lovable só chama `aura-proxy → /ai/reply` — a chave Gemini nunca passa por aqui.
+3. Posso começar já pela **Etapa 1 (schema + edge functions + camada de serviço + seed de preços)** na próxima mensagem?
