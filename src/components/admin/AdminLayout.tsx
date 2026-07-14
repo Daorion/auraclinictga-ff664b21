@@ -2,16 +2,20 @@ import { ReactNode } from "react";
 import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet } from "lucide-react";
+import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet, MessageSquare, Bot, Plug, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 const nav = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin", label: "Visão geral", icon: LayoutDashboard, end: true },
+  { to: "/admin/atendimentos", label: "Atendimentos", icon: MessageSquare },
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
+  { to: "/admin/aurora", label: "Aurora IA", icon: Bot },
   { to: "/admin/profissionais", label: "Profissionais", icon: UserCog },
   { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
   { to: "/admin/servicos", label: "Serviços", icon: ScrollText },
+  { to: "/admin/integracoes", label: "Integrações", icon: Plug },
+  { to: "/admin/auditoria", label: "Auditoria", icon: ShieldAlert },
   { to: "/admin/imagens", label: "Imagens", icon: ImageIcon },
   { to: "/admin/estudio", label: "Estúdio de Artes", icon: Palette },
   { to: "/admin/historico", label: "Histórico", icon: History },
