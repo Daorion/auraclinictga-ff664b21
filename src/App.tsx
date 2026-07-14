@@ -20,6 +20,8 @@ import AdminServicos from "./pages/admin/AdminServicos";
 import AdminImagens from "./pages/admin/AdminImagens";
 import AdminEstudio from "./pages/admin/AdminEstudio";
 import AdminHistorico from "./pages/admin/AdminHistorico";
+import AdminClientes from "./pages/admin/AdminClientes";
+import AdminClienteDetail from "./pages/admin/AdminClienteDetail";
 
 const queryClient = new QueryClient();
 
