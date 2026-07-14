@@ -4,9 +4,13 @@
 // underlying transport (Edge Function today, direct HTTPS later) in one place.
 import { supabase } from "@/integrations/supabase/client";
 
-export type AuraProxyResult<T = unknown> =
-  | { ok: true; status: number; data: T }
-  | { ok: false; status: number; error: string; message?: string; data?: unknown };
+export interface AuraProxyResult<T = unknown> {
+  ok: boolean;
+  status: number;
+  data?: T;
+  error?: string;
+  message?: string;
+}
 
 interface CallOptions {
   path: string;
