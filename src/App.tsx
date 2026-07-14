@@ -22,6 +22,8 @@ import AdminEstudio from "./pages/admin/AdminEstudio";
 import AdminHistorico from "./pages/admin/AdminHistorico";
 import AdminClientes from "./pages/admin/AdminClientes";
 import AdminClienteDetail from "./pages/admin/AdminClienteDetail";
+import AdminProfissionais from "./pages/admin/AdminProfissionais";
+import AdminProfissionalDetail from "./pages/admin/AdminProfissionalDetail";
 
 const queryClient = new QueryClient();
 
