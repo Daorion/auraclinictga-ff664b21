@@ -2,11 +2,12 @@ import { ReactNode } from "react";
 import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog } from "lucide-react";
+import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 
 const nav = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/profissionais", label: "Profissionais", icon: UserCog },
   { to: "/admin/servicos", label: "Serviços", icon: ScrollText },
