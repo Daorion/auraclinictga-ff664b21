@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays } from "lucide-react";
+import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 const nav = [
@@ -10,6 +10,7 @@ const nav = [
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/profissionais", label: "Profissionais", icon: UserCog },
+  { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
   { to: "/admin/servicos", label: "Serviços", icon: ScrollText },
   { to: "/admin/imagens", label: "Imagens", icon: ImageIcon },
   { to: "/admin/estudio", label: "Estúdio de Artes", icon: Palette },
