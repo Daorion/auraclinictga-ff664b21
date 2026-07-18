@@ -45,8 +45,12 @@ async function sendWhatsApp(phone: string, text: string): Promise<{ id?: string;
   }
 }
 
-async function buildSystemPrompt(admin: any, contactName: string | null): Promise<string> {
-  // Base persona
+async function buildSystemPrompt(
+  admin: any,
+  contactName: string | null,
+  clientInfo: any | null,
+  recentAppointments: any[] | null,
+): Promise<string> {
   const { data: settings } = await admin
     .from("ai_settings")
     .select("action_key, config")
@@ -74,8 +78,29 @@ Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
     }).join("\n");
   }
 
-  const nameLine = contactName ? `\n\nNome do contato: ${contactName}` : "";
-  return persona + procText + nameLine;
+  // ---- Quem é essa pessoa? ----
+  let personText = "";
+  if (clientInfo) {
+    const parts: string[] = [];
+    parts.push(`Nome cadastrado: ${clientInfo.name}`);
+    if (clientInfo.birth_date) parts.push(`Nascimento: ${clientInfo.birth_date}`);
+    if (clientInfo.tags?.length) parts.push(`Tags: ${clientInfo.tags.join(", ")}`);
+    if (clientInfo.notes) parts.push(`Observações da clínica: ${clientInfo.notes}`);
+    if (recentAppointments && recentAppointments.length) {
+      const list = recentAppointments.slice(0, 5).map((a: any) =>
+        `- ${new Date(a.start_at).toLocaleDateString("pt-BR")} • ${a.service_name} (${a.status})`
+      ).join("\n");
+      parts.push(`Últimos atendimentos:\n${list}`);
+    }
+    personText = "\n\n=== Cliente identificada ===\n" + parts.join("\n") +
+      "\nUse o primeiro nome de forma natural. Trate como cliente conhecida.";
+  } else if (contactName) {
+    personText = `\n\n=== Contato novo ===\nNome no WhatsApp: ${contactName}. Ainda não é cliente cadastrada — colha nome completo educadamente na primeira oportunidade.`;
+  } else {
+    personText = `\n\n=== Contato novo ===\nAinda não temos o nome. Pergunte com gentileza como pode chamá-la.`;
+  }
+
+  return persona + procText + personText;
 }
 
 async function generateAiReply(
