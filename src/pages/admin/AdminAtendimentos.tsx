@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
