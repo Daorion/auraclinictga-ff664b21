@@ -59,7 +59,7 @@ chmod 600 .env
 
 # --- docker compose up (só API, worker, postgres, redis; WAHA já existe) ---
 echo "==> Subindo containers..."
-docker compose -f docker-compose.yml up -d postgres redis api worker
+docker compose -f docker-compose.waha-existente.yml up -d --build
 
 # --- Nginx + HTTPS ---
 echo "==> Configurando Nginx para $DOMAIN..."
