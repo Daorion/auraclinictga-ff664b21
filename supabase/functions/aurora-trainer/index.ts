@@ -151,8 +151,8 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       if (error) return { error: error.message };
       const ids: string[] = Array.isArray(args.client_ids) ? args.client_ids : [];
       if (ids.length) {
-        const { data: clients } = await admin.from("clients").select("id, name, phone").in("id", ids);
-        const rows = (clients ?? []).filter((c: any) => c.phone).map((c: any) => {
+        const { data: clients } = await admin.from("clients").select("id, name, phone, whatsapp_phone").in("id", ids);
+        const rows = (clients ?? []).map((c: any) => ({ ...c, phone: c.whatsapp_phone || c.phone })).filter((c: any) => c.phone).map((c: any) => {
           const firstName = String(c.name ?? "").split(" ")[0] || "";
           const msg = String(args.message_template).replaceAll("{{nome}}", firstName);
           return {
