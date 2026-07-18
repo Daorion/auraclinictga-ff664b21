@@ -302,6 +302,13 @@ const AdminAtendimentos = () => {
                           <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
                           {(() => {
                             const takeover = c.human_takeover_until && new Date(c.human_takeover_until) > new Date();
+                            if (ct?.aurora_blocked) {
+                              return (
+                                <Badge className="text-[10px] py-0 h-4 gap-1 bg-rose-600/90 hover:bg-rose-600 text-white border-0">
+                                  <XCircle className="w-3 h-3" /> Aurora bloqueada
+                                </Badge>
+                              );
+                            }
                             if (takeover) {
                               return (
                                 <Badge className="text-[10px] py-0 h-4 gap-1 bg-amber-500/90 hover:bg-amber-500 text-white border-0">
