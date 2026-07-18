@@ -471,6 +471,7 @@ Deno.serve(async (req) => {
     if (existing) return json({ ok: true, deduped: true });
   }
 
+  const arrivedAt = new Date().toISOString();
   await admin.from("messages").insert({
     conversation_id: convId,
     contact_id: contact.id,
@@ -481,12 +482,12 @@ Deno.serve(async (req) => {
     msg_type: payload?.type ?? "text",
     author: fromMe ? "human" : "contact",
     status: fromMe ? "sent" : "delivered",
-    sent_at: new Date().toISOString(),
+    sent_at: arrivedAt,
     metadata: { waha_event: event, from_phone: fromMe, raw: payload },
   });
 
   const convUpdate: any = {
-    last_message_at: new Date().toISOString(),
+    last_message_at: arrivedAt,
     last_message_preview: (storedBody || "[mensagem]").slice(0, 140),
   };
   if (fromMe) {
@@ -508,32 +509,12 @@ Deno.serve(async (req) => {
     return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : (!convAiEnabled ? "ai_disabled" : "empty_body") });
   }
 
-  // Call AI
-  const reply = await generateAiReply(admin, convId, phone, contact.name ?? contactName, aiInput);
-  if (!reply) return json({ ok: true, ai_no_reply: true });
+  // Debounce + resposta particionada em background — responde SÓ depois de
+  // DEBOUNCE_MS sem novas mensagens, e simula digitação humana entre chunks.
+  // @ts-ignore — EdgeRuntime é global no Supabase Edge Runtime
+  EdgeRuntime.waitUntil(
+    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt),
+  );
 
-  // Send via WAHA
-  const sent = await sendWhatsApp(rawFrom, reply);
-
-  // Save outbound message
-  await admin.from("messages").insert({
-    conversation_id: convId,
-    contact_id: contact.id,
-    channel: "whatsapp",
-    direction: "out",
-    body: reply,
-    external_id: sent.id ?? null,
-    msg_type: "text",
-    author: "aurora",
-    status: sent.error ? "failed" : "sent",
-    error: sent.error ?? null,
-    sent_at: new Date().toISOString(),
-  });
-
-  await admin.from("conversations").update({
-    last_message_at: new Date().toISOString(),
-    last_message_preview: reply.slice(0, 140),
-  }).eq("id", convId);
-
-  return json({ ok: true, replied: !sent.error, error: sent.error ?? null });
+  return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS });
 });
