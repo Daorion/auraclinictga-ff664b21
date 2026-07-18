@@ -58,6 +58,48 @@ async function sendWhatsApp(destination: string, text: string): Promise<{ id?: s
   }
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function typing(destination: string, on: boolean) {
+  if (!WAHA_URL || !WAHA_API_KEY) return;
+  const chatId = destination.includes("@") ? destination : `${destination}@c.us`;
+  try {
+    await fetch(`${WAHA_URL}/api/${on ? "startTyping" : "stopTyping"}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Api-Key": WAHA_API_KEY },
+      body: JSON.stringify({ session: WAHA_SESSION, chatId }),
+    });
+  } catch { /* best effort */ }
+}
+
+// Quebra a resposta em 1–3 pedaços "humanos" por parágrafo/frase.
+function splitReply(text: string): string[] {
+  const clean = text.trim();
+  if (!clean) return [];
+  // 1) parágrafos separados por linha em branco
+  let parts = clean.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
+  // 2) se ainda é um bloco só, tenta quebrar por frase quando for longo
+  if (parts.length === 1 && clean.length > 180) {
+    const sentences = clean.match(/[^.!?\n]+[.!?]+(?:\s|$)|[^.!?\n]+$/g)?.map((s) => s.trim()).filter(Boolean) ?? [clean];
+    parts = [];
+    let buf = "";
+    for (const s of sentences) {
+      if ((buf + " " + s).trim().length > 160 && buf) { parts.push(buf.trim()); buf = s; }
+      else { buf = (buf ? buf + " " : "") + s; }
+    }
+    if (buf.trim()) parts.push(buf.trim());
+  }
+  // Máximo 3 chunks pra não parecer robô esparramando texto
+  if (parts.length > 3) {
+    const head = parts.slice(0, 2);
+    const tail = parts.slice(2).join("\n\n");
+    parts = [...head, tail];
+  }
+  return parts;
+}
+
+
+
 async function buildSystemPrompt(
   admin: any,
   contactName: string | null,
@@ -163,11 +205,13 @@ async function generateAiReply(
   }
 
   const system = await buildSystemPrompt(admin, contactName, clientInfo, recentAppts);
-  const messages = [
+  const messages: any[] = [
     { role: "system", content: system },
     ...historyMsgs,
-    { role: "user", content: userMessage },
   ];
+  if (userMessage && userMessage.trim()) {
+    messages.push({ role: "user", content: userMessage });
+  }
 
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -190,6 +234,82 @@ async function generateAiReply(
   } catch (e) {
     console.error("ai_call_failed", e);
     return null;
+  }
+}
+
+const DEBOUNCE_MS = 8_000; // aguarda a pessoa terminar de mandar as msgs
+const TYPING_CPS = 45;     // ~45 caracteres por segundo "digitados"
+const TYPING_MIN_MS = 1200;
+const TYPING_MAX_MS = 4500;
+const CHUNK_GAP_MS = 700;
+
+async function scheduleReply(
+  admin: any,
+  convId: string,
+  rawFrom: string,
+  phone: string,
+  contactId: string,
+  contactName: string | null,
+  arrivedAt: string,
+) {
+  // 1) Debounce — se chegar msg nova, aborta essa execução
+  await sleep(DEBOUNCE_MS);
+
+  const { data: newer } = await admin
+    .from("messages")
+    .select("id, sent_at")
+    .eq("conversation_id", convId)
+    .eq("direction", "in")
+    .gt("sent_at", arrivedAt)
+    .limit(1);
+  if (newer && newer.length > 0) {
+    console.log("debounce_aborted", { convId, arrivedAt });
+    return;
+  }
+
+  // 2) Re-checa estado da conversa (pode ter sido pausada nesses 8s)
+  const { data: conv } = await admin
+    .from("conversations")
+    .select("ai_enabled, human_takeover_until")
+    .eq("id", convId)
+    .maybeSingle();
+  if (!conv) return;
+  if (conv.ai_enabled === false) return;
+  if (conv.human_takeover_until && new Date(conv.human_takeover_until) > new Date()) return;
+
+  // 3) Gera resposta com base em TODO o histórico acumulado
+  const reply = await generateAiReply(admin, convId, phone, contactName, "");
+  if (!reply) return;
+
+  // 4) Quebra em chunks e envia com "digitando…" entre eles
+  const chunks = splitReply(reply);
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const typingMs = Math.min(TYPING_MAX_MS, Math.max(TYPING_MIN_MS, Math.round((chunk.length / TYPING_CPS) * 1000)));
+    await typing(rawFrom, true);
+    await sleep(typingMs);
+    await typing(rawFrom, false);
+
+    const sent = await sendWhatsApp(rawFrom, chunk);
+    await admin.from("messages").insert({
+      conversation_id: convId,
+      contact_id: contactId,
+      channel: "whatsapp",
+      direction: "out",
+      body: chunk,
+      external_id: sent.id ?? null,
+      msg_type: "text",
+      author: "aurora",
+      status: sent.error ? "failed" : "sent",
+      error: sent.error ?? null,
+      sent_at: new Date().toISOString(),
+    });
+    await admin.from("conversations").update({
+      last_message_at: new Date().toISOString(),
+      last_message_preview: chunk.slice(0, 140),
+    }).eq("id", convId);
+
+    if (i < chunks.length - 1) await sleep(CHUNK_GAP_MS);
   }
 }
 
@@ -351,6 +471,7 @@ Deno.serve(async (req) => {
     if (existing) return json({ ok: true, deduped: true });
   }
 
+  const arrivedAt = new Date().toISOString();
   await admin.from("messages").insert({
     conversation_id: convId,
     contact_id: contact.id,
@@ -361,12 +482,12 @@ Deno.serve(async (req) => {
     msg_type: payload?.type ?? "text",
     author: fromMe ? "human" : "contact",
     status: fromMe ? "sent" : "delivered",
-    sent_at: new Date().toISOString(),
+    sent_at: arrivedAt,
     metadata: { waha_event: event, from_phone: fromMe, raw: payload },
   });
 
   const convUpdate: any = {
-    last_message_at: new Date().toISOString(),
+    last_message_at: arrivedAt,
     last_message_preview: (storedBody || "[mensagem]").slice(0, 140),
   };
   if (fromMe) {
@@ -388,32 +509,12 @@ Deno.serve(async (req) => {
     return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : (!convAiEnabled ? "ai_disabled" : "empty_body") });
   }
 
-  // Call AI
-  const reply = await generateAiReply(admin, convId, phone, contact.name ?? contactName, aiInput);
-  if (!reply) return json({ ok: true, ai_no_reply: true });
+  // Debounce + resposta particionada em background — responde SÓ depois de
+  // DEBOUNCE_MS sem novas mensagens, e simula digitação humana entre chunks.
+  // @ts-ignore — EdgeRuntime é global no Supabase Edge Runtime
+  EdgeRuntime.waitUntil(
+    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt),
+  );
 
-  // Send via WAHA
-  const sent = await sendWhatsApp(rawFrom, reply);
-
-  // Save outbound message
-  await admin.from("messages").insert({
-    conversation_id: convId,
-    contact_id: contact.id,
-    channel: "whatsapp",
-    direction: "out",
-    body: reply,
-    external_id: sent.id ?? null,
-    msg_type: "text",
-    author: "aurora",
-    status: sent.error ? "failed" : "sent",
-    error: sent.error ?? null,
-    sent_at: new Date().toISOString(),
-  });
-
-  await admin.from("conversations").update({
-    last_message_at: new Date().toISOString(),
-    last_message_preview: reply.slice(0, 140),
-  }).eq("id", convId);
-
-  return json({ ok: true, replied: !sent.error, error: sent.error ?? null });
+  return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS });
 });
