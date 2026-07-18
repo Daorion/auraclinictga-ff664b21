@@ -256,7 +256,11 @@ Deno.serve(async (req) => {
 
   const fromMe = payload?.fromMe === true;
 
-  const rawFrom = String(payload?.from ?? payload?.chatId ?? "");
+  const rawFrom = String(
+    fromMe
+      ? (payload?.to ?? payload?.chatId ?? payload?._data?.to ?? "")
+      : (payload?.from ?? payload?.chatId ?? "")
+  );
   const msgType = String(payload?.type ?? payload?._data?.type ?? "");
 
   // ⚠️ Never respond to WhatsApp groups, broadcasts, newsletters or status.
