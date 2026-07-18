@@ -1,0 +1,1 @@
+UPDATE public.contacts SET push_name = NULL WHERE wa_id ILIKE '%@lid%';
