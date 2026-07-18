@@ -255,7 +255,6 @@ Deno.serve(async (req) => {
 
 
   const fromMe = payload?.fromMe === true;
-  if (fromMe) return json({ ok: true, ignored: "fromMe" });
 
   const rawFrom = String(payload?.from ?? payload?.chatId ?? "");
   const msgType = String(payload?.type ?? payload?._data?.type ?? "");
