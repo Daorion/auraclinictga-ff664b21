@@ -161,11 +161,9 @@ const AdminAtendimentos = () => {
 
   const handleToggleAi = async (enable: boolean) => {
     if (!active) return;
-    const patch: Record<string, unknown> = {
-      ai_enabled: enable,
-      assigned_to: enable ? "aurora" : "sirlei",
-    };
-    if (enable) patch.human_takeover_until = null;
+    const patch = enable
+      ? { ai_enabled: true, assigned_to: "aurora" as const, human_takeover_until: null }
+      : { ai_enabled: false, assigned_to: "sirlei" as const };
     await supabase.from("conversations").update(patch).eq("id", active.id);
     await supabase.from("audit_log").insert({
       action: enable ? "conversation.ai_resumed" : "conversation.ai_paused",
@@ -251,15 +249,19 @@ const AdminAtendimentos = () => {
                   <p className="text-xs text-muted-foreground truncate">{activeContact?.phone}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {active.assigned_to === "aurora" ? (
-                    <Button size="sm" variant="outline" onClick={() => handleAssign("sirlei")}>
-                      <UserCheck className="w-4 h-4 mr-1" /> Assumir
-                    </Button>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={() => handleAssign("aurora")}>
-                      <Bot className="w-4 h-4 mr-1" /> Devolver para Aurora
-                    </Button>
-                  )}
+                  {(() => {
+                    const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
+                    const aiOn = active.ai_enabled && !takeover;
+                    return aiOn ? (
+                      <Button size="sm" variant="outline" onClick={() => handleToggleAi(false)}>
+                        <UserCheck className="w-4 h-4 mr-1" /> Pausar IA / Assumir
+                      </Button>
+                    ) : (
+                      <Button size="sm" onClick={() => handleToggleAi(true)}>
+                        <Bot className="w-4 h-4 mr-1" /> Reativar IA
+                      </Button>
+                    );
+                  })()}
                 </div>
               </div>
 
