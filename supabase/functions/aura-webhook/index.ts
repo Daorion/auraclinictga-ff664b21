@@ -224,8 +224,15 @@ Deno.serve(async (req) => {
   const fromMe = payload?.fromMe === true;
   if (fromMe) return json({ ok: true, ignored: "fromMe" });
 
-  const rawFrom = payload?.from ?? payload?.chatId ?? "";
-  const phone = normalizePhone(String(rawFrom));
+  const rawFrom = String(payload?.from ?? payload?.chatId ?? "");
+
+  // ⚠️ Never respond to WhatsApp groups, broadcasts, newsletters or status.
+  const lowered = rawFrom.toLowerCase();
+  if (lowered.endsWith("@g.us") || lowered.endsWith("@broadcast") || lowered.endsWith("@newsletter") || lowered === "status@broadcast") {
+    return json({ ok: true, ignored: "group_or_broadcast", from: rawFrom });
+  }
+
+  const phone = normalizePhone(rawFrom);
   if (!phone) return json({ error: "missing_phone" }, 400);
 
   const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? null;
@@ -309,7 +316,7 @@ Deno.serve(async (req) => {
   }
 
   // Call AI
-  const reply = await generateAiReply(admin, convId, contact.name ?? contactName, messageBody);
+  const reply = await generateAiReply(admin, convId, phone, contact.name ?? contactName, messageBody);
   if (!reply) return json({ ok: true, ai_no_reply: true });
 
   // Send via WAHA
