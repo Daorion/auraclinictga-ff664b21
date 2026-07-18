@@ -202,10 +202,15 @@ async function generateAiReply(
     .order("sent_at", { ascending: false })
     .limit(10);
 
-  const historyMsgs = (history ?? []).reverse().map((m: any) => ({
-    role: m.direction === "in" ? "user" : "assistant",
-    content: m.body ?? "",
-  })).filter((m: any) => m.content);
+  const historyMsgs = (history ?? []).reverse().map((m: any) => {
+    let body = String(m.body ?? "").trim();
+    if (m.direction === "in") {
+      // Marca mídia/áudio de forma inequívoca para o modelo NÃO tentar adivinhar o conteúdo
+      if (body === "[áudio]" || body === "[audio]") body = "(A cliente enviou um áudio — você não tem acesso ao conteúdo.)";
+      else if (body === "[mídia]" || body === "[midia]" || body === "[imagem]") body = "(A cliente enviou uma mídia/imagem — você não tem acesso ao conteúdo.)";
+    }
+    return { role: m.direction === "in" ? "user" : "assistant", content: body };
+  }).filter((m: any) => m.content);
 
   // Look up client by phone
 
