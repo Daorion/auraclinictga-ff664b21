@@ -1,13 +1,24 @@
 ##############################################################################
-# AURA CLINIC — Stack para colar no Docker Manager do Hostinger
-# Sobe: Postgres + Redis + API (Fastify) + Worker (Gemini)
-# Usa o WAHA que você JÁ instalou (não sobe WAHA de novo)
-#
-# Build contexts remotos: o Docker faz `git clone` do seu repo público
-# na hora do deploy. Nada precisa ser enviado por SFTP.
+# AURA CLINIC — Stack COMPLETO (WAHA + Postgres + Redis + API + Worker)
+# Cole no Docker Manager do Hostinger. Sem dependências externas.
 ##############################################################################
 
 services:
+  waha:
+    image: devlikeapro/waha:latest
+    restart: unless-stopped
+    environment:
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
+      WHATSAPP_HOOK_URL: http://api:3000/waha/events
+      WHATSAPP_HOOK_EVENTS: message,message.ack,session.status
+    volumes:
+      - aura_waha_sessions:/app/.sessions
+    ports:
+      - "3001:3000"       # dashboard do WAHA (http://IP:3001)
+    networks: [aura]
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -21,17 +32,15 @@ services:
 
   postgres_init:
     image: postgres:16-alpine
-    restart: "no"
+    restart: on-failure
     depends_on: [postgres]
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     entrypoint: >
-      sh -c "
-        apk add --no-cache curl >/dev/null &&
-        until pg_isready -h postgres -U aura; do sleep 1; done &&
-        curl -fsSL https://raw.githubusercontent.com/Daorion/auraclinictga-ff664b21/main/vps/api/schema.sql
-          | psql -h postgres -U aura -d aura
-      "
+      sh -c "apk add --no-cache curl >/dev/null &&
+             until pg_isready -h postgres -U aura; do sleep 2; done &&
+             curl -fsSL https://raw.githubusercontent.com/Daorion/auraclinictga-ff664b21/main/vps/api/schema.sql
+               | psql -h postgres -U aura -d aura"
     networks: [aura]
 
   redis:
@@ -49,12 +58,12 @@ services:
       API_TOKEN: ${API_TOKEN}
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
       INTERNAL_WAHA_HOOK_TOKEN: ${INTERNAL_WAHA_HOOK_TOKEN}
-      WAHA_BASE_URL: ${WAHA_BASE_URL_EXTERNAL}
+      WAHA_BASE_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY}
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       REDIS_URL: redis://redis:6379
       LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
-    depends_on: [postgres, redis]
+    depends_on: [postgres, redis, waha]
     ports:
       - "3000:3000"
     networks: [aura]
@@ -69,7 +78,7 @@ services:
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: gemini-2.0-flash
-      WAHA_BASE_URL: ${WAHA_BASE_URL_EXTERNAL}
+      WAHA_BASE_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY}
       LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
@@ -78,6 +87,7 @@ services:
 
 volumes:
   aura_pg_data:
+  aura_waha_sessions:
 
 networks:
   aura:
