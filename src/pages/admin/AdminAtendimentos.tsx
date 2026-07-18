@@ -25,7 +25,7 @@ interface Conversation {
   status: string;
   internal_notes: string | null;
 }
-interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; }
+interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; aurora_blocked?: boolean | null; }
 interface Message {
   id: string;
   conversation_id: string;
@@ -77,7 +77,7 @@ const AdminAtendimentos = () => {
     const ids = list.map((c) => c.contact_id);
     if (ids.length) {
       const { data: contacts } = await supabase
-        .from("contacts").select("id,phone,name,push_name,profile_picture_url,client_id").in("id", ids);
+        .from("contacts").select("id,phone,name,push_name,profile_picture_url,client_id,aurora_blocked").in("id", ids);
       const rows = (contacts ?? []) as Contact[];
 
       // Fetch linked clients (by client_id first, then by matching last 10 digits of phone)
@@ -302,6 +302,13 @@ const AdminAtendimentos = () => {
                           <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
                           {(() => {
                             const takeover = c.human_takeover_until && new Date(c.human_takeover_until) > new Date();
+                            if (ct?.aurora_blocked) {
+                              return (
+                                <Badge className="text-[10px] py-0 h-4 gap-1 bg-rose-600/90 hover:bg-rose-600 text-white border-0">
+                                  <XCircle className="w-3 h-3" /> Aurora bloqueada
+                                </Badge>
+                              );
+                            }
                             if (takeover) {
                               return (
                                 <Badge className="text-[10px] py-0 h-4 gap-1 bg-amber-500/90 hover:bg-amber-500 text-white border-0">
@@ -377,6 +384,19 @@ const AdminAtendimentos = () => {
 
               {(() => {
                 const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
+                if (activeContact?.aurora_blocked) {
+                  return (
+                    <div className="px-4 py-2 bg-rose-600/10 border-b border-rose-600/30 flex items-center gap-2 text-xs text-rose-900 dark:text-rose-200">
+                      <XCircle className="w-4 h-4 shrink-0" />
+                      <span className="flex-1">
+                        <strong>Aurora bloqueada</strong> — esta conversa está na blacklist. Você responde manualmente.
+                      </span>
+                      <Button size="sm" variant="outline" className="h-7 text-xs border-rose-600/40 hover:bg-rose-600/10" onClick={() => window.open(`/admin/blacklist`, "_blank")}>
+                        Ver blacklist
+                      </Button>
+                    </div>
+                  );
+                }
                 if (!takeover) return null;
                 return (
                   <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
