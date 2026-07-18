@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, Bot, User as UserIcon, Wrench, Trash2, MessageSquare } from "lucide-react";
+import { Loader2, Send, Bot, User as UserIcon, Wrench, Trash2, MessageSquare, Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -34,6 +34,11 @@ const AdminAuroraChat = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const load = async () => {
     const [msg, dir] = await Promise.all([
@@ -85,6 +90,50 @@ const AdminAuroraChat = () => {
     setMessages([]);
     toast.success("Histórico limpo");
   };
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
+      rec.onstop = async () => {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        const type = rec.mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
+        if (blob.size < 2048) { toast.error("Áudio muito curto, tente novamente"); return; }
+        const ext = type.includes("mp4") ? "mp4" : type.includes("ogg") ? "ogg" : "webm";
+        setTranscribing(true);
+        try {
+          const fd = new FormData();
+          fd.append("file", blob, `recording.${ext}`);
+          const { data, error } = await supabase.functions.invoke("transcribe-audio", { body: fd });
+          if (error || (data as any)?.error) {
+            toast.error("Falha na transcrição: " + (error?.message ?? (data as any)?.error));
+            return;
+          }
+          const text = ((data as any)?.text ?? "").trim();
+          if (!text) { toast.error("Não entendi o áudio"); return; }
+          setInput((cur) => (cur ? cur + " " : "") + text);
+          inputRef.current?.focus();
+        } finally { setTranscribing(false); }
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setRecording(true);
+    } catch (e: any) {
+      toast.error("Não foi possível acessar o microfone: " + (e?.message ?? e));
+    }
+  };
+  const stopRecording = () => {
+    recorderRef.current?.stop();
+    recorderRef.current = null;
+    setRecording(false);
+  };
+
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
@@ -170,12 +219,23 @@ const AdminAuroraChat = () => {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
               }}
-              placeholder="Ex.: A partir de hoje até 30/12 temos promoção de botox por 850,00. Cadastra isso pra você mencionar."
+              placeholder={recording ? "Gravando... clique no quadrado para parar" : transcribing ? "Transcrevendo áudio..." : "Ex.: A partir de hoje até 30/12 temos promoção de botox por 850,00. Cadastra isso pra você mencionar."}
               rows={2}
-              disabled={sending}
+              disabled={sending || recording || transcribing}
               className="resize-none"
             />
-            <Button onClick={send} disabled={sending || !input.trim()} size="icon" className="h-10 w-10 flex-shrink-0">
+            <Button
+              type="button"
+              onClick={recording ? stopRecording : startRecording}
+              disabled={sending || transcribing}
+              size="icon"
+              variant={recording ? "destructive" : "outline"}
+              className="h-10 w-10 flex-shrink-0"
+              title={recording ? "Parar gravação" : "Gravar áudio"}
+            >
+              {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </Button>
+            <Button onClick={send} disabled={sending || recording || transcribing || !input.trim()} size="icon" className="h-10 w-10 flex-shrink-0">
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
