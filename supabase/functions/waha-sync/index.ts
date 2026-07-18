@@ -38,9 +38,13 @@ Deno.serve(async (req) => {
 
   let chats: any[] = [];
   try {
-    chats = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/chats?limit=${chatLimit}`);
-  } catch (e) {
-    return json({ error: "chats_failed", details: String(e) }, 502);
+    chats = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/chats/overview?limit=${chatLimit}`);
+  } catch {
+    try {
+      chats = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/chats?limit=${chatLimit}`);
+    } catch (e) {
+      return json({ error: "chats_failed", details: String(e) }, 502);
+    }
   }
 
   const stats = { chats: 0, contacts: 0, conversations: 0, messages: 0, skipped: 0 };
