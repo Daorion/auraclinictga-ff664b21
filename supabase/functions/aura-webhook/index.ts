@@ -535,10 +535,31 @@ Deno.serve(async (req) => {
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
   const hasMedia = payload?.hasMedia === true;
   const isAudio = msgType === "audio" || msgType === "ptt" || payload?._data?.isPtt === true;
-  const storedBody = messageBody || (isAudio ? "[áudio]" : (hasMedia ? "[mídia]" : ""));
-  const aiInput = messageBody || (isAudio
-    ? "A pessoa enviou um áudio no WhatsApp. Responda de forma acolhedora, diga que recebeu o áudio e conduza para entender o interesse/agendar avaliação, sem fingir que ouviu o conteúdo."
-    : "");
+  const audioSeconds = Number(payload?.duration ?? payload?._data?.duration ?? 0);
+
+  // Tenta transcrever áudio (até 4 min). Se conseguir, o body vira "🎤 <transcrição>".
+  let transcript: string | null = null;
+  if (isAudio && !fromMe) {
+    if (audioSeconds && audioSeconds > MAX_AUDIO_SECONDS) {
+      console.log("[audio] skipping — too long:", audioSeconds, "s");
+    } else {
+      const media = await downloadWahaMedia(payload);
+      if (media) {
+        transcript = await transcribeAudio(media.bytes, media.mime);
+        console.log("[audio] transcript:", transcript ? `${transcript.slice(0, 80)}...` : "(none)");
+      }
+    }
+  }
+
+  const storedBody = messageBody
+    || (transcript ? `🎤 ${transcript}` : (isAudio ? "[áudio]" : (hasMedia ? "[mídia]" : "")));
+  const aiInput = messageBody
+    || (transcript ? transcript
+        : isAudio
+          ? (audioSeconds > MAX_AUDIO_SECONDS
+              ? "A pessoa enviou um áudio longo (mais de 4 minutos). Peça gentilmente para ela resumir por texto o que precisa, para você poder ajudar melhor."
+              : "A pessoa enviou um áudio no WhatsApp, mas não foi possível compreender o conteúdo. Peça de forma acolhedora que ela reenvie ou descreva por texto.")
+          : "");
 
   // Fetch profile picture + saved phonebook name (best-effort)
   const chatIdFull = rawFrom.includes("@") ? rawFrom : `${phone}@c.us`;
