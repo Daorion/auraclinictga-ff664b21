@@ -1,0 +1,2 @@
+ALTER TABLE public.contacts ADD COLUMN IF NOT EXISTS aurora_blocked BOOLEAN NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_contacts_aurora_blocked ON public.contacts(aurora_blocked) WHERE aurora_blocked = true;

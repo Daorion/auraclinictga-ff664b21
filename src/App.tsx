@@ -30,6 +30,7 @@ import AdminAtendimentos from "./pages/admin/AdminAtendimentos";
 import AdminIntegracoes from "./pages/admin/AdminIntegracoes";
 import AdminAurora from "./pages/admin/AdminAurora";
 import AdminAuditoria from "./pages/admin/AdminAuditoria";
+import AdminBlacklist from "./pages/admin/AdminBlacklist";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="atendimentos" element={<AdminAtendimentos />} />
               <Route path="aurora" element={<AdminAurora />} />
+              <Route path="blacklist" element={<AdminBlacklist />} />
               <Route path="integracoes" element={<AdminIntegracoes />} />
               <Route path="auditoria" element={<AdminAuditoria />} />
               <Route path="agenda" element={<AdminAgenda />} />

@@ -541,6 +541,7 @@ export type Database = {
       }
       contacts: {
         Row: {
+          aurora_blocked: boolean
           client_id: string | null
           consent_at: string | null
           consent_marketing: boolean
@@ -563,6 +564,7 @@ export type Database = {
           wa_id: string | null
         }
         Insert: {
+          aurora_blocked?: boolean
           client_id?: string | null
           consent_at?: string | null
           consent_marketing?: boolean
@@ -585,6 +587,7 @@ export type Database = {
           wa_id?: string | null
         }
         Update: {
+          aurora_blocked?: boolean
           client_id?: string | null
           consent_at?: string | null
           consent_marketing?: boolean

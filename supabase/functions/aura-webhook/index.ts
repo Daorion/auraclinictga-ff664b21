@@ -611,6 +611,8 @@ async function scheduleReply(
   }
   if (conv.ai_enabled === false) return;
   if (conv.human_takeover_until && new Date(conv.human_takeover_until) > new Date()) return;
+  const { data: ctBlk } = await admin.from("contacts").select("aurora_blocked").eq("id", contactId).maybeSingle();
+  if (ctBlk?.aurora_blocked) { console.log("aurora_blocked_contact", { contactId }); return; }
 
   // 3) Gera resposta com base em TODO o histórico acumulado
   const reply = await generateAiReply(admin, convId, phone, contactName, "");
@@ -930,6 +932,9 @@ Deno.serve(async (req) => {
 
   // Decide: should AI reply?
   const takeoverActive = convTakeoverUntil && new Date(convTakeoverUntil) > new Date();
+  if ((contact as any).aurora_blocked) {
+    return json({ ok: true, ai_skipped: "contact_blacklisted" });
+  }
   if (!convAiEnabled || takeoverActive) {
     return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : "ai_disabled" });
   }
