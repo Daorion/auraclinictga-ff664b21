@@ -28,6 +28,19 @@ function normalizePhone(from: string): string {
   return from.replace(/@c\.us$/i, "").replace(/@s\.whatsapp\.net$/i, "").replace(/\D/g, "");
 }
 
+async function fetchProfilePicture(chatId: string): Promise<string | null> {
+  if (!WAHA_URL || !WAHA_API_KEY) return null;
+  try {
+    const r = await fetch(
+      `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/contacts/profile-picture?contactId=${encodeURIComponent(chatId)}`,
+      { headers: { "X-Api-Key": WAHA_API_KEY } },
+    );
+    if (!r.ok) return null;
+    const data = await r.json().catch(() => ({}));
+    return data?.profilePictureURL ?? data?.url ?? null;
+  } catch { return null; }
+}
+
 async function sendWhatsApp(phone: string, text: string): Promise<{ id?: string; error?: string }> {
   if (!WAHA_URL || !WAHA_API_KEY) return { error: "waha_not_configured" };
   const chatId = phone.includes("@") ? phone : `${phone}@c.us`;
