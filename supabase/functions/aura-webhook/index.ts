@@ -425,9 +425,15 @@ Deno.serve(async (req) => {
     ? "A pessoa enviou um áudio no WhatsApp. Responda de forma acolhedora, diga que recebeu o áudio e conduza para entender o interesse/agendar avaliação, sem fingir que ouviu o conteúdo."
     : "");
 
-  // Fetch profile picture (best-effort, non-blocking failure)
+  // Fetch profile picture + saved phonebook name (best-effort)
   const chatIdFull = rawFrom.includes("@") ? rawFrom : `${phone}@c.us`;
-  const profilePic = await fetchProfilePicture(chatIdFull);
+  const [profilePic, wahaContact] = await Promise.all([
+    fetchProfilePicture(chatIdFull),
+    fetchWahaContact(chatIdFull),
+  ]);
+  // Prefer the phonebook name saved on the device; fall back to notifyName / pushName
+  const contactName = wahaContact.savedName ?? notifyName;
+  const contactPushName = wahaContact.pushName ?? notifyName;
 
   // Try to link with an existing client by phone (match last 10 digits — handles @lid IDs and +55 variants)
   const last10 = phone.slice(-10);
