@@ -34,6 +34,11 @@ const AdminAuroraChat = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const load = async () => {
     const [msg, dir] = await Promise.all([
