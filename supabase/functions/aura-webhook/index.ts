@@ -586,16 +586,22 @@ Deno.serve(async (req) => {
 
   // Decide: should AI reply?
   const takeoverActive = convTakeoverUntil && new Date(convTakeoverUntil) > new Date();
-  if (!convAiEnabled || takeoverActive || !aiInput) {
-    return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : (!convAiEnabled ? "ai_disabled" : "empty_body") });
+  if (!convAiEnabled || takeoverActive) {
+    return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : "ai_disabled" });
   }
+
+  // Lock por conversa: cada inbound gera um novo token; só o último vence.
+  const replyToken = crypto.randomUUID();
+  await admin.from("conversations")
+    .update({ pending_reply_token: replyToken })
+    .eq("id", convId);
 
   // Debounce + resposta particionada em background — responde SÓ depois de
   // DEBOUNCE_MS sem novas mensagens, e simula digitação humana entre chunks.
   // @ts-ignore — EdgeRuntime é global no Supabase Edge Runtime
   EdgeRuntime.waitUntil(
-    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt),
+    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt, replyToken),
   );
 
-  return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS });
+  return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS, token: replyToken });
 });
