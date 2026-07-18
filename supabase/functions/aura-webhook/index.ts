@@ -41,6 +41,23 @@ async function fetchProfilePicture(chatId: string): Promise<string | null> {
   } catch { return null; }
 }
 
+async function fetchWahaContact(chatId: string): Promise<{ savedName: string | null; pushName: string | null }> {
+  if (!WAHA_URL || !WAHA_API_KEY) return { savedName: null, pushName: null };
+  try {
+    const r = await fetch(
+      `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/contacts?contactId=${encodeURIComponent(chatId)}`,
+      { headers: { "X-Api-Key": WAHA_API_KEY } },
+    );
+    if (!r.ok) return { savedName: null, pushName: null };
+    const data = await r.json().catch(() => null) as any;
+    // WAHA returns either the contact object or an array; `name` = phonebook saved name, `pushname` = user-set profile name
+    const c = Array.isArray(data) ? data[0] : data;
+    return {
+      savedName: c?.name ?? c?.formattedName ?? null,
+      pushName: c?.pushname ?? c?.pushName ?? null,
+    };
+  } catch { return { savedName: null, pushName: null }; }
+}
 async function sendWhatsApp(destination: string, text: string): Promise<{ id?: string; error?: string }> {
   if (!WAHA_URL || !WAHA_API_KEY) return { error: "waha_not_configured" };
   const chatId = destination.includes("@") ? destination : `${destination}@c.us`;
