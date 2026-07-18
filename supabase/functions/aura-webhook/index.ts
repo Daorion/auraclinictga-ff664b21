@@ -58,6 +58,93 @@ async function fetchWahaContact(chatId: string): Promise<{ savedName: string | n
     };
   } catch { return { savedName: null, pushName: null }; }
 }
+
+// ===== Áudio: baixa da WAHA e transcreve com Gemini (aceita OGG/Opus direto) =====
+const MAX_AUDIO_SECONDS = 240; // 4 min
+const MAX_AUDIO_BYTES = 15 * 1024 * 1024; // 15 MB
+
+async function downloadWahaMedia(payload: any): Promise<{ bytes: Uint8Array; mime: string } | null> {
+  const mime = String(payload?.media?.mimetype ?? payload?._data?.mimetype ?? "audio/ogg").split(";")[0].trim() || "audio/ogg";
+  // 1) URL direta no payload (WAHA com downloadMedia ativado)
+  const directUrl = payload?.media?.url ?? payload?._data?.mediaUrl ?? null;
+  const tryFetch = async (url: string, withKey: boolean) => {
+    const headers: Record<string, string> = {};
+    if (withKey && WAHA_API_KEY) headers["X-Api-Key"] = WAHA_API_KEY;
+    const r = await fetch(url, { headers });
+    if (!r.ok) throw new Error(`http_${r.status}`);
+    const buf = new Uint8Array(await r.arrayBuffer());
+    return buf;
+  };
+  try {
+    if (directUrl) {
+      const bytes = await tryFetch(directUrl, directUrl.startsWith(WAHA_URL));
+      if (bytes.byteLength > MAX_AUDIO_BYTES) return null;
+      return { bytes, mime };
+    }
+  } catch (e) { console.warn("[audio] direct url failed:", String(e)); }
+  // 2) Endpoint de download por id
+  const msgId = payload?.id?._serialized ?? payload?.id ?? null;
+  if (msgId && WAHA_URL && WAHA_API_KEY) {
+    const url = `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/messages/${encodeURIComponent(String(msgId))}/download-media`;
+    try {
+      const bytes = await tryFetch(url, true);
+      if (bytes.byteLength > MAX_AUDIO_BYTES) return null;
+      return { bytes, mime };
+    } catch (e) { console.warn("[audio] download-media failed:", String(e)); }
+  }
+  return null;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let bin = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
+}
+
+async function transcribeAudio(bytes: Uint8Array, mime: string): Promise<string | null> {
+  if (!LOVABLE_API_KEY) return null;
+  const audioMime = mime.startsWith("audio/") ? mime : "audio/ogg";
+  const b64 = bytesToBase64(bytes);
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: "Você é um transcritor de áudio profissional. Transcreva EXATAMENTE o que a pessoa disse em português do Brasil, sem inventar, sem interpretar, sem comentar. Retorne SOMENTE a transcrição literal. Se não houver fala compreensível, responda exatamente: [inaudível]",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Transcreva este áudio literalmente." },
+              { type: "input_audio", input_audio: { data: b64, format: audioMime.includes("mp4") || audioMime.includes("m4a") ? "m4a" : audioMime.includes("mpeg") || audioMime.includes("mp3") ? "mp3" : audioMime.includes("wav") ? "wav" : "ogg" } },
+            ],
+          },
+        ],
+      }),
+    });
+    if (!r.ok) {
+      console.warn("[transcribe] status", r.status, await r.text().catch(() => ""));
+      return null;
+    }
+    const data = await r.json();
+    const text = String(data?.choices?.[0]?.message?.content ?? "").trim();
+    if (!text || text === "[inaudível]") return null;
+    return text;
+  } catch (e) {
+    console.warn("[transcribe] error:", String(e));
+    return null;
+  }
+}
 async function sendWhatsApp(destination: string, text: string): Promise<{ id?: string; error?: string }> {
   if (!WAHA_URL || !WAHA_API_KEY) return { error: "waha_not_configured" };
   const chatId = destination.includes("@") ? destination : `${destination}@c.us`;
