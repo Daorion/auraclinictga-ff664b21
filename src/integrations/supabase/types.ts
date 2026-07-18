@@ -553,11 +553,14 @@ export type Database = {
           name: string | null
           origin: string | null
           phone: string
+          profile_picture_url: string | null
+          push_name: string | null
           updated_at: string
           utm_campaign: string | null
           utm_content: string | null
           utm_medium: string | null
           utm_source: string | null
+          wa_id: string | null
         }
         Insert: {
           client_id?: string | null
@@ -572,11 +575,14 @@ export type Database = {
           name?: string | null
           origin?: string | null
           phone: string
+          profile_picture_url?: string | null
+          push_name?: string | null
           updated_at?: string
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
           utm_source?: string | null
+          wa_id?: string | null
         }
         Update: {
           client_id?: string | null
@@ -591,11 +597,14 @@ export type Database = {
           name?: string | null
           origin?: string | null
           phone?: string
+          profile_picture_url?: string | null
+          push_name?: string | null
           updated_at?: string
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
           utm_source?: string | null
+          wa_id?: string | null
         }
         Relationships: [
           {
