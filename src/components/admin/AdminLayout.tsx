@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet, MessageSquare, Bot, Plug, ShieldAlert, ShieldOff } from "lucide-react";
+import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet, MessageSquare, Bot, Plug, ShieldAlert, ShieldOff, MessagesSquare, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 
 const nav = [
