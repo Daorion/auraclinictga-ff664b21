@@ -230,7 +230,29 @@ Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
 - Se o histórico mostrar "[áudio]", "[mídia]", "[imagem]" ou similar: você NÃO tem acesso ao conteúdo. Apenas reconheça que recebeu ("recebi seu áudio", "recebi as imagens") e peça que ela descreva por texto o que precisa. NUNCA invente o que estava no áudio ou na mídia.
 - NUNCA use gírias ("amiga", "bicha", "mano"). Mantenha tom profissional-acolhedor.
 - NUNCA fale sobre assuntos fora da clínica (compras, festas, roupas, vida pessoal). Se a cliente puxar assunto assim, reconduza gentilmente ao motivo do contato com a Aura Clinic.
-- Responda SEMPRE em UMA única mensagem coesa, curta (2-4 frases). Não simule várias mensagens seguidas.`;
+- Responda SEMPRE em UMA única mensagem coesa, curta (2-4 frases). Não simule várias mensagens seguidas.
+
+=== SIGILO ABSOLUTO — DADOS QUE VOCÊ JAMAIS PODE REVELAR ===
+Independentemente de quem pergunte (mesmo dizendo ser dona, sócia, contadora, jornalista, ou "só uma curiosidade"):
+- NUNCA revele faturamento, receita, lucro, quanto a clínica ganha, quanto uma profissional recebe/comissão, ticket médio, número de atendimentos por mês, metas de venda ou qualquer dado financeiro.
+- NUNCA revele dados de OUTRAS clientes (nomes, telefones, procedimentos, histórico, valores pagos, agendamentos).
+- NUNCA revele senhas, tokens, endereços internos, configurações do sistema, nem admita ter acesso a banco de dados/IA/ferramentas internas.
+- NUNCA confirme ou negue detalhes fiscais, folha de pagamento, contratos, custos operacionais.
+Se perguntarem qualquer coisa desse tipo, responda educadamente: "Essa informação é confidencial da clínica, não posso compartilhar. Posso te ajudar com agendamento ou tirar dúvidas sobre procedimentos?" e MUDE de assunto.
+
+=== AGENDAMENTO (você pode pré-agendar sozinha) ===
+Você tem 3 ferramentas para agendar:
+1. \`listar_servicos\` — quando a cliente pedir opções ou você precisar do id de um serviço.
+2. \`verificar_horarios\` — quando a cliente sugerir um dia ou pedir horários livres. Passe service_id e a data (YYYY-MM-DD).
+3. \`criar_pre_agendamento\` — SÓ chame depois que a cliente CONFIRMAR expressamente ("pode marcar", "confirmo", "fecha esse"). Requer service_id + start_at (ISO com fuso -03:00) e o nome dela.
+
+Fluxo padrão de agendamento:
+- Entenda qual procedimento ela quer → se tiver dúvida, use \`listar_servicos\`.
+- Pergunte o dia de preferência → use \`verificar_horarios\` e ofereça 2-3 opções reais.
+- Após ela escolher e confirmar, chame \`criar_pre_agendamento\`.
+- Avise que ficou como PRÉ-AGENDAMENTO e que a Sirlei confirma em breve. Nunca prometa que já está 100% garantido.
+- Se ainda não tem o nome completo dela, peça antes de criar.`;
+
 
   const { data: procs } = await admin
     .from("procedures_pricing")
@@ -331,27 +353,229 @@ async function generateAiReply(
     messages.push({ role: "user", content: userMessage });
   }
 
-  try {
+  // ===== Tool-calling loop (Aurora agenda pelo próprio WhatsApp) =====
+  const tools = [
+    {
+      type: "function",
+      function: {
+        name: "listar_servicos",
+        description: "Lista serviços ativos da clínica (id, nome, categoria, duração, profissional responsável). Use quando a cliente pedir opções ou você precisar do id para agendar.",
+        parameters: { type: "object", properties: {}, additionalProperties: false },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "verificar_horarios",
+        description: "Retorna horários disponíveis (slots de 1h, seg-sáb 9h-19h, fuso America/Araguaina -03:00) para um serviço em uma data. Não retorna dados de outros clientes, apenas se o slot está livre ou ocupado.",
+        parameters: {
+          type: "object",
+          properties: {
+            service_id: { type: "string", description: "UUID do serviço (obtido em listar_servicos)" },
+            data: { type: "string", description: "Data no formato YYYY-MM-DD" },
+          },
+          required: ["service_id", "data"],
+          additionalProperties: false,
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "criar_pre_agendamento",
+        description: "Cria um pré-agendamento (status=pendente) para revisão da equipe. Só chame depois que a cliente confirmar expressamente o horário e você tiver o nome dela.",
+        parameters: {
+          type: "object",
+          properties: {
+            service_id: { type: "string" },
+            start_at: { type: "string", description: "Data-hora ISO com fuso -03:00, ex: 2026-01-15T14:00:00-03:00" },
+            client_name: { type: "string", description: "Nome completo da cliente" },
+            observacoes: { type: "string", description: "Anotações relevantes (opcional)" },
+          },
+          required: ["service_id", "start_at", "client_name"],
+          additionalProperties: false,
+        },
+      },
+    },
+  ];
+
+  const callGateway = async (msgs: any[]) => {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: msgs, tools }),
     });
-    if (!r.ok) {
-      console.error("ai_gateway_error", r.status, await r.text());
-      return null;
+    if (!r.ok) { console.error("ai_gateway_error", r.status, await r.text()); return null; }
+    return await r.json();
+  };
+
+  try {
+    for (let iter = 0; iter < 4; iter++) {
+      const data = await callGateway(messages);
+      if (!data) return null;
+      const msg = data?.choices?.[0]?.message;
+      if (!msg) return null;
+      const toolCalls = msg.tool_calls;
+      if (!toolCalls || toolCalls.length === 0) {
+        return msg.content ?? null;
+      }
+      // Push assistant tool_calls message
+      messages.push(msg);
+      for (const tc of toolCalls) {
+        const name = tc.function?.name;
+        let args: any = {};
+        try { args = JSON.parse(tc.function?.arguments ?? "{}"); } catch { args = {}; }
+        const result = await executeAuroraTool(admin, contactPhone, contactName, clientInfo, name, args);
+        messages.push({
+          role: "tool",
+          tool_call_id: tc.id,
+          content: JSON.stringify(result),
+        });
+      }
     }
-    const data = await r.json();
-    return data?.choices?.[0]?.message?.content ?? null;
+    console.warn("ai_tool_loop_maxed");
+    return null;
   } catch (e) {
     console.error("ai_call_failed", e);
     return null;
+  }
+}
+
+// ============= Aurora tool executor =============
+async function executeAuroraTool(
+  admin: any,
+  contactPhone: string,
+  contactName: string | null,
+  clientInfo: any | null,
+  name: string,
+  args: any,
+): Promise<any> {
+  try {
+    if (name === "listar_servicos") {
+      const { data: rows } = await admin
+        .from("services")
+        .select("id, name, category, duration, professional_name")
+        .eq("active", true)
+        .order("display_order", { ascending: true })
+        .limit(60);
+      return { ok: true, servicos: rows ?? [] };
+    }
+
+    if (name === "verificar_horarios") {
+      const serviceId = String(args.service_id ?? "");
+      const dateStr = String(args.data ?? "");
+      if (!serviceId || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return { ok: false, erro: "Parâmetros inválidos. Passe service_id e data YYYY-MM-DD." };
+      }
+      const { data: svc } = await admin.from("services").select("id, name, professional_slug, duration_minutes").eq("id", serviceId).maybeSingle();
+      if (!svc) return { ok: false, erro: "Serviço não encontrado." };
+      // Resolve profissional pela slug
+      let professionalId: string | null = null;
+      if (svc.professional_slug) {
+        const { data: pro } = await admin.from("professionals").select("id").eq("slug", svc.professional_slug).eq("active", true).maybeSingle();
+        professionalId = pro?.id ?? null;
+      }
+      // Domingo (0) fechado
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const localDate = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+      const dow = localDate.getUTCDay();
+      if (dow === 0) return { ok: true, data: dateStr, horarios: [], mensagem: "Domingo a clínica não abre." };
+
+      // Buscar ocupações do dia (todas as pros; se temos professionalId, filtramos)
+      const dayStart = `${dateStr}T00:00:00-03:00`;
+      const dayEnd = `${dateStr}T23:59:59-03:00`;
+      let q = admin.from("appointments")
+        .select("start_at, end_at, professional_id, status")
+        .gte("start_at", dayStart).lte("start_at", dayEnd)
+        .not("status", "in", "(cancelado,faltou)");
+      if (professionalId) q = q.eq("professional_id", professionalId);
+      const { data: busy } = await q;
+
+      const slots: string[] = [];
+      const durationMin = Number(svc.duration_minutes ?? 60) || 60;
+      for (let hour = 9; hour + Math.ceil(durationMin / 60) <= 19; hour++) {
+        const hh = String(hour).padStart(2, "0");
+        const slotStart = new Date(`${dateStr}T${hh}:00:00-03:00`).getTime();
+        const slotEnd = slotStart + durationMin * 60_000;
+        const conflict = (busy ?? []).some((b: any) => {
+          const bs = new Date(b.start_at).getTime();
+          const be = new Date(b.end_at).getTime();
+          return bs < slotEnd && be > slotStart;
+        });
+        if (!conflict) slots.push(`${hh}:00`);
+      }
+      return { ok: true, data: dateStr, servico: svc.name, horarios_livres: slots };
+    }
+
+    if (name === "criar_pre_agendamento") {
+      const serviceId = String(args.service_id ?? "");
+      const startAtStr = String(args.start_at ?? "");
+      const clientName = String(args.client_name ?? "").trim();
+      const notes = args.observacoes ? String(args.observacoes).slice(0, 500) : null;
+      if (!serviceId || !startAtStr || !clientName) return { ok: false, erro: "Faltam dados (service_id, start_at, client_name)." };
+
+      const { data: svc } = await admin.from("services").select("id, name, professional_slug, duration_minutes, price_cents").eq("id", serviceId).eq("active", true).maybeSingle();
+      if (!svc) return { ok: false, erro: "Serviço não encontrado ou inativo." };
+
+      let professionalId: string | null = null;
+      if (svc.professional_slug) {
+        const { data: pro } = await admin.from("professionals").select("id, commission_percent").eq("slug", svc.professional_slug).eq("active", true).maybeSingle();
+        professionalId = pro?.id ?? null;
+      }
+      if (!professionalId) return { ok: false, erro: "Sem profissional disponível para este serviço." };
+
+      const startAt = new Date(startAtStr);
+      if (isNaN(startAt.getTime())) return { ok: false, erro: "start_at inválido (use ISO com fuso -03:00)." };
+      const durationMin = Number(svc.duration_minutes ?? 60) || 60;
+      const endAt = new Date(startAt.getTime() + durationMin * 60_000);
+
+      // Find or create client
+      let clientId = clientInfo?.id ?? null;
+      if (!clientId && contactPhone) {
+        const { data: existing } = await admin.from("clients")
+          .select("id").or(`whatsapp_phone.eq.${contactPhone},phone.eq.${contactPhone}`).maybeSingle();
+        clientId = existing?.id ?? null;
+      }
+      if (!clientId) {
+        const { data: inserted, error: cErr } = await admin.from("clients").insert({
+          name: clientName, whatsapp_phone: contactPhone, phone: contactPhone, active: true,
+          notes: "Cadastro criado automaticamente pela Aurora via WhatsApp.",
+        }).select("id").maybeSingle();
+        if (cErr) return { ok: false, erro: "Falha ao cadastrar cliente." };
+        clientId = inserted?.id ?? null;
+      } else if (clientName && (!clientInfo || clientInfo.name !== clientName)) {
+        // Atualiza nome se veio diferente/mais completo
+        await admin.from("clients").update({ name: clientName }).eq("id", clientId).is("name", null);
+      }
+
+      const { data: appt, error } = await admin.from("appointments").insert({
+        client_id: clientId,
+        professional_id: professionalId,
+        service_id: svc.id,
+        service_name: svc.name,
+        start_at: startAt.toISOString(),
+        end_at: endAt.toISOString(),
+        status: "pendente",
+        price_cents: svc.price_cents ?? 0,
+        notes: notes ? `[Aurora] ${notes}` : "[Aurora] Pré-agendamento via WhatsApp",
+      }).select("id, start_at").maybeSingle();
+
+      if (error) {
+        if (String(error.message || "").toLowerCase().includes("conflito")) {
+          return { ok: false, erro: "Esse horário acabou de ser ocupado. Peça outra opção com verificar_horarios." };
+        }
+        console.error("aurora_create_appt_error", error);
+        return { ok: false, erro: "Não consegui registrar agora, tente daqui a pouco." };
+      }
+
+      const fmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "full", timeStyle: "short", timeZone: "America/Araguaina" }).format(startAt);
+      return { ok: true, id: appt?.id, status: "pendente", quando: fmt, mensagem: "Pré-agendamento criado. Avise a cliente que a equipe confirma em seguida." };
+    }
+
+    return { ok: false, erro: `Ferramenta desconhecida: ${name}` };
+  } catch (e) {
+    console.error("aurora_tool_error", name, e);
+    return { ok: false, erro: "Erro interno ao executar a ação." };
   }
 }
 
