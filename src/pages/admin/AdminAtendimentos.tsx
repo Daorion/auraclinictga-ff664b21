@@ -77,7 +77,7 @@ const AdminAtendimentos = () => {
     const ids = list.map((c) => c.contact_id);
     if (ids.length) {
       const { data: contacts } = await supabase
-        .from("contacts").select("id,phone,name,push_name,profile_picture_url,client_id").in("id", ids);
+        .from("contacts").select("id,phone,name,push_name,profile_picture_url,client_id,aurora_blocked").in("id", ids);
       const rows = (contacts ?? []) as Contact[];
 
       // Fetch linked clients (by client_id first, then by matching last 10 digits of phone)
