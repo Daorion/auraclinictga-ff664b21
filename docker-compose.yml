@@ -18,6 +18,8 @@ services:
       - aura_waha_sessions:/app/.sessions
     ports:
       - "${WAHA_HOST_PORT:-3001}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - aura
 
