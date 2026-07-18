@@ -112,7 +112,9 @@ Deno.serve(async (req) => {
       msgs = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/chats/${encodeURIComponent(chatId)}/messages?limit=${msgLimit}&downloadMedia=false`);
     } catch { continue; }
 
-    for (const m of msgs ?? []) {
+    const orderedMsgs = [...(msgs ?? [])].sort((a, b) => Number(a?.timestamp ?? 0) - Number(b?.timestamp ?? 0));
+
+    for (const m of orderedMsgs) {
       const mType = String(m?.type ?? m?._data?.type ?? "");
       if (mType.includes("notification") || mType === "protocol" || mType === "e2e_notification" || mType === "gp2") continue;
       const externalId = m?.id?._serialized ?? m?.id ?? null;
@@ -124,6 +126,7 @@ Deno.serve(async (req) => {
       const fromMe = m?.fromMe === true;
       const text = String(m?.body ?? m?.text ?? "").trim();
       const hasMedia = m?.hasMedia === true;
+      const isAudio = mType === "audio" || mType === "ptt" || m?._data?.isPtt === true;
       const ts = m?.timestamp ? new Date(Number(m.timestamp) * 1000).toISOString() : new Date().toISOString();
 
       await admin.from("messages").insert({
@@ -131,7 +134,7 @@ Deno.serve(async (req) => {
         contact_id: contact.id,
         channel: "whatsapp",
         direction: fromMe ? "out" : "in",
-        body: hasMedia && !text ? "[mídia]" : text,
+        body: text || (isAudio ? "[áudio]" : (hasMedia ? "[mídia]" : "")),
         external_id: externalId,
         msg_type: m?.type ?? "text",
         author: fromMe ? "sirlei" : "contact",
@@ -143,9 +146,11 @@ Deno.serve(async (req) => {
     }
 
     // Update conversation preview from last synced message
-    const tail = (msgs ?? [])[msgs.length - 1];
+    const tail = orderedMsgs[orderedMsgs.length - 1];
     if (tail) {
-      const preview = String(tail?.body ?? tail?.text ?? "[mídia]").slice(0, 140);
+      const tailType = String(tail?.type ?? tail?._data?.type ?? "");
+      const tailIsAudio = tailType === "audio" || tailType === "ptt" || tail?._data?.isPtt === true;
+      const preview = String(tail?.body ?? tail?.text ?? (tailIsAudio ? "[áudio]" : "[mídia]")).slice(0, 140);
       const lastTs = tail?.timestamp ? new Date(Number(tail.timestamp) * 1000).toISOString() : new Date().toISOString();
       await admin.from("conversations").update({
         last_message_at: lastTs, last_message_preview: preview,

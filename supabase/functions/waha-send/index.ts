@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     sent_at: new Date().toISOString(),
   });
 
-  // Update conversation snapshot + pause AI
+  // Update conversation snapshot. AI only pauses when explicitly requested by the panel.
   const patch: Record<string, unknown> = {
     last_message_at: new Date().toISOString(),
     last_message_preview: text.slice(0, 140),
@@ -91,6 +91,7 @@ Deno.serve(async (req) => {
   if (pause_ai !== false) {
     const until = new Date(Date.now() + HUMAN_PAUSE_HOURS * 3600 * 1000).toISOString();
     patch.human_takeover_until = until;
+    patch.assigned_to = "sirlei";
   }
   await admin.from("conversations").update(patch).eq("id", conversation_id);
 

@@ -89,12 +89,21 @@ const AdminAtendimentos = () => {
       .from("messages")
       .select("id,conversation_id,direction,body,author,status,is_draft,error,created_at")
       .eq("conversation_id", convId)
-      .order("created_at");
+      .order("sent_at", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true });
     setMessages((data ?? []) as Message[]);
     await supabase.from("conversations").update({ unread_count: 0 }).eq("id", convId);
   };
 
   useEffect(() => { loadConversations(); }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      loadConversations();
+      if (activeId) loadMessages(activeId);
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [activeId]);
 
   useEffect(() => {
     const ch = supabase
