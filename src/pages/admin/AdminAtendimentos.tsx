@@ -326,8 +326,13 @@ const AdminAtendimentos = () => {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="font-semibold truncate">{activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
-                    <p className="text-xs text-muted-foreground truncate">{activeContact?.phone ? `+${activeContact.phone}` : ""}</p>
+                    <p className="font-semibold truncate">{activeContact?.client_name ?? activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
+                    <div className="text-xs text-muted-foreground truncate flex items-center gap-2 flex-wrap">
+                      {activeContact?.push_name && activeContact.push_name !== (activeContact.client_name ?? activeContact.name) && (
+                        <span>WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
+                      )}
+                      {activeContact?.phone && <span>+{activeContact.phone}</span>}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
