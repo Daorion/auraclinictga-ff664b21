@@ -142,11 +142,11 @@ Deno.serve(async (req) => {
       stats.messages++;
     }
 
-    // Update conversation preview from last message
-    const last = (msgs ?? [])[msgs.length - 1];
-    if (last) {
-      const preview = String(last?.body ?? last?.text ?? "[mídia]").slice(0, 140);
-      const lastTs = last?.timestamp ? new Date(Number(last.timestamp) * 1000).toISOString() : new Date().toISOString();
+    // Update conversation preview from last synced message
+    const tail = (msgs ?? [])[msgs.length - 1];
+    if (tail) {
+      const preview = String(tail?.body ?? tail?.text ?? "[mídia]").slice(0, 140);
+      const lastTs = tail?.timestamp ? new Date(Number(tail.timestamp) * 1000).toISOString() : new Date().toISOString();
       await admin.from("conversations").update({
         last_message_at: lastTs, last_message_preview: preview,
       }).eq("id", convId);
