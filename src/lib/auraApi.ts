@@ -48,9 +48,15 @@ export const auraApi = {
   updateConversation: (id: string, body: Record<string, unknown>) =>
     call({ path: `/api/conversations/${id}`, method: "PATCH", body }),
 
-  // Messages
-  sendMessage: (body: { conversation_id: string; body: string; author?: "sirlei" | "aurora" }) =>
-    call({ path: "/api/messages", method: "POST", body }),
+  // Messages — sends via WhatsApp (WAHA) directly from Lovable edge function.
+  sendMessage: async (body: { conversation_id: string; body: string; author?: "sirlei" | "aurora" }) => {
+    const { data, error } = await supabase.functions.invoke("waha-send", {
+      body: { conversation_id: body.conversation_id, text: body.body, pause_ai: true },
+    });
+    if (error) return { ok: false, status: 0, error: "network_error", message: error.message } as AuraProxyResult;
+    if ((data as any)?.error) return { ok: false, status: 500, error: (data as any).error, message: (data as any).error } as AuraProxyResult;
+    return { ok: true, status: 200, data } as AuraProxyResult;
+  },
 
   // AI
   prepareReply: (body: { conversation_id: string; hint?: string }) =>

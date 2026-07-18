@@ -616,6 +616,7 @@ export type Database = {
           contact_id: string
           created_at: string
           external_session: string | null
+          human_takeover_until: string | null
           id: string
           interest: string | null
           internal_notes: string | null
@@ -635,6 +636,7 @@ export type Database = {
           contact_id: string
           created_at?: string
           external_session?: string | null
+          human_takeover_until?: string | null
           id?: string
           interest?: string | null
           internal_notes?: string | null
@@ -654,6 +656,7 @@ export type Database = {
           contact_id?: string
           created_at?: string
           external_session?: string | null
+          human_takeover_until?: string | null
           id?: string
           interest?: string | null
           internal_notes?: string | null
