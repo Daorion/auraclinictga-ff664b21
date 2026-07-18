@@ -338,7 +338,9 @@ Deno.serve(async (req) => {
     convId = newConv.id;
   }
 
-  // Save inbound message (idempotent via external_id)
+  // Save message (idempotent via external_id). If fromMe and we already logged it
+  // (system-sent via waha-send), just ignore. If fromMe and NEW → user replied from
+  // their own phone → save as human message and pause the AI.
   if (externalId) {
     const { data: existing } = await admin
       .from("messages")
@@ -352,21 +354,32 @@ Deno.serve(async (req) => {
     conversation_id: convId,
     contact_id: contact.id,
     channel: "whatsapp",
-    direction: "in",
+    direction: fromMe ? "out" : "in",
     body: storedBody,
     external_id: externalId,
     msg_type: payload?.type ?? "text",
-    author: "contact",
-    status: "delivered",
+    author: fromMe ? "human" : "contact",
+    status: fromMe ? "sent" : "delivered",
     sent_at: new Date().toISOString(),
-    metadata: { waha_event: event, raw: payload },
+    metadata: { waha_event: event, from_phone: fromMe, raw: payload },
   });
 
-  await admin.from("conversations").update({
+  const convUpdate: any = {
     last_message_at: new Date().toISOString(),
     last_message_preview: (storedBody || "[mensagem]").slice(0, 140),
-    unread_count: convUnread + 1,
-  }).eq("id", convId);
+  };
+  if (fromMe) {
+    // Humano assumiu direto pelo celular → pausa a Aurora por HUMAN_PAUSE_HOURS
+    convUpdate.human_takeover_until = new Date(Date.now() + HUMAN_PAUSE_HOURS * 3600_000).toISOString();
+    convUpdate.unread_count = 0;
+  } else {
+    convUpdate.unread_count = convUnread + 1;
+  }
+  await admin.from("conversations").update(convUpdate).eq("id", convId);
+
+  if (fromMe) {
+    return json({ ok: true, human_takeover: true, hours: HUMAN_PAUSE_HOURS });
+  }
 
   // Decide: should AI reply?
   const takeoverActive = convTakeoverUntil && new Date(convTakeoverUntil) > new Date();
