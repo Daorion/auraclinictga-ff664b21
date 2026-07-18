@@ -29,6 +29,8 @@ import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
 import AdminAtendimentos from "./pages/admin/AdminAtendimentos";
 import AdminIntegracoes from "./pages/admin/AdminIntegracoes";
 import AdminAurora from "./pages/admin/AdminAurora";
+import AdminAuroraChat from "./pages/admin/AdminAuroraChat";
+import AdminAuroraCampanhas from "./pages/admin/AdminAuroraCampanhas";
 import AdminAuditoria from "./pages/admin/AdminAuditoria";
 import AdminBlacklist from "./pages/admin/AdminBlacklist";
 
