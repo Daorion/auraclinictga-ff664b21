@@ -292,12 +292,24 @@ const AdminAtendimentos = () => {
                         )}
                         {ct?.phone && <p className="text-[11px] text-muted-foreground truncate">+{ct.phone}</p>}
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
-                        <div className="flex items-center gap-1.5 mt-1.5">
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
-                          <Badge variant={c.assigned_to === "sirlei" ? "default" : "secondary"} className="text-[10px] py-0 h-4 gap-1">
-                            {c.assigned_to === "sirlei" ? <UserCheck className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                            {c.assigned_to === "sirlei" ? "Sirlei" : "Aurora"}
-                          </Badge>
+                          {(() => {
+                            const takeover = c.human_takeover_until && new Date(c.human_takeover_until) > new Date();
+                            if (takeover) {
+                              return (
+                                <Badge className="text-[10px] py-0 h-4 gap-1 bg-amber-500/90 hover:bg-amber-500 text-white border-0">
+                                  <UserCheck className="w-3 h-3" /> Sirlei assumiu
+                                </Badge>
+                              );
+                            }
+                            return (
+                              <Badge variant={c.assigned_to === "sirlei" ? "default" : "secondary"} className="text-[10px] py-0 h-4 gap-1">
+                                {c.assigned_to === "sirlei" ? <UserCheck className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                                {c.assigned_to === "sirlei" ? "Sirlei" : "Aurora"}
+                              </Badge>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -351,6 +363,23 @@ const AdminAtendimentos = () => {
                   })()}
                 </div>
               </div>
+
+              {(() => {
+                const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
+                if (!takeover) return null;
+                return (
+                  <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
+                    <UserCheck className="w-4 h-4 shrink-0" />
+                    <span className="flex-1">
+                      <strong>Sirlei está respondendo</strong> — Aurora pausada (você respondeu fora do sistema).
+                      Retomada automática {formatDistanceToNow(new Date(active.human_takeover_until!), { addSuffix: true, locale: ptBR })}.
+                    </span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleToggleAi(true)}>
+                      <Bot className="w-3 h-3 mr-1" /> Reativar Aurora agora
+                    </Button>
+                  </div>
+                );
+              })()}
 
               <div ref={scrollRef} className="flex-1 overflow-auto p-4 space-y-2 bg-muted/20">
                 {messages.length === 0 ? (
