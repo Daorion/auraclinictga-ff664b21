@@ -84,11 +84,37 @@ Deno.serve(async (req) => {
       picUrl = pic?.profilePictureURL ?? pic?.url ?? null;
     } catch { /* ignore */ }
 
-    const { data: contact } = await admin.from("contacts").upsert({
-      phone, wa_id: chatId, name: pushName, push_name: pushName,
-      profile_picture_url: picUrl, origin: "whatsapp",
-      last_seen_at: new Date().toISOString(),
-    }, { onConflict: "phone" }).select("id").single();
+    // Match existing client by last 10 digits to link CRM name
+    const last10 = phone.slice(-10);
+    let linkedClientId: string | null = null;
+    let linkedClientName: string | null = null;
+    if (last10.length >= 8) {
+      const { data: cli } = await admin.from("clients")
+        .select("id, name").ilike("phone", `%${last10}`).limit(1).maybeSingle();
+      if (cli) { linkedClientId = cli.id; linkedClientName = cli.name; }
+    }
+
+    const { data: existing } = await admin.from("contacts")
+      .select("id, name, client_id").eq("phone", phone).maybeSingle();
+
+    let contact: { id: string } | null = null;
+    if (existing) {
+      const patch: Record<string, unknown> = {
+        wa_id: chatId, push_name: pushName, profile_picture_url: picUrl,
+        last_seen_at: new Date().toISOString(),
+      };
+      if (!existing.name && (linkedClientName || pushName)) patch.name = linkedClientName ?? pushName;
+      if (!existing.client_id && linkedClientId) patch.client_id = linkedClientId;
+      const { data: upd } = await admin.from("contacts").update(patch).eq("id", existing.id).select("id").single();
+      contact = upd ?? null;
+    } else {
+      const { data: ins } = await admin.from("contacts").insert({
+        phone, wa_id: chatId, name: linkedClientName ?? pushName, push_name: pushName,
+        profile_picture_url: picUrl, origin: "whatsapp",
+        last_seen_at: new Date().toISOString(), client_id: linkedClientId,
+      }).select("id").single();
+      contact = ins ?? null;
+    }
     if (!contact) continue;
     stats.contacts++;
 

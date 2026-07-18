@@ -25,7 +25,7 @@ interface Conversation {
   status: string;
   internal_notes: string | null;
 }
-interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; }
+interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; }
 interface Message {
   id: string;
   conversation_id: string;
@@ -76,9 +76,36 @@ const AdminAtendimentos = () => {
     const ids = list.map((c) => c.contact_id);
     if (ids.length) {
       const { data: contacts } = await supabase
-        .from("contacts").select("id,phone,name,push_name,profile_picture_url").in("id", ids);
+        .from("contacts").select("id,phone,name,push_name,profile_picture_url,client_id").in("id", ids);
+      const rows = (contacts ?? []) as Contact[];
+
+      // Fetch linked clients (by client_id first, then by matching last 10 digits of phone)
+      const clientIds = Array.from(new Set(rows.map((c) => c.client_id).filter(Boolean))) as string[];
+      const clientsById: Record<string, string> = {};
+      if (clientIds.length) {
+        const { data: cls } = await supabase.from("clients").select("id,name").in("id", clientIds);
+        (cls ?? []).forEach((cl: any) => { clientsById[cl.id] = cl.name; });
+      }
+      const unlinkedPhones = rows.filter((c) => !c.client_id).map((c) => c.phone.slice(-10)).filter((p) => p.length >= 8);
+      const clientsByLast10: Record<string, { id: string; name: string }> = {};
+      if (unlinkedPhones.length) {
+        const { data: cls2 } = await supabase.from("clients").select("id,name,phone");
+        (cls2 ?? []).forEach((cl: any) => {
+          const last10 = String(cl.phone ?? "").replace(/\D/g, "").slice(-10);
+          if (last10.length >= 8) clientsByLast10[last10] = { id: cl.id, name: cl.name };
+        });
+      }
+
       const map: Record<string, Contact> = {};
-      (contacts ?? []).forEach((c) => { map[c.id] = c as Contact; });
+      rows.forEach((c) => {
+        let clientName: string | null = null;
+        if (c.client_id && clientsById[c.client_id]) clientName = clientsById[c.client_id];
+        else {
+          const match = clientsByLast10[c.phone.slice(-10)];
+          if (match) clientName = match.name;
+        }
+        map[c.id] = { ...c, client_name: clientName };
+      });
       setContactsById(map);
     }
     setLoading(false);
@@ -257,9 +284,12 @@ const AdminAtendimentos = () => {
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium truncate">{ct?.name ?? ct?.push_name ?? ct?.phone ?? "—"}</span>
+                          <span className="font-medium truncate">{ct?.client_name ?? ct?.name ?? ct?.push_name ?? ct?.phone ?? "—"}</span>
                           {c.unread_count > 0 && <Badge className="shrink-0">{c.unread_count}</Badge>}
                         </div>
+                        {ct?.push_name && ct.push_name !== (ct.client_name ?? ct.name) && (
+                          <p className="text-[11px] text-muted-foreground truncate">WhatsApp: {ct.push_name}</p>
+                        )}
                         {ct?.phone && <p className="text-[11px] text-muted-foreground truncate">+{ct.phone}</p>}
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
                         <div className="flex items-center gap-1.5 mt-1.5">
@@ -296,8 +326,13 @@ const AdminAtendimentos = () => {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="font-semibold truncate">{activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
-                    <p className="text-xs text-muted-foreground truncate">{activeContact?.phone ? `+${activeContact.phone}` : ""}</p>
+                    <p className="font-semibold truncate">{activeContact?.client_name ?? activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
+                    <div className="text-xs text-muted-foreground truncate flex items-center gap-2 flex-wrap">
+                      {activeContact?.push_name && activeContact.push_name !== (activeContact.client_name ?? activeContact.name) && (
+                        <span>WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
+                      )}
+                      {activeContact?.phone && <span>+{activeContact.phone}</span>}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

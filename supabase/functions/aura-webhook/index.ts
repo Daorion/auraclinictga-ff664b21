@@ -41,6 +41,23 @@ async function fetchProfilePicture(chatId: string): Promise<string | null> {
   } catch { return null; }
 }
 
+async function fetchWahaContact(chatId: string): Promise<{ savedName: string | null; pushName: string | null }> {
+  if (!WAHA_URL || !WAHA_API_KEY) return { savedName: null, pushName: null };
+  try {
+    const r = await fetch(
+      `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/contacts?contactId=${encodeURIComponent(chatId)}`,
+      { headers: { "X-Api-Key": WAHA_API_KEY } },
+    );
+    if (!r.ok) return { savedName: null, pushName: null };
+    const data = await r.json().catch(() => null) as any;
+    // WAHA returns either the contact object or an array; `name` = phonebook saved name, `pushname` = user-set profile name
+    const c = Array.isArray(data) ? data[0] : data;
+    return {
+      savedName: c?.name ?? c?.formattedName ?? null,
+      pushName: c?.pushname ?? c?.pushName ?? null,
+    };
+  } catch { return { savedName: null, pushName: null }; }
+}
 async function sendWhatsApp(destination: string, text: string): Promise<{ id?: string; error?: string }> {
   if (!WAHA_URL || !WAHA_API_KEY) return { error: "waha_not_configured" };
   const chatId = destination.includes("@") ? destination : `${destination}@c.us`;
@@ -398,7 +415,7 @@ Deno.serve(async (req) => {
   const phone = normalizePhone(rawFrom);
   if (!phone || phone.length < 8) return json({ ok: true, ignored: "invalid_phone", from: rawFrom });
 
-  const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
+  const notifyName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
   const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
   const hasMedia = payload?.hasMedia === true;
@@ -408,28 +425,75 @@ Deno.serve(async (req) => {
     ? "A pessoa enviou um áudio no WhatsApp. Responda de forma acolhedora, diga que recebeu o áudio e conduza para entender o interesse/agendar avaliação, sem fingir que ouviu o conteúdo."
     : "");
 
-  // Fetch profile picture (best-effort, non-blocking failure)
+  // Fetch profile picture + saved phonebook name (best-effort)
   const chatIdFull = rawFrom.includes("@") ? rawFrom : `${phone}@c.us`;
-  const profilePic = await fetchProfilePicture(chatIdFull);
+  const [profilePic, wahaContact] = await Promise.all([
+    fetchProfilePicture(chatIdFull),
+    fetchWahaContact(chatIdFull),
+  ]);
+  // Prefer the phonebook name saved on the device; fall back to notifyName / pushName
+  const contactName = wahaContact.savedName ?? notifyName;
+  const contactPushName = wahaContact.pushName ?? notifyName;
 
-  // Upsert contact
-  const { data: contact, error: contactErr } = await admin
+  // Try to link with an existing client by phone (match last 10 digits — handles @lid IDs and +55 variants)
+  const last10 = phone.slice(-10);
+  let linkedClientId: string | null = null;
+  let linkedClientName: string | null = null;
+  if (last10.length >= 8) {
+    const { data: clientMatch } = await admin
+      .from("clients")
+      .select("id, name, phone")
+      .ilike("phone", `%${last10}`)
+      .limit(1)
+      .maybeSingle();
+    if (clientMatch) {
+      linkedClientId = clientMatch.id;
+      linkedClientName = clientMatch.name;
+    }
+  }
+
+  // Look up existing contact so we NEVER overwrite the CRM name with WhatsApp push name
+  const { data: existingContact } = await admin
     .from("contacts")
-    .upsert(
-      {
+    .select("id, name, client_id")
+    .eq("phone", phone)
+    .maybeSingle();
+
+  let contact: { id: string; name: string | null } | null = null;
+  if (existingContact) {
+    const patch: Record<string, unknown> = {
+      wa_id: rawFrom,
+      push_name: contactPushName,
+      profile_picture_url: profilePic,
+      last_seen_at: new Date().toISOString(),
+    };
+    // Only fill `name` if it was never set manually
+    if (!existingContact.name && (linkedClientName || contactName)) {
+      patch.name = linkedClientName ?? contactName;
+    }
+    if (!existingContact.client_id && linkedClientId) patch.client_id = linkedClientId;
+    const { data: updated, error: updErr } = await admin
+      .from("contacts").update(patch).eq("id", existingContact.id).select("id, name").single();
+    if (updErr || !updated) return json({ error: "contact_update_failed", details: updErr }, 500);
+    contact = updated;
+  } else {
+    const { data: inserted, error: insErr } = await admin
+      .from("contacts")
+      .insert({
         phone,
         wa_id: rawFrom,
-        name: contactName,
-        push_name: contactName,
+        name: linkedClientName ?? contactName,
+        push_name: contactPushName,
         profile_picture_url: profilePic,
         last_seen_at: new Date().toISOString(),
         origin: "whatsapp",
-      },
-      { onConflict: "phone" },
-    )
-    .select("id, name")
-    .single();
-  if (contactErr || !contact) return json({ error: "contact_failed", details: contactErr }, 500);
+        client_id: linkedClientId,
+      })
+      .select("id, name")
+      .single();
+    if (insErr || !inserted) return json({ error: "contact_failed", details: insErr }, 500);
+    contact = inserted;
+  }
 
   // Find or create open conversation
   let convId: string;
