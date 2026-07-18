@@ -43,15 +43,16 @@ Deno.serve(async (req) => {
 
   const { data: conv, error: convErr } = await admin
     .from("conversations")
-    .select("id, contact_id, contacts(phone)")
+    .select("id, contact_id, contacts(phone, wa_id)")
     .eq("id", conversation_id)
     .maybeSingle();
   if (convErr || !conv) return json({ error: "conversation_not_found" }, 404);
   const phone = (conv as any).contacts?.phone;
-  if (!phone) return json({ error: "no_phone" }, 400);
+  const waId = (conv as any).contacts?.wa_id as string | null;
+  if (!phone && !waId) return json({ error: "no_phone" }, 400);
 
-  // Send via WAHA
-  const chatId = `${phone}@c.us`;
+  // Send via WAHA — prefer raw wa_id (handles @lid hosted accounts). Fallback to phone@c.us.
+  const chatId = waId && waId.includes("@") ? waId : `${phone}@c.us`;
   let sentId: string | null = null;
   let sendError: string | null = null;
   try {
