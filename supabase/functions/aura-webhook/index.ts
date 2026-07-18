@@ -106,6 +106,7 @@ Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
 async function generateAiReply(
   admin: any,
   convId: string,
+  contactPhone: string,
   contactName: string | null,
   userMessage: string,
 ): Promise<string | null> {
@@ -124,9 +125,8 @@ async function generateAiReply(
     content: m.body ?? "",
   })).filter((m: any) => m.content);
 
-  // Look up client by phone (whatsapp_phone or phone)
-  const phoneDigits = (contactName ?? "").length ? undefined : undefined; // placeholder
-  const contactPhone = (await admin.from("contacts").select("phone").eq("id", (await admin.from("conversations").select("contact_id").eq("id", convId).maybeSingle()).data?.contact_id ?? "").maybeSingle()).data?.phone ?? "";
+  // Look up client by phone
+
   let clientInfo: any = null;
   let recentAppts: any[] = [];
   if (contactPhone) {
