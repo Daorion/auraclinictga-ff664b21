@@ -284,9 +284,12 @@ const AdminAtendimentos = () => {
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium truncate">{ct?.name ?? ct?.push_name ?? ct?.phone ?? "—"}</span>
+                          <span className="font-medium truncate">{ct?.client_name ?? ct?.name ?? ct?.push_name ?? ct?.phone ?? "—"}</span>
                           {c.unread_count > 0 && <Badge className="shrink-0">{c.unread_count}</Badge>}
                         </div>
+                        {ct?.push_name && ct.push_name !== (ct.client_name ?? ct.name) && (
+                          <p className="text-[11px] text-muted-foreground truncate">WhatsApp: {ct.push_name}</p>
+                        )}
                         {ct?.phone && <p className="text-[11px] text-muted-foreground truncate">+{ct.phone}</p>}
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
                         <div className="flex items-center gap-1.5 mt-1.5">
