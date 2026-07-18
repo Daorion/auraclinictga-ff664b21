@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
   if (existing) contactId = existing.id;
   else {
     const { data: created } = await admin.from("contacts").insert({
-      phone, display_name: target.contact_name, source: "aurora_campaign",
+      phone, name: target.contact_name, origin: "aurora_campaign",
     }).select("id").maybeSingle();
     contactId = created?.id ?? null;
   }
