@@ -122,30 +122,24 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       const dias = Math.max(1, Number(args.dias_sem_agendar) || 90);
       const limite = Math.min(200, Number(args.limite) || 50);
       const cutoff = new Date(Date.now() - dias * 86400 * 1000).toISOString();
-      // Clientes com telefone que não têm appointment realizado após 'cutoff'
+      const { data: recentes } = await admin
+        .from("appointments")
+        .select("client_id")
+        .eq("status", "realizado")
+        .gte("start_at", cutoff);
+      const excluir = new Set((recentes ?? []).map((r: any) => r.client_id));
       const { data: clientes } = await admin
         .from("clients")
-        .select("id, name, phone, last_visit_at")
-        .not("phone", "is", null)
-        .or(`last_visit_at.is.null,last_visit_at.lt.${cutoff}`)
-        .limit(limite);
-      // Filtro extra: confirma pelo appointments
-      const ids = (clientes ?? []).map((c: any) => c.id);
-      let realmenteInativos = clientes ?? [];
-      if (ids.length) {
-        const { data: recentes } = await admin
-          .from("appointments")
-          .select("client_id")
-          .in("client_id", ids)
-          .eq("status", "realizado")
-          .gte("start_at", cutoff);
-        const excluir = new Set((recentes ?? []).map((r: any) => r.client_id));
-        realmenteInativos = (clientes ?? []).filter((c: any) => !excluir.has(c.id));
-      }
+        .select("id, name, phone, whatsapp_phone")
+        .eq("active", true)
+        .limit(500);
+      const inativos = (clientes ?? [])
+        .filter((c: any) => (c.phone || c.whatsapp_phone) && !excluir.has(c.id))
+        .slice(0, limite);
       return {
-        total: realmenteInativos.length,
-        clientes: realmenteInativos.slice(0, limite).map((c: any) => ({
-          id: c.id, name: c.name, phone: c.phone, last_visit_at: c.last_visit_at,
+        total: inativos.length,
+        clientes: inativos.map((c: any) => ({
+          id: c.id, name: c.name, phone: c.whatsapp_phone || c.phone,
         })),
       };
     }
