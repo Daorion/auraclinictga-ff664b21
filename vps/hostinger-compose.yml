@@ -1,0 +1,84 @@
+##############################################################################
+# AURA CLINIC — Stack para colar no Docker Manager do Hostinger
+# Sobe: Postgres + Redis + API (Fastify) + Worker (Gemini)
+# Usa o WAHA que você JÁ instalou (não sobe WAHA de novo)
+#
+# Build contexts remotos: o Docker faz `git clone` do seu repo público
+# na hora do deploy. Nada precisa ser enviado por SFTP.
+##############################################################################
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aura
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: aura
+    volumes:
+      - aura_pg_data:/var/lib/postgresql/data
+    networks: [aura]
+
+  postgres_init:
+    image: postgres:16-alpine
+    restart: "no"
+    depends_on: [postgres]
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: >
+      sh -c "
+        apk add --no-cache curl >/dev/null &&
+        until pg_isready -h postgres -U aura; do sleep 1; done &&
+        curl -fsSL https://raw.githubusercontent.com/Daorion/auraclinictga-ff664b21/main/vps/api/schema.sql
+          | psql -h postgres -U aura -d aura
+      "
+    networks: [aura]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks: [aura]
+
+  api:
+    build:
+      context: https://github.com/Daorion/auraclinictga-ff664b21.git#main:vps/api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      API_TOKEN: ${API_TOKEN}
+      WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
+      INTERNAL_WAHA_HOOK_TOKEN: ${INTERNAL_WAHA_HOOK_TOKEN}
+      WAHA_BASE_URL: ${WAHA_BASE_URL_EXTERNAL}
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
+      REDIS_URL: redis://redis:6379
+      LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
+    depends_on: [postgres, redis]
+    ports:
+      - "3000:3000"
+    networks: [aura]
+
+  worker:
+    build:
+      context: https://github.com/Daorion/auraclinictga-ff664b21.git#main:vps/worker
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: gemini-2.0-flash
+      WAHA_BASE_URL: ${WAHA_BASE_URL_EXTERNAL}
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
+      WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
+    depends_on: [redis, postgres]
+    networks: [aura]
+
+volumes:
+  aura_pg_data:
+
+networks:
+  aura:
+    driver: bridge
