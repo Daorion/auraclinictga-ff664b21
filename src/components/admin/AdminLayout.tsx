@@ -10,7 +10,7 @@ const nav = [
   { to: "/admin/atendimentos", label: "Atendimentos", icon: MessageSquare },
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
-  { to: "/admin/aurora", label: "Aurora IA", icon: Bot },
+  { to: "/admin/aurora", label: "Aurora IA", icon: Bot, end: true },
   { to: "/admin/aurora/chat", label: "Chat com a Aurora", icon: MessagesSquare },
   { to: "/admin/aurora/campanhas", label: "Campanhas Aurora", icon: Megaphone },
   { to: "/admin/blacklist", label: "Blacklist Aurora", icon: ShieldOff },
