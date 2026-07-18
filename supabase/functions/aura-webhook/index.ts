@@ -412,24 +412,65 @@ Deno.serve(async (req) => {
   const chatIdFull = rawFrom.includes("@") ? rawFrom : `${phone}@c.us`;
   const profilePic = await fetchProfilePicture(chatIdFull);
 
-  // Upsert contact
-  const { data: contact, error: contactErr } = await admin
+  // Try to link with an existing client by phone (match last 10 digits — handles @lid IDs and +55 variants)
+  const last10 = phone.slice(-10);
+  let linkedClientId: string | null = null;
+  let linkedClientName: string | null = null;
+  if (last10.length >= 8) {
+    const { data: clientMatch } = await admin
+      .from("clients")
+      .select("id, name, phone")
+      .ilike("phone", `%${last10}`)
+      .limit(1)
+      .maybeSingle();
+    if (clientMatch) {
+      linkedClientId = clientMatch.id;
+      linkedClientName = clientMatch.name;
+    }
+  }
+
+  // Look up existing contact so we NEVER overwrite the CRM name with WhatsApp push name
+  const { data: existingContact } = await admin
     .from("contacts")
-    .upsert(
-      {
+    .select("id, name, client_id")
+    .eq("phone", phone)
+    .maybeSingle();
+
+  let contact: { id: string; name: string | null } | null = null;
+  if (existingContact) {
+    const patch: Record<string, unknown> = {
+      wa_id: rawFrom,
+      push_name: contactName,
+      profile_picture_url: profilePic,
+      last_seen_at: new Date().toISOString(),
+    };
+    // Only fill `name` if it was never set manually
+    if (!existingContact.name && (linkedClientName || contactName)) {
+      patch.name = linkedClientName ?? contactName;
+    }
+    if (!existingContact.client_id && linkedClientId) patch.client_id = linkedClientId;
+    const { data: updated, error: updErr } = await admin
+      .from("contacts").update(patch).eq("id", existingContact.id).select("id, name").single();
+    if (updErr || !updated) return json({ error: "contact_update_failed", details: updErr }, 500);
+    contact = updated;
+  } else {
+    const { data: inserted, error: insErr } = await admin
+      .from("contacts")
+      .insert({
         phone,
         wa_id: rawFrom,
-        name: contactName,
+        name: linkedClientName ?? contactName,
         push_name: contactName,
         profile_picture_url: profilePic,
         last_seen_at: new Date().toISOString(),
         origin: "whatsapp",
-      },
-      { onConflict: "phone" },
-    )
-    .select("id, name")
-    .single();
-  if (contactErr || !contact) return json({ error: "contact_failed", details: contactErr }, 500);
+        client_id: linkedClientId,
+      })
+      .select("id, name")
+      .single();
+    if (insErr || !inserted) return json({ error: "contact_failed", details: insErr }, 500);
+    contact = inserted;
+  }
 
   // Find or create open conversation
   let convId: string;
