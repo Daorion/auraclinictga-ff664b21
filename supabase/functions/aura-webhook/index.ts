@@ -28,6 +28,19 @@ function normalizePhone(from: string): string {
   return from.replace(/@c\.us$/i, "").replace(/@s\.whatsapp\.net$/i, "").replace(/\D/g, "");
 }
 
+async function fetchProfilePicture(chatId: string): Promise<string | null> {
+  if (!WAHA_URL || !WAHA_API_KEY) return null;
+  try {
+    const r = await fetch(
+      `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/contacts/profile-picture?contactId=${encodeURIComponent(chatId)}`,
+      { headers: { "X-Api-Key": WAHA_API_KEY } },
+    );
+    if (!r.ok) return null;
+    const data = await r.json().catch(() => ({}));
+    return data?.profilePictureURL ?? data?.url ?? null;
+  } catch { return null; }
+}
+
 async function sendWhatsApp(phone: string, text: string): Promise<{ id?: string; error?: string }> {
   if (!WAHA_URL || !WAHA_API_KEY) return { error: "waha_not_configured" };
   const chatId = phone.includes("@") ? phone : `${phone}@c.us`;
@@ -59,8 +72,9 @@ async function buildSystemPrompt(
 
   const persona = settings?.config?.system_prompt ?? `Você é a Aurora, atendente virtual da Aura Clinic (clínica de estética em Palmas-TO).
 Tom acolhedor, elegante, profissional. Respostas curtas (2-4 frases), naturais no WhatsApp.
-Nunca invente preços. Se perguntarem valores, ofereça agendar avaliação.
-Sempre incentive a marcar horário. Colete: nome, procedimento de interesse, melhor dia/horário.
+Nunca invente preços. Se perguntarem valores, ofereça agendar avaliação presencial gratuita.
+OBJETIVO PRINCIPAL: conduzir toda conversa para AGENDAR UMA AVALIAÇÃO (modo avaliação).
+Fluxo ideal: 1) cumprimente pelo nome, 2) entenda o interesse, 3) explique brevemente o procedimento, 4) proponha 2 opções de dia/horário para avaliação presencial, 5) confirme e peça nome completo + WhatsApp.
 Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
 
   const { data: procs } = await admin
@@ -225,6 +239,7 @@ Deno.serve(async (req) => {
   if (fromMe) return json({ ok: true, ignored: "fromMe" });
 
   const rawFrom = String(payload?.from ?? payload?.chatId ?? "");
+  const msgType = String(payload?.type ?? payload?._data?.type ?? "");
 
   // ⚠️ Never respond to WhatsApp groups, broadcasts, newsletters or status.
   const lowered = rawFrom.toLowerCase();
@@ -232,19 +247,41 @@ Deno.serve(async (req) => {
     return json({ ok: true, ignored: "group_or_broadcast", from: rawFrom });
   }
 
-  const phone = normalizePhone(rawFrom);
-  if (!phone) return json({ error: "missing_phone" }, 400);
+  // ⚠️ Ignore WhatsApp system notifications (business account changes, e2e updates, etc.)
+  if (msgType && (msgType.includes("notification") || msgType === "protocol" || msgType === "e2e_notification" || msgType === "gp2")) {
+    return json({ ok: true, ignored: "system_notification", type: msgType });
+  }
 
-  const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? null;
+  // ⚠️ @lid is Meta's internal linked-ID (hosted business accounts) — not a real phone. Skip.
+  if (lowered.endsWith("@lid")) {
+    return json({ ok: true, ignored: "lid_no_phone", from: rawFrom });
+  }
+
+  const phone = normalizePhone(rawFrom);
+  if (!phone || phone.length < 8) return json({ ok: true, ignored: "invalid_phone", from: rawFrom });
+
+  const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
   const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
   const hasMedia = payload?.hasMedia === true;
+
+  // Fetch profile picture (best-effort, non-blocking failure)
+  const chatIdFull = rawFrom.includes("@") ? rawFrom : `${phone}@c.us`;
+  const profilePic = await fetchProfilePicture(chatIdFull);
 
   // Upsert contact
   const { data: contact, error: contactErr } = await admin
     .from("contacts")
     .upsert(
-      { phone, name: contactName, last_seen_at: new Date().toISOString(), origin: "whatsapp" },
+      {
+        phone,
+        wa_id: rawFrom,
+        name: contactName,
+        push_name: contactName,
+        profile_picture_url: profilePic,
+        last_seen_at: new Date().toISOString(),
+        origin: "whatsapp",
+      },
       { onConflict: "phone" },
     )
     .select("id, name")

@@ -25,7 +25,7 @@ interface Conversation {
   status: string;
   internal_notes: string | null;
 }
-interface Contact { id: string; phone: string; name: string | null; }
+interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; }
 interface Message {
   id: string;
   conversation_id: string;
@@ -76,7 +76,7 @@ const AdminAtendimentos = () => {
     const ids = list.map((c) => c.contact_id);
     if (ids.length) {
       const { data: contacts } = await supabase
-        .from("contacts").select("id,phone,name").in("id", ids);
+        .from("contacts").select("id,phone,name,push_name,profile_picture_url").in("id", ids);
       const map: Record<string, Contact> = {};
       (contacts ?? []).forEach((c) => { map[c.id] = c as Contact; });
       setContactsById(map);
@@ -216,17 +216,29 @@ const AdminAtendimentos = () => {
                     onClick={() => setActiveId(c.id)}
                     className={`w-full text-left p-3 border-b hover:bg-muted/40 transition-colors ${activeId === c.id ? "bg-muted/60" : ""}`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium truncate">{ct?.name ?? ct?.phone ?? "—"}</span>
-                      {c.unread_count > 0 && <Badge className="shrink-0">{c.unread_count}</Badge>}
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
-                      <Badge variant={c.assigned_to === "sirlei" ? "default" : "secondary"} className="text-[10px] py-0 h-4 gap-1">
-                        {c.assigned_to === "sirlei" ? <UserCheck className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                        {c.assigned_to === "sirlei" ? "Sirlei" : "Aurora"}
-                      </Badge>
+                    <div className="flex items-start gap-3">
+                      {ct?.profile_picture_url ? (
+                        <img src={ct.profile_picture_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
+                          {(ct?.push_name ?? ct?.name ?? ct?.phone ?? "?").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium truncate">{ct?.name ?? ct?.push_name ?? ct?.phone ?? "—"}</span>
+                          {c.unread_count > 0 && <Badge className="shrink-0">{c.unread_count}</Badge>}
+                        </div>
+                        {ct?.phone && <p className="text-[11px] text-muted-foreground truncate">+{ct.phone}</p>}
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
+                          <Badge variant={c.assigned_to === "sirlei" ? "default" : "secondary"} className="text-[10px] py-0 h-4 gap-1">
+                            {c.assigned_to === "sirlei" ? <UserCheck className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                            {c.assigned_to === "sirlei" ? "Sirlei" : "Aurora"}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </button>
                 );
@@ -244,9 +256,18 @@ const AdminAtendimentos = () => {
           ) : (
             <>
               <div className="p-3 border-b flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{activeContact?.name ?? activeContact?.phone}</p>
-                  <p className="text-xs text-muted-foreground truncate">{activeContact?.phone}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  {activeContact?.profile_picture_url ? (
+                    <img src={activeContact.profile_picture_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
+                      {(activeContact?.push_name ?? activeContact?.name ?? activeContact?.phone ?? "?").slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
+                    <p className="text-xs text-muted-foreground truncate">{activeContact?.phone ? `+${activeContact.phone}` : ""}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {(() => {
