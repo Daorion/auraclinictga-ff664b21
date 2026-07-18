@@ -30,6 +30,7 @@ import AdminAtendimentos from "./pages/admin/AdminAtendimentos";
 import AdminIntegracoes from "./pages/admin/AdminIntegracoes";
 import AdminAurora from "./pages/admin/AdminAurora";
 import AdminAuditoria from "./pages/admin/AdminAuditoria";
+import AdminBlacklist from "./pages/admin/AdminBlacklist";
 
 const queryClient = new QueryClient();
 
