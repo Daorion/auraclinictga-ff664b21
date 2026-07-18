@@ -81,6 +81,7 @@ services:
       INTERNAL_WAHA_HOOK_TOKEN: ${INTERNAL_WAHA_HOOK_TOKEN}
       WAHA_BASE_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY}
+      WAHA_SESSION_NAME: ${WAHA_SESSION_NAME:-default}
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       REDIS_URL: redis://redis:6379
       LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
