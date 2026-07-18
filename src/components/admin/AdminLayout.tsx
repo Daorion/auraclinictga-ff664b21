@@ -11,6 +11,7 @@ const nav = [
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/aurora", label: "Aurora IA", icon: Bot },
+  { to: "/admin/blacklist", label: "Blacklist Aurora", icon: ShieldOff },
   { to: "/admin/profissionais", label: "Profissionais", icon: UserCog },
   { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },
   { to: "/admin/servicos", label: "Serviços", icon: ScrollText },
