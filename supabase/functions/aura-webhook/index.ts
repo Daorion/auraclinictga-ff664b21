@@ -930,6 +930,9 @@ Deno.serve(async (req) => {
 
   // Decide: should AI reply?
   const takeoverActive = convTakeoverUntil && new Date(convTakeoverUntil) > new Date();
+  if ((contact as any).aurora_blocked) {
+    return json({ ok: true, ai_skipped: "contact_blacklisted" });
+  }
   if (!convAiEnabled || takeoverActive) {
     return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : "ai_disabled" });
   }
