@@ -58,6 +58,48 @@ async function sendWhatsApp(destination: string, text: string): Promise<{ id?: s
   }
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function typing(destination: string, on: boolean) {
+  if (!WAHA_URL || !WAHA_API_KEY) return;
+  const chatId = destination.includes("@") ? destination : `${destination}@c.us`;
+  try {
+    await fetch(`${WAHA_URL}/api/${on ? "startTyping" : "stopTyping"}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Api-Key": WAHA_API_KEY },
+      body: JSON.stringify({ session: WAHA_SESSION, chatId }),
+    });
+  } catch { /* best effort */ }
+}
+
+// Quebra a resposta em 1–3 pedaços "humanos" por parágrafo/frase.
+function splitReply(text: string): string[] {
+  const clean = text.trim();
+  if (!clean) return [];
+  // 1) parágrafos separados por linha em branco
+  let parts = clean.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
+  // 2) se ainda é um bloco só, tenta quebrar por frase quando for longo
+  if (parts.length === 1 && clean.length > 180) {
+    const sentences = clean.match(/[^.!?\n]+[.!?]+(?:\s|$)|[^.!?\n]+$/g)?.map((s) => s.trim()).filter(Boolean) ?? [clean];
+    parts = [];
+    let buf = "";
+    for (const s of sentences) {
+      if ((buf + " " + s).trim().length > 160 && buf) { parts.push(buf.trim()); buf = s; }
+      else { buf = (buf ? buf + " " : "") + s; }
+    }
+    if (buf.trim()) parts.push(buf.trim());
+  }
+  // Máximo 3 chunks pra não parecer robô esparramando texto
+  if (parts.length > 3) {
+    const head = parts.slice(0, 2);
+    const tail = parts.slice(2).join("\n\n");
+    parts = [...head, tail];
+  }
+  return parts;
+}
+
+
+
 async function buildSystemPrompt(
   admin: any,
   contactName: string | null,
