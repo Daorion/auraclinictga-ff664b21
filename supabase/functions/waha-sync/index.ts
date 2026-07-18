@@ -15,7 +15,8 @@ const WAHA_API_KEY = Deno.env.get("WAHA_API_KEY") ?? "";
 const WAHA_SESSION = Deno.env.get("WAHA_SESSION") ?? "default";
 
 function normalizePhone(from: string): string {
-  return from.replace(/@c\.us$/i, "").replace(/@s\.whatsapp\.net$/i, "").replace(/\D/g, "");
+  const base = String(from).split("@")[0] ?? "";
+  return base.replace(/\D/g, "");
 }
 
 async function wahaGet(path: string): Promise<any> {
@@ -37,9 +38,13 @@ Deno.serve(async (req) => {
 
   let chats: any[] = [];
   try {
-    chats = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/chats?limit=${chatLimit}`);
-  } catch (e) {
-    return json({ error: "chats_failed", details: String(e) }, 502);
+    chats = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/chats/overview?limit=${chatLimit}`);
+  } catch {
+    try {
+      chats = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/chats?limit=${chatLimit}`);
+    } catch (e) {
+      return json({ error: "chats_failed", details: String(e) }, 502);
+    }
   }
 
   const stats = { chats: 0, contacts: 0, conversations: 0, messages: 0, skipped: 0 };
@@ -48,14 +53,29 @@ Deno.serve(async (req) => {
     const chatId: string = chat?.id?._serialized ?? chat?.id ?? "";
     const idLow = chatId.toLowerCase();
     if (!chatId || idLow.endsWith("@g.us") || idLow.endsWith("@broadcast") ||
-        idLow.endsWith("@newsletter") || idLow.endsWith("@lid") || idLow === "status@broadcast") {
+        idLow.endsWith("@newsletter") || idLow === "status@broadcast") {
       stats.skipped++; continue;
     }
-    const phone = normalizePhone(chatId);
+
+    const pushName: string | null = chat?.name ?? chat?.pushname ?? chat?.formattedTitle ?? null;
+    const last = chat?.lastMessage ?? chat?.lastMessage?._data ?? null;
+
+    // Derive phone: chatId (@c.us), else pushName if it looks like a phone,
+    // else lastMessage.from/to (@c.us side), else the @lid user id.
+    let phone = normalizePhone(chatId);
+    if ((!phone || phone.length < 8) && pushName) {
+      const p = pushName.replace(/\D/g, "");
+      if (p.length >= 8) phone = p;
+    }
+    if ((!phone || phone.length < 8) && last) {
+      const from = String(last?.from?._serialized ?? last?.from ?? "");
+      const to = String(last?.to?._serialized ?? last?.to ?? "");
+      const cand = [from, to].find((s) => s.endsWith("@c.us"));
+      if (cand) phone = normalizePhone(cand);
+    }
     if (!phone || phone.length < 8) { stats.skipped++; continue; }
 
     stats.chats++;
-    const pushName: string | null = chat?.name ?? chat?.pushname ?? chat?.formattedTitle ?? null;
 
     // Profile pic (best-effort)
     let picUrl: string | null = null;
@@ -122,11 +142,11 @@ Deno.serve(async (req) => {
       stats.messages++;
     }
 
-    // Update conversation preview from last message
-    const last = (msgs ?? [])[msgs.length - 1];
-    if (last) {
-      const preview = String(last?.body ?? last?.text ?? "[mídia]").slice(0, 140);
-      const lastTs = last?.timestamp ? new Date(Number(last.timestamp) * 1000).toISOString() : new Date().toISOString();
+    // Update conversation preview from last synced message
+    const tail = (msgs ?? [])[msgs.length - 1];
+    if (tail) {
+      const preview = String(tail?.body ?? tail?.text ?? "[mídia]").slice(0, 140);
+      const lastTs = tail?.timestamp ? new Date(Number(tail.timestamp) * 1000).toISOString() : new Date().toISOString();
       await admin.from("conversations").update({
         last_message_at: lastTs, last_message_preview: preview,
       }).eq("id", convId);
