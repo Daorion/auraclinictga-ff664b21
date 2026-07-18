@@ -256,9 +256,18 @@ const AdminAtendimentos = () => {
           ) : (
             <>
               <div className="p-3 border-b flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{activeContact?.name ?? activeContact?.phone}</p>
-                  <p className="text-xs text-muted-foreground truncate">{activeContact?.phone}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  {activeContact?.profile_picture_url ? (
+                    <img src={activeContact.profile_picture_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
+                      {(activeContact?.push_name ?? activeContact?.name ?? activeContact?.phone ?? "?").slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
+                    <p className="text-xs text-muted-foreground truncate">{activeContact?.phone ? `+${activeContact.phone}` : ""}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {(() => {
