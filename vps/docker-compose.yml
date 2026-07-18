@@ -1,20 +1,25 @@
 # =====================================================================
-# Aura Clinic — WAHA only (webhooks direto pro Lovable/Supabase)
+# Aura Clinic — WAHA standalone (Hostinger Docker Compose)
 # =====================================================================
-# Como usar na VPS:
-#   1) mkdir -p /opt/aura && cd /opt/aura
-#   2) Cole este arquivo como docker-compose.yml
-#   3) Crie um .env AO LADO deste arquivo com:
-#        WAHA_API_KEY=<sua chave forte, ex: openssl rand -hex 24>
-#        WAHA_DASHBOARD_USER=admin
-#        WAHA_DASHBOARD_PASS=<senha forte>
-#        WEBHOOK_URL=https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook?secret=<AURA_WEBHOOK_SECRET>
-#   4) docker compose up -d
-#   5) Abra http://<IP-da-VPS>:3001  (login: WAHA_DASHBOARD_USER / _PASS)
-#      -> Start session "arly" -> escaneie o QR
+# COMO SUBIR NA HOSTINGER:
 #
-# Depois disso, TODA mensagem recebida dispara o webhook pra Lovable.
-# Não precisa mais de Postgres / Redis / API própria — o Lovable cuida.
+# 1) Painel Hostinger -> VPS -> Docker Compose (ou "Deploy new project")
+# 2) Cole ESTE arquivo inteiro no campo "docker-compose.yml"
+# 3) No campo ".env" (ou "Environment variables") cole:
+#
+#       WAHA_API_KEY=<gere: openssl rand -hex 24>
+#       WAHA_DASHBOARD_USER=admin
+#       WAHA_DASHBOARD_PASS=<senha forte>
+#       WEBHOOK_URL=https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook?secret=COLE_O_AURA_WEBHOOK_SECRET
+#
+# 4) Deploy. Aguarde o container ficar "healthy".
+# 5) Acesse http://<IP-da-VPS>:3001
+#       -> login com WAHA_DASHBOARD_USER / WAHA_DASHBOARD_PASS
+#       -> "Start new session" com nome EXATO:  arly
+#       -> escaneie o QR com o WhatsApp da clínica
+#
+# Pronto. Toda mensagem cai em /admin/atendimentos no Lovable e a
+# Aurora (IA) responde automaticamente.
 # =====================================================================
 
 services:
@@ -22,31 +27,38 @@ services:
     image: devlikeapro/waha:latest
     container_name: waha
     restart: unless-stopped
+
     ports:
       - "3001:3000"
+
     environment:
-      # --- Segurança ---
-      WAHA_API_KEY: ${WAHA_API_KEY}
+      # --- Autenticação da API (usada pelo Lovable pra enviar msgs) ---
+      WHATSAPP_API_KEY: ${WAHA_API_KEY}
+
+      # --- Login do dashboard web ---
+      WAHA_DASHBOARD_ENABLED: "true"
       WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USER}
       WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASS}
 
-      # --- Webhook global: TODA sessão manda evento pro Lovable ---
+      # --- Webhook GLOBAL: toda sessão dispara evento pro Lovable ---
       WHATSAPP_HOOK_URL: ${WEBHOOK_URL}
       WHATSAPP_HOOK_EVENTS: "message,message.any,session.status"
 
-      # --- Sessão persistente ---
+      # --- Engine + sessão persistente ---
       WHATSAPP_DEFAULT_ENGINE: WEBJS
       WAHA_PRINT_QR: "false"
+      TZ: America/Araguaina
 
     volumes:
       - waha_sessions:/app/.sessions
       - waha_media:/app/.media
 
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 5
+      start_period: 40s
 
 volumes:
   waha_sessions:
