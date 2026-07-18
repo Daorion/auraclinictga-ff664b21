@@ -331,7 +331,12 @@ const AdminAtendimentos = () => {
               <div className="p-3 border-b flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   {activeContact?.profile_picture_url ? (
-                    <img src={activeContact.profile_picture_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                    <img
+                      src={activeContact.profile_picture_url}
+                      alt=""
+                      onClick={() => setLightboxUrl(activeContact.profile_picture_url!)}
+                      className="w-10 h-10 rounded-full object-cover shrink-0 cursor-zoom-in hover:ring-2 hover:ring-primary/50 transition"
+                    />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
                       {(activeContact?.push_name ?? activeContact?.name ?? activeContact?.phone ?? "?").slice(0, 1).toUpperCase()}
