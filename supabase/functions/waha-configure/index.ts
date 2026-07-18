@@ -67,5 +67,17 @@ Deno.serve(async (req) => {
     data = await r.json().catch(() => ({}));
   }
 
-  return json({ status: r.status, ok: r.ok, webhook_url: url, response: data });
+  // Restart session so WAHA picks up the new webhooks (WEBJS requires it)
+  let restart: any = null;
+  try {
+    const rr = await fetch(
+      `${WAHA_URL}/api/sessions/${encodeURIComponent(WAHA_SESSION)}/restart`,
+      { method: "POST", headers },
+    );
+    restart = { status: rr.status, ok: rr.ok, body: await rr.json().catch(() => ({})) };
+  } catch (e) {
+    restart = { error: String(e) };
+  }
+
+  return json({ status: r.status, ok: r.ok, webhook_url: url, response: data, restart });
 });
