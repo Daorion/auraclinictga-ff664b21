@@ -277,6 +277,162 @@ export type Database = {
         }
         Relationships: []
       }
+      aurora_campaign_targets: {
+        Row: {
+          campaign_id: string
+          client_id: string | null
+          contact_name: string | null
+          created_at: string
+          external_id: string | null
+          id: string
+          phone: string | null
+          reason: string | null
+          sent_at: string | null
+          status: string
+          suggested_message: string
+        }
+        Insert: {
+          campaign_id: string
+          client_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          sent_at?: string | null
+          status?: string
+          suggested_message: string
+        }
+        Update: {
+          campaign_id?: string
+          client_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          sent_at?: string | null
+          status?: string
+          suggested_message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurora_campaign_targets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "aurora_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aurora_campaign_targets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurora_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          goal: string | null
+          id: string
+          message_template: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          goal?: string | null
+          id?: string
+          message_template: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          goal?: string | null
+          id?: string
+          message_template?: string
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      aurora_directives: {
+        Row: {
+          active: boolean
+          content: string
+          created_at: string
+          created_by: string | null
+          ends_at: string | null
+          id: string
+          kind: string
+          starts_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          content: string
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          starts_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          starts_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      aurora_trainer_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          parts: Json | null
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          parts?: Json | null
+          role: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          parts?: Json | null
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       cash_sessions: {
         Row: {
           closed_at: string | null
