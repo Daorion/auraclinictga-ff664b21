@@ -48,14 +48,29 @@ Deno.serve(async (req) => {
     const chatId: string = chat?.id?._serialized ?? chat?.id ?? "";
     const idLow = chatId.toLowerCase();
     if (!chatId || idLow.endsWith("@g.us") || idLow.endsWith("@broadcast") ||
-        idLow.endsWith("@newsletter") || idLow.endsWith("@lid") || idLow === "status@broadcast") {
+        idLow.endsWith("@newsletter") || idLow === "status@broadcast") {
       stats.skipped++; continue;
     }
-    const phone = normalizePhone(chatId);
+
+    const pushName: string | null = chat?.name ?? chat?.pushname ?? chat?.formattedTitle ?? null;
+    const last = chat?.lastMessage ?? chat?.lastMessage?._data ?? null;
+
+    // Derive phone: chatId (@c.us), else pushName if it looks like a phone,
+    // else lastMessage.from/to (@c.us side), else the @lid user id.
+    let phone = normalizePhone(chatId);
+    if ((!phone || phone.length < 8) && pushName) {
+      const p = pushName.replace(/\D/g, "");
+      if (p.length >= 8) phone = p;
+    }
+    if ((!phone || phone.length < 8) && last) {
+      const from = String(last?.from?._serialized ?? last?.from ?? "");
+      const to = String(last?.to?._serialized ?? last?.to ?? "");
+      const cand = [from, to].find((s) => s.endsWith("@c.us"));
+      if (cand) phone = normalizePhone(cand);
+    }
     if (!phone || phone.length < 8) { stats.skipped++; continue; }
 
     stats.chats++;
-    const pushName: string | null = chat?.name ?? chat?.pushname ?? chat?.formattedTitle ?? null;
 
     // Profile pic (best-effort)
     let picUrl: string | null = null;
