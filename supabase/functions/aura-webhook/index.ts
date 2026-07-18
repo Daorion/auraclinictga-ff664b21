@@ -463,7 +463,7 @@ Deno.serve(async (req) => {
   if (existingContact) {
     const patch: Record<string, unknown> = {
       wa_id: rawFrom,
-      push_name: contactName,
+      push_name: contactPushName,
       profile_picture_url: profilePic,
       last_seen_at: new Date().toISOString(),
     };
@@ -483,7 +483,7 @@ Deno.serve(async (req) => {
         phone,
         wa_id: rawFrom,
         name: linkedClientName ?? contactName,
-        push_name: contactName,
+        push_name: contactPushName,
         profile_picture_url: profilePic,
         last_seen_at: new Date().toISOString(),
         origin: "whatsapp",
