@@ -247,8 +247,9 @@ Deno.serve(async (req) => {
   }
 
   // ===== message events =====
-  // WAHA "message" fires on INBOUND only. "message.any" includes fromMe.
-  if (event !== "message" && event !== "message.any") {
+  // Só processamos "message.any" (cobre inbound + fromMe). "message" é duplicata.
+  if (event === "message") return json({ ok: true, ignored: "duplicate_of_message.any" });
+  if (event !== "message.any") {
     return json({ ok: true, ignored: event });
   }
 
