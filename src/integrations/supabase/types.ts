@@ -632,6 +632,7 @@ export type Database = {
           last_message_at: string | null
           last_message_preview: string | null
           metadata: Json
+          pending_reply_token: string | null
           stage: Database["public"]["Enums"]["conv_stage"]
           status: string
           unread_count: number
@@ -652,6 +653,7 @@ export type Database = {
           last_message_at?: string | null
           last_message_preview?: string | null
           metadata?: Json
+          pending_reply_token?: string | null
           stage?: Database["public"]["Enums"]["conv_stage"]
           status?: string
           unread_count?: number
@@ -672,6 +674,7 @@ export type Database = {
           last_message_at?: string | null
           last_message_preview?: string | null
           metadata?: Json
+          pending_reply_token?: string | null
           stage?: Database["public"]["Enums"]["conv_stage"]
           status?: string
           unread_count?: number
