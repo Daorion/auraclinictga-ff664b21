@@ -15,7 +15,8 @@ const WAHA_API_KEY = Deno.env.get("WAHA_API_KEY") ?? "";
 const WAHA_SESSION = Deno.env.get("WAHA_SESSION") ?? "default";
 
 function normalizePhone(from: string): string {
-  return from.replace(/@c\.us$/i, "").replace(/@s\.whatsapp\.net$/i, "").replace(/\D/g, "");
+  const base = String(from).split("@")[0] ?? "";
+  return base.replace(/\D/g, "");
 }
 
 async function wahaGet(path: string): Promise<any> {
