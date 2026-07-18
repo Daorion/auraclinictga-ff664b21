@@ -25,7 +25,7 @@ interface Conversation {
   status: string;
   internal_notes: string | null;
 }
-interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; }
+interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; }
 interface Message {
   id: string;
   conversation_id: string;
