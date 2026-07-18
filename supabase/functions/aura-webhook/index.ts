@@ -437,7 +437,13 @@ Deno.serve(async (req) => {
   const phone = normalizePhone(rawFrom);
   if (!phone || phone.length < 8) return json({ ok: true, ignored: "invalid_phone", from: rawFrom });
 
-  const notifyName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
+  // ⚠️ Contatos @lid (novos IDs do WhatsApp) têm bug conhecido no whatsapp-web.js:
+  // o notifyName do payload frequentemente vem contaminado com o nome de outro chat
+  // aberto recentemente. Nesses casos ignoramos o notifyName e confiamos APENAS no
+  // pushname autoritativo vindo do endpoint /contacts da WAHA.
+  const isLid = rawFrom.toLowerCase().includes("@lid");
+  const rawNotifyName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
+  const notifyName = isLid ? null : rawNotifyName;
   const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
   const hasMedia = payload?.hasMedia === true;
@@ -453,8 +459,9 @@ Deno.serve(async (req) => {
     fetchProfilePicture(chatIdFull),
     fetchWahaContact(chatIdFull),
   ]);
-  // Prefer the phonebook name saved on the device; fall back to notifyName / pushName
+  // Prefer the phonebook name saved on the device; fall back to notifyName (só se NÃO for @lid)
   const contactName = wahaContact.savedName ?? notifyName;
+  // push_name = nome de perfil autoritativo do WA. Para @lid, só confia no /contacts.
   const contactPushName = wahaContact.pushName ?? notifyName;
 
   // Try to link with an existing client by phone (match last 10 digits — handles @lid IDs and +55 variants)
