@@ -237,6 +237,82 @@ async function generateAiReply(
   }
 }
 
+const DEBOUNCE_MS = 8_000; // aguarda a pessoa terminar de mandar as msgs
+const TYPING_CPS = 45;     // ~45 caracteres por segundo "digitados"
+const TYPING_MIN_MS = 1200;
+const TYPING_MAX_MS = 4500;
+const CHUNK_GAP_MS = 700;
+
+async function scheduleReply(
+  admin: any,
+  convId: string,
+  rawFrom: string,
+  phone: string,
+  contactId: string,
+  contactName: string | null,
+  arrivedAt: string,
+) {
+  // 1) Debounce — se chegar msg nova, aborta essa execução
+  await sleep(DEBOUNCE_MS);
+
+  const { data: newer } = await admin
+    .from("messages")
+    .select("id, sent_at")
+    .eq("conversation_id", convId)
+    .eq("direction", "in")
+    .gt("sent_at", arrivedAt)
+    .limit(1);
+  if (newer && newer.length > 0) {
+    console.log("debounce_aborted", { convId, arrivedAt });
+    return;
+  }
+
+  // 2) Re-checa estado da conversa (pode ter sido pausada nesses 8s)
+  const { data: conv } = await admin
+    .from("conversations")
+    .select("ai_enabled, human_takeover_until")
+    .eq("id", convId)
+    .maybeSingle();
+  if (!conv) return;
+  if (conv.ai_enabled === false) return;
+  if (conv.human_takeover_until && new Date(conv.human_takeover_until) > new Date()) return;
+
+  // 3) Gera resposta com base em TODO o histórico acumulado
+  const reply = await generateAiReply(admin, convId, phone, contactName, "");
+  if (!reply) return;
+
+  // 4) Quebra em chunks e envia com "digitando…" entre eles
+  const chunks = splitReply(reply);
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const typingMs = Math.min(TYPING_MAX_MS, Math.max(TYPING_MIN_MS, Math.round((chunk.length / TYPING_CPS) * 1000)));
+    await typing(rawFrom, true);
+    await sleep(typingMs);
+    await typing(rawFrom, false);
+
+    const sent = await sendWhatsApp(rawFrom, chunk);
+    await admin.from("messages").insert({
+      conversation_id: convId,
+      contact_id: contactId,
+      channel: "whatsapp",
+      direction: "out",
+      body: chunk,
+      external_id: sent.id ?? null,
+      msg_type: "text",
+      author: "aurora",
+      status: sent.error ? "failed" : "sent",
+      error: sent.error ?? null,
+      sent_at: new Date().toISOString(),
+    });
+    await admin.from("conversations").update({
+      last_message_at: new Date().toISOString(),
+      last_message_preview: chunk.slice(0, 140),
+    }).eq("id", convId);
+
+    if (i < chunks.length - 1) await sleep(CHUNK_GAP_MS);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
