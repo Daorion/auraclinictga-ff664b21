@@ -45,8 +45,12 @@ async function sendWhatsApp(phone: string, text: string): Promise<{ id?: string;
   }
 }
 
-async function buildSystemPrompt(admin: any, contactName: string | null): Promise<string> {
-  // Base persona
+async function buildSystemPrompt(
+  admin: any,
+  contactName: string | null,
+  clientInfo: any | null,
+  recentAppointments: any[] | null,
+): Promise<string> {
   const { data: settings } = await admin
     .from("ai_settings")
     .select("action_key, config")
@@ -74,13 +78,35 @@ Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
     }).join("\n");
   }
 
-  const nameLine = contactName ? `\n\nNome do contato: ${contactName}` : "";
-  return persona + procText + nameLine;
+  // ---- Quem é essa pessoa? ----
+  let personText = "";
+  if (clientInfo) {
+    const parts: string[] = [];
+    parts.push(`Nome cadastrado: ${clientInfo.name}`);
+    if (clientInfo.birth_date) parts.push(`Nascimento: ${clientInfo.birth_date}`);
+    if (clientInfo.tags?.length) parts.push(`Tags: ${clientInfo.tags.join(", ")}`);
+    if (clientInfo.notes) parts.push(`Observações da clínica: ${clientInfo.notes}`);
+    if (recentAppointments && recentAppointments.length) {
+      const list = recentAppointments.slice(0, 5).map((a: any) =>
+        `- ${new Date(a.start_at).toLocaleDateString("pt-BR")} • ${a.service_name} (${a.status})`
+      ).join("\n");
+      parts.push(`Últimos atendimentos:\n${list}`);
+    }
+    personText = "\n\n=== Cliente identificada ===\n" + parts.join("\n") +
+      "\nUse o primeiro nome de forma natural. Trate como cliente conhecida.";
+  } else if (contactName) {
+    personText = `\n\n=== Contato novo ===\nNome no WhatsApp: ${contactName}. Ainda não é cliente cadastrada — colha nome completo educadamente na primeira oportunidade.`;
+  } else {
+    personText = `\n\n=== Contato novo ===\nAinda não temos o nome. Pergunte com gentileza como pode chamá-la.`;
+  }
+
+  return persona + procText + personText;
 }
 
 async function generateAiReply(
   admin: any,
   convId: string,
+  contactPhone: string,
   contactName: string | null,
   userMessage: string,
 ): Promise<string | null> {
@@ -99,7 +125,30 @@ async function generateAiReply(
     content: m.body ?? "",
   })).filter((m: any) => m.content);
 
-  const system = await buildSystemPrompt(admin, contactName);
+  // Look up client by phone
+
+  let clientInfo: any = null;
+  let recentAppts: any[] = [];
+  if (contactPhone) {
+    const { data: client } = await admin
+      .from("clients")
+      .select("id, name, birth_date, tags, notes")
+      .or(`whatsapp_phone.eq.${contactPhone},phone.eq.${contactPhone}`)
+      .eq("active", true)
+      .maybeSingle();
+    if (client) {
+      clientInfo = client;
+      const { data: appts } = await admin
+        .from("appointments")
+        .select("start_at, service_name, status")
+        .eq("client_id", client.id)
+        .order("start_at", { ascending: false })
+        .limit(5);
+      recentAppts = appts ?? [];
+    }
+  }
+
+  const system = await buildSystemPrompt(admin, contactName, clientInfo, recentAppts);
   const messages = [
     { role: "system", content: system },
     ...historyMsgs,
@@ -175,8 +224,15 @@ Deno.serve(async (req) => {
   const fromMe = payload?.fromMe === true;
   if (fromMe) return json({ ok: true, ignored: "fromMe" });
 
-  const rawFrom = payload?.from ?? payload?.chatId ?? "";
-  const phone = normalizePhone(String(rawFrom));
+  const rawFrom = String(payload?.from ?? payload?.chatId ?? "");
+
+  // ⚠️ Never respond to WhatsApp groups, broadcasts, newsletters or status.
+  const lowered = rawFrom.toLowerCase();
+  if (lowered.endsWith("@g.us") || lowered.endsWith("@broadcast") || lowered.endsWith("@newsletter") || lowered === "status@broadcast") {
+    return json({ ok: true, ignored: "group_or_broadcast", from: rawFrom });
+  }
+
+  const phone = normalizePhone(rawFrom);
   if (!phone) return json({ error: "missing_phone" }, 400);
 
   const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? null;
@@ -260,7 +316,7 @@ Deno.serve(async (req) => {
   }
 
   // Call AI
-  const reply = await generateAiReply(admin, convId, contact.name ?? contactName, messageBody);
+  const reply = await generateAiReply(admin, convId, phone, contact.name ?? contactName, messageBody);
   if (!reply) return json({ ok: true, ai_no_reply: true });
 
   // Send via WAHA
