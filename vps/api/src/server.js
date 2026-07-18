@@ -168,8 +168,9 @@ app.post("/api/messages", async (req, reply) => {
   if (!rows[0]) return reply.code(404).send({ error: "conversation_not_found" });
   const phone = rows[0].phone;
 
+  const SESSION = process.env.WAHA_SESSION_NAME || "default";
   const sendRes = await waha("/api/sendText", "POST", {
-    chatId: `${phone}@c.us`, text: body, session: "default",
+    chatId: `${phone}@c.us`, text: body, session: SESSION,
   });
   if (sendRes.status >= 300) return reply.code(502).send({ error: "waha_send_failed", details: sendRes.data });
 
@@ -194,22 +195,23 @@ app.post("/api/ai/reply", async (req, reply) => {
 });
 
 // --- WhatsApp session control ---
+const SESSION_NAME = process.env.WAHA_SESSION_NAME || "default";
+
 app.get("/api/whatsapp/status", async (req, reply) => {
   if (!requireAdmin(req, reply)) return;
-  const r = await waha("/api/sessions/default");
+  const r = await waha(`/api/sessions/${SESSION_NAME}`);
   return { data: r.data };
 });
 
 app.post("/api/whatsapp/start", async (req, reply) => {
   if (!requireAdmin(req, reply)) return;
-  const r = await waha("/api/sessions/start", "POST", { name: "default" });
+  const r = await waha("/api/sessions/start", "POST", { name: SESSION_NAME });
   return { data: r.data };
 });
 
 app.get("/api/whatsapp/qr", async (req, reply) => {
   if (!requireAdmin(req, reply)) return;
-  const r = await waha("/api/sessions/default/auth/qr?format=image");
-  // WAHA retorna image/png ou base64 conforme versão
+  const r = await waha(`/api/sessions/${SESSION_NAME}/auth/qr?format=image`);
   const qr = typeof r.data === "string" ? r.data : (r.data?.data ?? r.data?.qr ?? null);
   return { data: { qr } };
 });
