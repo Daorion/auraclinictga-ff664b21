@@ -90,6 +90,50 @@ const AdminAuroraChat = () => {
     setMessages([]);
     toast.success("Histórico limpo");
   };
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
+      rec.onstop = async () => {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        const type = rec.mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
+        if (blob.size < 2048) { toast.error("Áudio muito curto, tente novamente"); return; }
+        const ext = type.includes("mp4") ? "mp4" : type.includes("ogg") ? "ogg" : "webm";
+        setTranscribing(true);
+        try {
+          const fd = new FormData();
+          fd.append("file", blob, `recording.${ext}`);
+          const { data, error } = await supabase.functions.invoke("transcribe-audio", { body: fd });
+          if (error || (data as any)?.error) {
+            toast.error("Falha na transcrição: " + (error?.message ?? (data as any)?.error));
+            return;
+          }
+          const text = ((data as any)?.text ?? "").trim();
+          if (!text) { toast.error("Não entendi o áudio"); return; }
+          setInput((cur) => (cur ? cur + " " : "") + text);
+          inputRef.current?.focus();
+        } finally { setTranscribing(false); }
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setRecording(true);
+    } catch (e: any) {
+      toast.error("Não foi possível acessar o microfone: " + (e?.message ?? e));
+    }
+  };
+  const stopRecording = () => {
+    recorderRef.current?.stop();
+    recorderRef.current = null;
+    setRecording(false);
+  };
+
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
