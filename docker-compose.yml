@@ -1,10 +1,28 @@
 ##############################################################################
-# AURA CLINIC — Hostinger com WAHA já existente
-# Sobe só API + Worker + Postgres + Redis. Não usa `build:`.
-# Use apenas se você NÃO quiser subir o WAHA neste mesmo projeto.
+# AURA CLINIC — Hostinger Docker Manager
+# Stack completo: WAHA + Postgres + Redis + API + Worker
+#
+# Este arquivo existe na raiz porque alguns painéis procuram automaticamente
+# `docker-compose.yml` no root do repositório. Não usa `build:`.
 ##############################################################################
 
 services:
+  waha:
+    image: devlikeapro/waha:latest
+    restart: unless-stopped
+    environment:
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
+      WHATSAPP_HOOK_URL: http://api:3000/waha/events
+      WHATSAPP_HOOK_EVENTS: message,message.ack,session.status
+      WAHA_LOG_LEVEL: info
+    volumes:
+      - aura_waha_sessions:/app/.sessions
+    ports:
+      - "3001:3000"
+    networks: [aura]
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -44,7 +62,7 @@ services:
       API_TOKEN: ${API_TOKEN}
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
       INTERNAL_WAHA_HOOK_TOKEN: ${INTERNAL_WAHA_HOOK_TOKEN}
-      WAHA_BASE_URL: ${WAHA_BASE_URL_EXTERNAL}
+      WAHA_BASE_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY}
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       REDIS_URL: redis://redis:6379
@@ -56,11 +74,9 @@ services:
              cp -r /tmp/aura-repo/vps/api/. /app/ &&
              npm install --omit=dev &&
              node src/server.js"
-    depends_on: [postgres, redis]
+    depends_on: [postgres, redis, waha]
     ports:
       - "3000:3000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks: [aura]
 
   worker:
@@ -73,7 +89,7 @@ services:
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: gemini-2.0-flash
-      WAHA_BASE_URL: ${WAHA_BASE_URL_EXTERNAL}
+      WAHA_BASE_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY}
       LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
@@ -84,13 +100,12 @@ services:
              cp -r /tmp/aura-repo/vps/worker/. /app/ &&
              npm install --omit=dev &&
              node src/worker.js"
-    depends_on: [redis, postgres]
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on: [redis, postgres, waha]
     networks: [aura]
 
 volumes:
   aura_pg_data:
+  aura_waha_sessions:
 
 networks:
   aura:

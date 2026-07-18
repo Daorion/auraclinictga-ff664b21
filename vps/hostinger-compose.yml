@@ -1,11 +1,8 @@
 ##############################################################################
-# AURA CLINIC — Stack COMPLETO v2 (WAHA + Postgres + Redis + API + Worker)
-# Cole no Docker Manager do Hostinger. Sem build local — tudo via imagens
-# oficiais + git clone no start (o Hostinger não faz `build:`).
+# AURA CLINIC — Hostinger Docker Manager
+# Stack completo: WAHA + Postgres + Redis + API + Worker
 #
-# IMPORTANTE: se o projeto antigo do Hostinger ficou com aurora-worker:latest,
-# apague o projeto antigo e crie um NOVO com este YAML. Esta versão usa nomes
-# diferentes (api-node / worker-node) para não reaproveitar cache quebrado.
+# Não usa `build:`. API e Worker usam node:20-alpine e baixam o código no start.
 ##############################################################################
 
 services:
@@ -16,8 +13,9 @@ services:
       WAHA_API_KEY: ${WAHA_API_KEY}
       WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME}
       WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
-      WHATSAPP_HOOK_URL: http://api-node:3000/waha/events
+      WHATSAPP_HOOK_URL: http://api:3000/waha/events
       WHATSAPP_HOOK_EVENTS: message,message.ack,session.status
+      WAHA_LOG_LEVEL: info
     volumes:
       - aura_waha_sessions:/app/.sessions
     ports:
@@ -53,7 +51,7 @@ services:
     restart: unless-stopped
     networks: [aura]
 
-  api-node:
+  api:
     image: node:20-alpine
     restart: unless-stopped
     working_dir: /app
@@ -70,10 +68,9 @@ services:
       LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
     entrypoint: >
       sh -c "apk add --no-cache git >/dev/null &&
-             if [ ! -d /app/.git ]; then
-               git clone --depth 1 https://github.com/Daorion/auraclinictga-ff664b21.git /tmp/repo &&
-               cp -r /tmp/repo/vps/api/. /app/ ;
-             fi &&
+             rm -rf /tmp/aura-repo /app/* &&
+             git clone --depth 1 https://github.com/Daorion/auraclinictga-ff664b21.git /tmp/aura-repo &&
+             cp -r /tmp/aura-repo/vps/api/. /app/ &&
              npm install --omit=dev &&
              node src/server.js"
     depends_on: [postgres, redis, waha]
@@ -81,7 +78,7 @@ services:
       - "3000:3000"
     networks: [aura]
 
-  worker-node:
+  worker:
     image: node:20-alpine
     restart: unless-stopped
     working_dir: /app
@@ -97,13 +94,12 @@ services:
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
     entrypoint: >
       sh -c "apk add --no-cache git >/dev/null &&
-             if [ ! -d /app/.git ]; then
-               git clone --depth 1 https://github.com/Daorion/auraclinictga-ff664b21.git /tmp/repo &&
-               cp -r /tmp/repo/vps/worker/. /app/ ;
-             fi &&
+             rm -rf /tmp/aura-repo /app/* &&
+             git clone --depth 1 https://github.com/Daorion/auraclinictga-ff664b21.git /tmp/aura-repo &&
+             cp -r /tmp/aura-repo/vps/worker/. /app/ &&
              npm install --omit=dev &&
              node src/worker.js"
-    depends_on: [redis, postgres]
+    depends_on: [redis, postgres, waha]
     networks: [aura]
 
 volumes:
