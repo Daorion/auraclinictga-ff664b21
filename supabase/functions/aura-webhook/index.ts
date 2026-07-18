@@ -415,7 +415,7 @@ Deno.serve(async (req) => {
   const phone = normalizePhone(rawFrom);
   if (!phone || phone.length < 8) return json({ ok: true, ignored: "invalid_phone", from: rawFrom });
 
-  const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
+  const notifyName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
   const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
   const hasMedia = payload?.hasMedia === true;
