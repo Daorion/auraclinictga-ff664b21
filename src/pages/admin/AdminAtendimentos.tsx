@@ -384,6 +384,19 @@ const AdminAtendimentos = () => {
 
               {(() => {
                 const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
+                if (activeContact?.aurora_blocked) {
+                  return (
+                    <div className="px-4 py-2 bg-rose-600/10 border-b border-rose-600/30 flex items-center gap-2 text-xs text-rose-900 dark:text-rose-200">
+                      <XCircle className="w-4 h-4 shrink-0" />
+                      <span className="flex-1">
+                        <strong>Aurora bloqueada</strong> — esta conversa está na blacklist. Você responde manualmente.
+                      </span>
+                      <Button size="sm" variant="outline" className="h-7 text-xs border-rose-600/40 hover:bg-rose-600/10" onClick={() => window.open(`/admin/blacklist`, "_blank")}>
+                        Ver blacklist
+                      </Button>
+                    </div>
+                  );
+                }
                 if (!takeover) return null;
                 return (
                   <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
