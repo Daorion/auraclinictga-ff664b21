@@ -76,9 +76,36 @@ const AdminAtendimentos = () => {
     const ids = list.map((c) => c.contact_id);
     if (ids.length) {
       const { data: contacts } = await supabase
-        .from("contacts").select("id,phone,name,push_name,profile_picture_url").in("id", ids);
+        .from("contacts").select("id,phone,name,push_name,profile_picture_url,client_id").in("id", ids);
+      const rows = (contacts ?? []) as Contact[];
+
+      // Fetch linked clients (by client_id first, then by matching last 10 digits of phone)
+      const clientIds = Array.from(new Set(rows.map((c) => c.client_id).filter(Boolean))) as string[];
+      const clientsById: Record<string, string> = {};
+      if (clientIds.length) {
+        const { data: cls } = await supabase.from("clients").select("id,name").in("id", clientIds);
+        (cls ?? []).forEach((cl: any) => { clientsById[cl.id] = cl.name; });
+      }
+      const unlinkedPhones = rows.filter((c) => !c.client_id).map((c) => c.phone.slice(-10)).filter((p) => p.length >= 8);
+      const clientsByLast10: Record<string, { id: string; name: string }> = {};
+      if (unlinkedPhones.length) {
+        const { data: cls2 } = await supabase.from("clients").select("id,name,phone");
+        (cls2 ?? []).forEach((cl: any) => {
+          const last10 = String(cl.phone ?? "").replace(/\D/g, "").slice(-10);
+          if (last10.length >= 8) clientsByLast10[last10] = { id: cl.id, name: cl.name };
+        });
+      }
+
       const map: Record<string, Contact> = {};
-      (contacts ?? []).forEach((c) => { map[c.id] = c as Contact; });
+      rows.forEach((c) => {
+        let clientName: string | null = null;
+        if (c.client_id && clientsById[c.client_id]) clientName = clientsById[c.client_id];
+        else {
+          const match = clientsByLast10[c.phone.slice(-10)];
+          if (match) clientName = match.name;
+        }
+        map[c.id] = { ...c, client_name: clientName };
+      });
       setContactsById(map);
     }
     setLoading(false);
