@@ -364,6 +364,23 @@ const AdminAtendimentos = () => {
                 </div>
               </div>
 
+              {(() => {
+                const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
+                if (!takeover) return null;
+                return (
+                  <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
+                    <UserCheck className="w-4 h-4 shrink-0" />
+                    <span className="flex-1">
+                      <strong>Sirlei está respondendo</strong> — Aurora pausada (você respondeu fora do sistema).
+                      Retomada automática {formatDistanceToNow(new Date(active.human_takeover_until!), { addSuffix: true, locale: ptBR })}.
+                    </span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleToggleAi(true)}>
+                      <Bot className="w-3 h-3 mr-1" /> Reativar Aurora agora
+                    </Button>
+                  </div>
+                );
+              })()}
+
               <div ref={scrollRef} className="flex-1 overflow-auto p-4 space-y-2 bg-muted/20">
                 {messages.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">Nenhuma mensagem ainda.</p>
