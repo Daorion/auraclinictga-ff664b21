@@ -17,6 +17,7 @@ interface Conversation {
   stage: string;
   assigned_to: "aurora" | "sirlei";
   ai_enabled: boolean;
+  human_takeover_until: string | null;
   interest: string | null;
   unread_count: number;
   last_message_at: string | null;
@@ -66,7 +67,7 @@ const AdminAtendimentos = () => {
   const loadConversations = async () => {
     const { data: convs } = await supabase
       .from("conversations")
-      .select("id,contact_id,stage,assigned_to,ai_enabled,interest,unread_count,last_message_at,last_message_preview,status,internal_notes")
+      .select("id,contact_id,stage,assigned_to,ai_enabled,human_takeover_until,interest,unread_count,last_message_at,last_message_preview,status,internal_notes")
       .eq("status", "open")
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .limit(200);
@@ -158,19 +159,21 @@ const AdminAtendimentos = () => {
     if (suggestion) setReply(suggestion);
   };
 
-  const handleAssign = async (to: "aurora" | "sirlei") => {
+  const handleToggleAi = async (enable: boolean) => {
     if (!active) return;
-    await supabase.from("conversations").update({
-      assigned_to: to,
-      ai_enabled: to === "aurora",
-    }).eq("id", active.id);
+    const patch: Record<string, unknown> = {
+      ai_enabled: enable,
+      assigned_to: enable ? "aurora" : "sirlei",
+    };
+    if (enable) patch.human_takeover_until = null;
+    await supabase.from("conversations").update(patch).eq("id", active.id);
     await supabase.from("audit_log").insert({
-      action: to === "sirlei" ? "conversation.take_over" : "conversation.return_to_aurora",
+      action: enable ? "conversation.ai_resumed" : "conversation.ai_paused",
       entity_type: "conversation",
       entity_id: active.id,
       actor_user_id: (await supabase.auth.getUser()).data.user?.id ?? null,
     });
-    toast.success(to === "sirlei" ? "Você assumiu a conversa. Aurora está pausada aqui." : "Aurora voltou a atender.");
+    toast.success(enable ? "IA reativada nesta conversa." : "IA pausada. Você assumiu.");
     loadConversations();
   };
 
