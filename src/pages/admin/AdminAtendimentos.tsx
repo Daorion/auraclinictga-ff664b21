@@ -444,8 +444,17 @@ const AdminAtendimentos = () => {
           )}
         </Card>
       </div>
+      {lightboxUrl && (
+        <div
+          onClick={() => setLightboxUrl(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 cursor-zoom-out"
+        >
+          <img src={lightboxUrl} alt="Foto de perfil" className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl object-contain" />
+        </div>
+      )}
     </div>
   );
+
 };
 
 export default AdminAtendimentos;
