@@ -239,6 +239,7 @@ Deno.serve(async (req) => {
   if (fromMe) return json({ ok: true, ignored: "fromMe" });
 
   const rawFrom = String(payload?.from ?? payload?.chatId ?? "");
+  const msgType = String(payload?.type ?? payload?._data?.type ?? "");
 
   // ⚠️ Never respond to WhatsApp groups, broadcasts, newsletters or status.
   const lowered = rawFrom.toLowerCase();
@@ -246,19 +247,41 @@ Deno.serve(async (req) => {
     return json({ ok: true, ignored: "group_or_broadcast", from: rawFrom });
   }
 
-  const phone = normalizePhone(rawFrom);
-  if (!phone) return json({ error: "missing_phone" }, 400);
+  // ⚠️ Ignore WhatsApp system notifications (business account changes, e2e updates, etc.)
+  if (msgType && (msgType.includes("notification") || msgType === "protocol" || msgType === "e2e_notification" || msgType === "gp2")) {
+    return json({ ok: true, ignored: "system_notification", type: msgType });
+  }
 
-  const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? null;
+  // ⚠️ @lid is Meta's internal linked-ID (hosted business accounts) — not a real phone. Skip.
+  if (lowered.endsWith("@lid")) {
+    return json({ ok: true, ignored: "lid_no_phone", from: rawFrom });
+  }
+
+  const phone = normalizePhone(rawFrom);
+  if (!phone || phone.length < 8) return json({ ok: true, ignored: "invalid_phone", from: rawFrom });
+
+  const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? payload?._data?.pushName ?? null;
   const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
   const hasMedia = payload?.hasMedia === true;
+
+  // Fetch profile picture (best-effort, non-blocking failure)
+  const chatIdFull = rawFrom.includes("@") ? rawFrom : `${phone}@c.us`;
+  const profilePic = await fetchProfilePicture(chatIdFull);
 
   // Upsert contact
   const { data: contact, error: contactErr } = await admin
     .from("contacts")
     .upsert(
-      { phone, name: contactName, last_seen_at: new Date().toISOString(), origin: "whatsapp" },
+      {
+        phone,
+        wa_id: rawFrom,
+        name: contactName,
+        push_name: contactName,
+        profile_picture_url: profilePic,
+        last_seen_at: new Date().toISOString(),
+        origin: "whatsapp",
+      },
       { onConflict: "phone" },
     )
     .select("id, name")
