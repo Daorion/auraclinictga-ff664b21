@@ -62,6 +62,7 @@ const AdminAtendimentos = () => {
   const [sending, setSending] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [apiUnavailable, setApiUnavailable] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const loadConversations = async () => {
