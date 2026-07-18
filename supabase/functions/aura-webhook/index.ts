@@ -277,29 +277,22 @@ async function scheduleReply(
   contactId: string,
   contactName: string | null,
   arrivedAt: string,
+  myToken: string,
 ) {
-  // 1) Debounce — se chegar msg nova, aborta essa execução
+  // 1) Debounce — se chegar msg nova (que gera novo token), aborta essa execução
   await sleep(DEBOUNCE_MS);
 
-  const { data: newer } = await admin
-    .from("messages")
-    .select("id, sent_at")
-    .eq("conversation_id", convId)
-    .eq("direction", "in")
-    .gt("sent_at", arrivedAt)
-    .limit(1);
-  if (newer && newer.length > 0) {
-    console.log("debounce_aborted", { convId, arrivedAt });
-    return;
-  }
-
-  // 2) Re-checa estado da conversa (pode ter sido pausada nesses 8s)
+  // 2) Re-checa estado + token. Só o ÚLTIMO agendamento pode responder.
   const { data: conv } = await admin
     .from("conversations")
-    .select("ai_enabled, human_takeover_until")
+    .select("ai_enabled, human_takeover_until, pending_reply_token")
     .eq("id", convId)
     .maybeSingle();
   if (!conv) return;
+  if (conv.pending_reply_token !== myToken) {
+    console.log("debounce_superseded", { convId, myToken, current: conv.pending_reply_token });
+    return;
+  }
   if (conv.ai_enabled === false) return;
   if (conv.human_takeover_until && new Date(conv.human_takeover_until) > new Date()) return;
 
@@ -307,7 +300,22 @@ async function scheduleReply(
   const reply = await generateAiReply(admin, convId, phone, contactName, "");
   if (!reply) return;
 
-  // 4) Quebra em chunks e envia com "digitando…" entre eles
+  // 4) Marca como enviado ANTES de disparar (limpa o token) para evitar corrida.
+  //    Se um novo inbound chegou entre a checagem e agora, ele já reescreveu o token
+  //    e essa comparação abaixo protege.
+  const { data: claim } = await admin
+    .from("conversations")
+    .update({ pending_reply_token: null })
+    .eq("id", convId)
+    .eq("pending_reply_token", myToken)
+    .select("id")
+    .maybeSingle();
+  if (!claim) {
+    console.log("claim_lost", { convId, myToken });
+    return;
+  }
+
+  // 5) Quebra em chunks e envia com "digitando…" entre eles
   const chunks = splitReply(reply);
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
