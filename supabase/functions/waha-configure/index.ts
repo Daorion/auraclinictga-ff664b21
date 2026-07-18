@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       webhooks: [
         {
           url,
-          events: ["message", "message.any", "session.status"],
+          events: ["message", "message.any", "message.ack", "session.status"],
           hmac: null,
           retries: { policy: "linear", delaySeconds: 2, attempts: 3 },
           customHeaders: null,
