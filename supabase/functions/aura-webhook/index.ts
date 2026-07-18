@@ -205,11 +205,13 @@ async function generateAiReply(
   }
 
   const system = await buildSystemPrompt(admin, contactName, clientInfo, recentAppts);
-  const messages = [
+  const messages: any[] = [
     { role: "system", content: system },
     ...historyMsgs,
-    { role: "user", content: userMessage },
   ];
+  if (userMessage && userMessage.trim()) {
+    messages.push({ role: "user", content: userMessage });
+  }
 
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
