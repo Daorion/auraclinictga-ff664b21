@@ -219,12 +219,23 @@ const AdminAuroraChat = () => {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
               }}
-              placeholder="Ex.: A partir de hoje até 30/12 temos promoção de botox por 850,00. Cadastra isso pra você mencionar."
+              placeholder={recording ? "Gravando... clique no quadrado para parar" : transcribing ? "Transcrevendo áudio..." : "Ex.: A partir de hoje até 30/12 temos promoção de botox por 850,00. Cadastra isso pra você mencionar."}
               rows={2}
-              disabled={sending}
+              disabled={sending || recording || transcribing}
               className="resize-none"
             />
-            <Button onClick={send} disabled={sending || !input.trim()} size="icon" className="h-10 w-10 flex-shrink-0">
+            <Button
+              type="button"
+              onClick={recording ? stopRecording : startRecording}
+              disabled={sending || transcribing}
+              size="icon"
+              variant={recording ? "destructive" : "outline"}
+              className="h-10 w-10 flex-shrink-0"
+              title={recording ? "Parar gravação" : "Gravar áudio"}
+            >
+              {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </Button>
+            <Button onClick={send} disabled={sending || recording || transcribing || !input.trim()} size="icon" className="h-10 w-10 flex-shrink-0">
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
