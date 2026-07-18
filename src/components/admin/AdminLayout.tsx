@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { NavLink, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet, MessageSquare, Bot, Plug, ShieldAlert, ShieldOff } from "lucide-react";
+import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet, MessageSquare, Bot, Plug, ShieldAlert, ShieldOff, MessagesSquare, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 
 const nav = [
@@ -10,7 +10,9 @@ const nav = [
   { to: "/admin/atendimentos", label: "Atendimentos", icon: MessageSquare },
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
-  { to: "/admin/aurora", label: "Aurora IA", icon: Bot },
+  { to: "/admin/aurora", label: "Aurora IA", icon: Bot, end: true },
+  { to: "/admin/aurora/chat", label: "Chat com a Aurora", icon: MessagesSquare },
+  { to: "/admin/aurora/campanhas", label: "Campanhas Aurora", icon: Megaphone },
   { to: "/admin/blacklist", label: "Blacklist Aurora", icon: ShieldOff },
   { to: "/admin/profissionais", label: "Profissionais", icon: UserCog },
   { to: "/admin/financeiro", label: "Financeiro", icon: Wallet },

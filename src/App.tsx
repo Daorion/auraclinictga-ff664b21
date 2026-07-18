@@ -29,6 +29,8 @@ import AdminFinanceiro from "./pages/admin/AdminFinanceiro";
 import AdminAtendimentos from "./pages/admin/AdminAtendimentos";
 import AdminIntegracoes from "./pages/admin/AdminIntegracoes";
 import AdminAurora from "./pages/admin/AdminAurora";
+import AdminAuroraChat from "./pages/admin/AdminAuroraChat";
+import AdminAuroraCampanhas from "./pages/admin/AdminAuroraCampanhas";
 import AdminAuditoria from "./pages/admin/AdminAuditoria";
 import AdminBlacklist from "./pages/admin/AdminBlacklist";
 
@@ -55,6 +57,8 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="atendimentos" element={<AdminAtendimentos />} />
               <Route path="aurora" element={<AdminAurora />} />
+              <Route path="aurora/chat" element={<AdminAuroraChat />} />
+              <Route path="aurora/campanhas" element={<AdminAuroraCampanhas />} />
               <Route path="blacklist" element={<AdminBlacklist />} />
               <Route path="integracoes" element={<AdminIntegracoes />} />
               <Route path="auditoria" element={<AdminAuditoria />} />
