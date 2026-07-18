@@ -76,7 +76,7 @@ const AdminAtendimentos = () => {
     const ids = list.map((c) => c.contact_id);
     if (ids.length) {
       const { data: contacts } = await supabase
-        .from("contacts").select("id,phone,name").in("id", ids);
+        .from("contacts").select("id,phone,name,push_name,profile_picture_url").in("id", ids);
       const map: Record<string, Contact> = {};
       (contacts ?? []).forEach((c) => { map[c.id] = c as Contact; });
       setContactsById(map);
