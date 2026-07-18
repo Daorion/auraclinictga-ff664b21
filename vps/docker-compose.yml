@@ -2,9 +2,8 @@
 # AURA CLINIC — Hostinger Docker Manager
 # Stack completo: WAHA + Postgres + Redis + API + Worker
 #
-# IMPORTANTE: este compose NÃO usa `build:`. Hostinger Docker Manager costuma
-# não construir imagem local; ele só puxa imagens prontas. API e Worker rodam
-# com node:20-alpine e baixam o código do GitHub no start.
+# Este arquivo existe na raiz porque alguns painéis procuram automaticamente
+# `docker-compose.yml` no root do repositório. Não usa `build:`.
 ##############################################################################
 
 services:
@@ -41,11 +40,14 @@ services:
     depends_on: [postgres]
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
-    entrypoint: >
-      sh -c "apk add --no-cache curl >/dev/null &&
-             until pg_isready -h postgres -U aura; do sleep 2; done &&
-             curl -fsSL https://raw.githubusercontent.com/Daorion/auraclinictga-ff664b21/main/vps/api/schema.sql
-               | psql -h postgres -U aura -d aura"
+    entrypoint:
+      - sh
+      - -c
+      - |
+        apk add --no-cache curl >/dev/null
+        until pg_isready -h postgres -U aura; do sleep 2; done
+        curl -fsSL https://raw.githubusercontent.com/Daorion/auraclinictga-ff664b21/main/vps/api/schema.sql -o /tmp/schema.sql
+        psql -h postgres -U aura -d aura -f /tmp/schema.sql
     networks: [aura]
 
   redis:
