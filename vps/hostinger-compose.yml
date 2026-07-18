@@ -67,7 +67,7 @@ services:
       WAHA_API_KEY: ${WAHA_API_KEY}
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       REDIS_URL: redis://redis:6379
-      LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
+      LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
     entrypoint: >
       sh -c "apk add --no-cache git >/dev/null &&
              if [ ! -d /app/.git ]; then
@@ -93,7 +93,7 @@ services:
       GEMINI_MODEL: gemini-2.0-flash
       WAHA_BASE_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY}
-      LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
+      LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
     entrypoint: >
       sh -c "apk add --no-cache git >/dev/null &&
