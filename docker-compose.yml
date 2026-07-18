@@ -1,9 +1,6 @@
 ##############################################################################
 # AURA CLINIC — Hostinger Docker Manager
 # Stack completo: WAHA + Postgres + Redis + API + Worker
-#
-# Este arquivo existe na raiz porque alguns painéis procuram automaticamente
-# `docker-compose.yml` no root do repositório. Não usa `build:`.
 ##############################################################################
 
 services:
@@ -20,8 +17,9 @@ services:
     volumes:
       - aura_waha_sessions:/app/.sessions
     ports:
-      - "3001:3000"
-    networks: [aura]
+      - "${WAHA_HOST_PORT:-3001}:3000"
+    networks:
+      - aura
 
   postgres:
     image: postgres:16-alpine
@@ -32,28 +30,42 @@ services:
       POSTGRES_DB: aura
     volumes:
       - aura_pg_data:/var/lib/postgresql/data
-    networks: [aura]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aura -d aura"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aura
 
   postgres_init:
     image: postgres:16-alpine
-    restart: on-failure
-    depends_on: [postgres]
+    restart: "no"
+    depends_on:
+      - postgres
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
+      SCHEMA_URL: ${SCHEMA_URL:-https://raw.githubusercontent.com/Daorion/auraclinictga-ff664b21/main/vps/api/schema.sql}
     entrypoint:
       - sh
-      - -c
+      - -ec
       - |
         apk add --no-cache curl >/dev/null
-        until pg_isready -h postgres -U aura; do sleep 2; done
-        curl -fsSL https://raw.githubusercontent.com/Daorion/auraclinictga-ff664b21/main/vps/api/schema.sql -o /tmp/schema.sql
-        psql -h postgres -U aura -d aura -f /tmp/schema.sql
-    networks: [aura]
+        until pg_isready -h postgres -U aura -d aura; do sleep 2; done
+        curl -fsSL "$${SCHEMA_URL}" | psql -h postgres -U aura -d aura
+    networks:
+      - aura
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    networks: [aura]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aura
 
   api:
     image: node:20-alpine
@@ -70,17 +82,25 @@ services:
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       REDIS_URL: redis://redis:6379
       LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
-    entrypoint: >
-      sh -c "apk add --no-cache git >/dev/null &&
-             rm -rf /tmp/aura-repo /app/* &&
-             git clone --depth 1 https://github.com/Daorion/auraclinictga-ff664b21.git /tmp/aura-repo &&
-             cp -r /tmp/aura-repo/vps/api/. /app/ &&
-             npm install --omit=dev &&
-             node src/server.js"
-    depends_on: [postgres, redis, waha]
+      APP_REPO_URL: ${APP_REPO_URL:-https://github.com/Daorion/auraclinictga-ff664b21.git}
+    entrypoint:
+      - sh
+      - -ec
+      - |
+        apk add --no-cache git >/dev/null
+        rm -rf /tmp/aura-repo /app/*
+        git clone --depth 1 "$${APP_REPO_URL}" /tmp/aura-repo
+        cp -r /tmp/aura-repo/vps/api/. /app/
+        npm install --omit=dev
+        node src/server.js
+    depends_on:
+      - postgres
+      - redis
+      - waha
     ports:
-      - "3000:3000"
-    networks: [aura]
+      - "${API_HOST_PORT:-3000}:3000"
+    networks:
+      - aura
 
   worker:
     image: node:20-alpine
@@ -96,15 +116,23 @@ services:
       WAHA_API_KEY: ${WAHA_API_KEY}
       LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
-    entrypoint: >
-      sh -c "apk add --no-cache git >/dev/null &&
-             rm -rf /tmp/aura-repo /app/* &&
-             git clone --depth 1 https://github.com/Daorion/auraclinictga-ff664b21.git /tmp/aura-repo &&
-             cp -r /tmp/aura-repo/vps/worker/. /app/ &&
-             npm install --omit=dev &&
-             node src/worker.js"
-    depends_on: [redis, postgres, waha]
-    networks: [aura]
+      APP_REPO_URL: ${APP_REPO_URL:-https://github.com/Daorion/auraclinictga-ff664b21.git}
+    entrypoint:
+      - sh
+      - -ec
+      - |
+        apk add --no-cache git >/dev/null
+        rm -rf /tmp/aura-repo /app/*
+        git clone --depth 1 "$${APP_REPO_URL}" /tmp/aura-repo
+        cp -r /tmp/aura-repo/vps/worker/. /app/
+        npm install --omit=dev
+        node src/worker.js
+    depends_on:
+      - redis
+      - postgres
+      - waha
+    networks:
+      - aura
 
 volumes:
   aura_pg_data:
