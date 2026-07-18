@@ -229,11 +229,30 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
+  // ===== message.ack (delivery / read receipts) =====
+  if (event === "message.ack" || event === "message.reaction") {
+    const extId = payload?.id?._serialized ?? payload?.id ?? null;
+    const ackNum = Number(payload?.ack ?? -99);
+    const ackName = String(payload?.ackName ?? "").toUpperCase();
+    // WEBJS ack: -1 ERROR, 0 PENDING, 1 SERVER(sent ✓), 2 DEVICE(delivered ✓✓), 3 READ(✓✓ azul), 4 PLAYED
+    let status: string | null = null;
+    if (ackName === "READ" || ackName === "PLAYED" || ackNum >= 3) status = "read";
+    else if (ackName === "DEVICE" || ackNum === 2) status = "delivered";
+    else if (ackName === "SERVER" || ackNum === 1) status = "sent";
+    else if (ackNum === -1) status = "failed";
+    if (extId && status) {
+      await admin.from("messages").update({ status }).eq("external_id", extId);
+    }
+    return json({ ok: true, ack: status, external_id: extId });
+  }
+
   // ===== message events =====
   // WAHA "message" fires on INBOUND only. "message.any" includes fromMe.
   if (event !== "message" && event !== "message.any") {
     return json({ ok: true, ignored: event });
   }
+
+
 
   const fromMe = payload?.fromMe === true;
   if (fromMe) return json({ ok: true, ignored: "fromMe" });
