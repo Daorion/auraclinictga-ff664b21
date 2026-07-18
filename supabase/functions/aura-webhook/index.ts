@@ -1,10 +1,11 @@
-// Aura webhook — receives events from the intermediate VPS API (which itself talks to WAHA).
-// Public endpoint validated by HMAC signature; never trusts raw client input from browsers.
+// Aura webhook — receives WAHA events directly and processes them here.
+// WAHA config: URL = https://<this-function>?secret=<AURA_WEBHOOK_SECRET>
+// Events subscribed: "message" (inbound only) and "session.status".
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-aura-signature",
+  "Access-Control-Allow-Headers": "content-type, x-webhook-hmac",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -14,69 +15,150 @@ const json = (b: unknown, s = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-async function verifySignature(secret: string, raw: string, sigHex: string) {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const macBuf = await crypto.subtle.sign("HMAC", key, enc.encode(raw));
-  const macHex = Array.from(new Uint8Array(macBuf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  if (macHex.length !== sigHex.length) return false;
-  let diff = 0;
-  for (let i = 0; i < macHex.length; i++) diff |= macHex.charCodeAt(i) ^ sigHex.charCodeAt(i);
-  return diff === 0;
+const WAHA_URL = Deno.env.get("WAHA_URL") ?? "";
+const WAHA_API_KEY = Deno.env.get("WAHA_API_KEY") ?? "";
+const WAHA_SESSION = Deno.env.get("WAHA_SESSION") ?? "default";
+const WEBHOOK_SECRET = Deno.env.get("AURA_WEBHOOK_SECRET") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
+
+const HUMAN_PAUSE_HOURS = 3;
+
+function normalizePhone(from: string): string {
+  // WAHA format: "5511999999999@c.us" → "5511999999999"
+  return from.replace(/@c\.us$/i, "").replace(/@s\.whatsapp\.net$/i, "").replace(/\D/g, "");
 }
 
-interface Payload {
-  event: "message.in" | "message.out" | "message.ack" | "session.status";
-  external_id?: string;
-  phone?: string;
-  contact_name?: string;
-  direction?: "in" | "out";
-  body?: string;
-  media_url?: string;
-  msg_type?: string;
-  status?: string;
-  session_name?: string;
-  phone_number?: string;
-  ts?: string;
-  metadata?: Record<string, unknown>;
+async function sendWhatsApp(phone: string, text: string): Promise<{ id?: string; error?: string }> {
+  if (!WAHA_URL || !WAHA_API_KEY) return { error: "waha_not_configured" };
+  const chatId = phone.includes("@") ? phone : `${phone}@c.us`;
+  try {
+    const r = await fetch(`${WAHA_URL}/api/sendText`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Api-Key": WAHA_API_KEY },
+      body: JSON.stringify({ session: WAHA_SESSION, chatId, text }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) return { error: `waha_${r.status}: ${JSON.stringify(data)}` };
+    return { id: data?.id?._serialized ?? data?.id ?? null };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
+async function buildSystemPrompt(admin: any, contactName: string | null): Promise<string> {
+  // Base persona
+  const { data: settings } = await admin
+    .from("ai_settings")
+    .select("action_key, config")
+    .eq("action_key", "whatsapp_agent")
+    .maybeSingle();
+
+  const persona = settings?.config?.system_prompt ?? `Você é a Aurora, atendente virtual da Aura Clinic (clínica de estética em Palmas-TO).
+Tom acolhedor, elegante, profissional. Respostas curtas (2-4 frases), naturais no WhatsApp.
+Nunca invente preços. Se perguntarem valores, ofereça agendar avaliação.
+Sempre incentive a marcar horário. Colete: nome, procedimento de interesse, melhor dia/horário.
+Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
+
+  const { data: procs } = await admin
+    .from("procedures_pricing")
+    .select("name, description, pricing_json, notes")
+    .eq("active", true)
+    .order("display_order", { ascending: true })
+    .limit(50);
+
+  let procText = "";
+  if (procs && procs.length) {
+    procText = "\n\nProcedimentos disponíveis:\n" + procs.map((p: any) => {
+      const price = p.pricing_json ? ` — ${JSON.stringify(p.pricing_json)}` : "";
+      return `- ${p.name}${p.description ? `: ${p.description}` : ""}${price}${p.notes ? ` (${p.notes})` : ""}`;
+    }).join("\n");
+  }
+
+  const nameLine = contactName ? `\n\nNome do contato: ${contactName}` : "";
+  return persona + procText + nameLine;
+}
+
+async function generateAiReply(
+  admin: any,
+  convId: string,
+  contactName: string | null,
+  userMessage: string,
+): Promise<string | null> {
+  if (!LOVABLE_API_KEY) return null;
+
+  // Fetch last 10 messages for context
+  const { data: history } = await admin
+    .from("messages")
+    .select("direction, body, author")
+    .eq("conversation_id", convId)
+    .order("sent_at", { ascending: false })
+    .limit(10);
+
+  const historyMsgs = (history ?? []).reverse().map((m: any) => ({
+    role: m.direction === "in" ? "user" : "assistant",
+    content: m.body ?? "",
+  })).filter((m: any) => m.content);
+
+  const system = await buildSystemPrompt(admin, contactName);
+  const messages = [
+    { role: "system", content: system },
+    ...historyMsgs,
+    { role: "user", content: userMessage },
+  ];
+
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages,
+      }),
+    });
+    if (!r.ok) {
+      console.error("ai_gateway_error", r.status, await r.text());
+      return null;
+    }
+    const data = await r.json();
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch (e) {
+    console.error("ai_call_failed", e);
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  const secret = Deno.env.get("WAHA_WEBHOOK_SECRET");
-  if (!secret) return json({ error: "not_configured" }, 501);
-
-  const raw = await req.text();
-  const sig = req.headers.get("x-aura-signature") ?? "";
-  if (!sig || !(await verifySignature(secret, raw, sig))) {
-    return json({ error: "invalid_signature" }, 401);
+  // Auth via ?secret= query param
+  const url = new URL(req.url);
+  const providedSecret = url.searchParams.get("secret") ?? "";
+  if (!WEBHOOK_SECRET || providedSecret !== WEBHOOK_SECRET) {
+    return json({ error: "invalid_secret" }, 401);
   }
 
-  let p: Payload;
-  try { p = JSON.parse(raw) as Payload; } catch { return json({ error: "invalid_json" }, 400); }
+  let body: any;
+  try { body = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Session status event
-  if (p.event === "session.status") {
+  const event = body?.event ?? "";
+  const session = body?.session ?? WAHA_SESSION;
+  const payload = body?.payload ?? body?.data ?? body;
+
+  // ===== session.status =====
+  if (event === "session.status" || event === "session.state") {
     await admin.from("whatsapp_sessions").upsert(
       {
-        session_name: p.session_name ?? "default",
-        status: p.status ?? "unknown",
-        phone_number: p.phone_number ?? null,
+        session_name: session,
+        status: payload?.status ?? payload?.state ?? "unknown",
         last_status_at: new Date().toISOString(),
       },
       { onConflict: "session_name" },
@@ -84,86 +166,125 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
-  // Message events
-  if (!p.phone) return json({ error: "missing_phone" }, 400);
+  // ===== message events =====
+  // WAHA "message" fires on INBOUND only. "message.any" includes fromMe.
+  if (event !== "message" && event !== "message.any") {
+    return json({ ok: true, ignored: event });
+  }
+
+  const fromMe = payload?.fromMe === true;
+  if (fromMe) return json({ ok: true, ignored: "fromMe" });
+
+  const rawFrom = payload?.from ?? payload?.chatId ?? "";
+  const phone = normalizePhone(String(rawFrom));
+  if (!phone) return json({ error: "missing_phone" }, 400);
+
+  const contactName = payload?._data?.notifyName ?? payload?.notifyName ?? payload?.pushName ?? null;
+  const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
+  const externalId = payload?.id?._serialized ?? payload?.id ?? null;
+  const hasMedia = payload?.hasMedia === true;
 
   // Upsert contact
   const { data: contact, error: contactErr } = await admin
     .from("contacts")
     .upsert(
-      {
-        phone: p.phone,
-        name: p.contact_name ?? null,
-        last_seen_at: new Date().toISOString(),
-      },
+      { phone, name: contactName, last_seen_at: new Date().toISOString(), origin: "whatsapp" },
       { onConflict: "phone" },
     )
-    .select("id")
+    .select("id, name")
     .single();
-  if (contactErr || !contact) return json({ error: "contact_upsert_failed", details: contactErr }, 500);
+  if (contactErr || !contact) return json({ error: "contact_failed", details: contactErr }, 500);
 
-  // Find or create conversation
-  let convId: string | null = null;
+  // Find or create open conversation
+  let convId: string;
+  let convAiEnabled = true;
+  let convTakeoverUntil: string | null = null;
+  let convUnread = 0;
+
   const { data: convRow } = await admin
     .from("conversations")
-    .select("id, unread_count")
+    .select("id, ai_enabled, human_takeover_until, unread_count")
     .eq("contact_id", contact.id)
     .eq("status", "open")
     .maybeSingle();
+
   if (convRow) {
     convId = convRow.id;
+    convAiEnabled = convRow.ai_enabled ?? true;
+    convTakeoverUntil = convRow.human_takeover_until;
+    convUnread = convRow.unread_count ?? 0;
   } else {
-    const { data: newConv } = await admin
+    const { data: newConv, error: newErr } = await admin
       .from("conversations")
-      .insert({ contact_id: contact.id, channel: "whatsapp" })
+      .insert({ contact_id: contact.id, channel: "whatsapp", ai_enabled: true, external_session: session })
       .select("id")
       .single();
-    convId = newConv?.id ?? null;
-  }
-  if (!convId) return json({ error: "conversation_failed" }, 500);
-
-  // Idempotent insert of message
-  if (p.event === "message.in" || p.event === "message.out") {
-    const direction = p.direction ?? (p.event === "message.in" ? "in" : "out");
-    const insertPayload: Record<string, unknown> = {
-      conversation_id: convId,
-      contact_id: contact.id,
-      channel: "whatsapp",
-      direction,
-      body: p.body ?? "",
-      media_url: p.media_url ?? null,
-      external_id: p.external_id ?? null,
-      msg_type: p.msg_type ?? "text",
-      author: direction === "in" ? "contact" : "aurora",
-      status: "delivered",
-      sent_at: p.ts ?? new Date().toISOString(),
-      metadata: p.metadata ?? {},
-    };
-
-    const { error: insertErr } = await admin.from("messages").insert(insertPayload);
-    // duplicate → ignore silently (idempotency)
-    if (insertErr && !String(insertErr.message).includes("duplicate")) {
-      return json({ error: "message_insert_failed", details: insertErr }, 500);
-    }
-
-    // Update conversation snapshot
-    const patch: Record<string, unknown> = {
-      last_message_at: new Date().toISOString(),
-      last_message_preview: (p.body ?? "").slice(0, 140),
-    };
-    if (direction === "in") {
-      patch.unread_count = (convRow?.unread_count ?? 0) + 1;
-    }
-    await admin.from("conversations").update(patch).eq("id", convId);
+    if (newErr || !newConv) return json({ error: "conv_failed", details: newErr }, 500);
+    convId = newConv.id;
   }
 
-  // ACK
-  if (p.event === "message.ack" && p.external_id) {
-    await admin
+  // Save inbound message (idempotent via external_id)
+  if (externalId) {
+    const { data: existing } = await admin
       .from("messages")
-      .update({ status: p.status ?? "read" })
-      .eq("external_id", p.external_id);
+      .select("id")
+      .eq("external_id", externalId)
+      .maybeSingle();
+    if (existing) return json({ ok: true, deduped: true });
   }
 
-  return json({ ok: true });
+  await admin.from("messages").insert({
+    conversation_id: convId,
+    contact_id: contact.id,
+    channel: "whatsapp",
+    direction: "in",
+    body: hasMedia && !messageBody ? "[mídia]" : messageBody,
+    external_id: externalId,
+    msg_type: payload?.type ?? "text",
+    author: "contact",
+    status: "delivered",
+    sent_at: new Date().toISOString(),
+    metadata: { waha_event: event, raw: payload },
+  });
+
+  await admin.from("conversations").update({
+    last_message_at: new Date().toISOString(),
+    last_message_preview: (messageBody || "[mídia]").slice(0, 140),
+    unread_count: convUnread + 1,
+  }).eq("id", convId);
+
+  // Decide: should AI reply?
+  const takeoverActive = convTakeoverUntil && new Date(convTakeoverUntil) > new Date();
+  if (!convAiEnabled || takeoverActive || !messageBody) {
+    return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : (!convAiEnabled ? "ai_disabled" : "empty_body") });
+  }
+
+  // Call AI
+  const reply = await generateAiReply(admin, convId, contact.name ?? contactName, messageBody);
+  if (!reply) return json({ ok: true, ai_no_reply: true });
+
+  // Send via WAHA
+  const sent = await sendWhatsApp(phone, reply);
+
+  // Save outbound message
+  await admin.from("messages").insert({
+    conversation_id: convId,
+    contact_id: contact.id,
+    channel: "whatsapp",
+    direction: "out",
+    body: reply,
+    external_id: sent.id ?? null,
+    msg_type: "text",
+    author: "aurora",
+    status: sent.error ? "failed" : "sent",
+    error: sent.error ?? null,
+    sent_at: new Date().toISOString(),
+  });
+
+  await admin.from("conversations").update({
+    last_message_at: new Date().toISOString(),
+    last_message_preview: reply.slice(0, 140),
+  }).eq("id", convId);
+
+  return json({ ok: true, replied: !sent.error, error: sent.error ?? null });
 });
