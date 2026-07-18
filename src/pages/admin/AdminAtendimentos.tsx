@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -175,11 +175,33 @@ const AdminAtendimentos = () => {
     loadConversations();
   };
 
+  const [syncing, setSyncing] = useState(false);
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("waha-sync", { body: { chats: 30, messages: 30 } });
+      if (error) throw error;
+      const s = (data as any)?.stats;
+      toast.success(`Sincronizado: ${s?.chats ?? 0} chats, ${s?.messages ?? 0} mensagens novas.`);
+      await loadConversations();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao sincronizar com WAHA");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Atendimentos</h1>
-        <p className="text-muted-foreground mt-1">Caixa de entrada em tempo real do WhatsApp da clínica</p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Atendimentos</h1>
+          <p className="text-muted-foreground mt-1">Caixa de entrada em tempo real do WhatsApp da clínica</p>
+        </div>
+        <Button onClick={handleSync} disabled={syncing} variant="outline">
+          {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+          Atualizar do WhatsApp
+        </Button>
       </header>
 
       {apiUnavailable && (
