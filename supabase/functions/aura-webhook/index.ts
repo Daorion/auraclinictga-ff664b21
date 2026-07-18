@@ -291,7 +291,23 @@ Fluxo padrão de agendamento:
     personText = `\n\n=== Contato novo ===\nAinda não temos o nome. Pergunte com gentileza como pode chamá-la.`;
   }
 
-  return persona + guardrails + procText + personText;
+  // Diretivas ativas configuradas pela admin via chat de treinamento da Aurora
+  const nowIso = new Date().toISOString();
+  const { data: directives } = await admin
+    .from("aurora_directives")
+    .select("title, kind, content, ends_at")
+    .eq("active", true)
+    .or(`ends_at.is.null,ends_at.gt.${nowIso}`)
+    .limit(30);
+  let directivesText = "";
+  if (directives && directives.length) {
+    directivesText = "\n\n=== DIRETIVAS ATIVAS (siga sempre — configuradas pela administradora) ===\n" +
+      directives.map((d: any) =>
+        `• [${d.kind}] ${d.title}${d.ends_at ? ` (vigente até ${d.ends_at})` : ""}: ${d.content}`
+      ).join("\n");
+  }
+
+  return persona + guardrails + procText + personText + directivesText;
 }
 
 async function generateAiReply(
