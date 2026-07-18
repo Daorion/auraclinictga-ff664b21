@@ -41,9 +41,9 @@ async function fetchProfilePicture(chatId: string): Promise<string | null> {
   } catch { return null; }
 }
 
-async function sendWhatsApp(phone: string, text: string): Promise<{ id?: string; error?: string }> {
+async function sendWhatsApp(destination: string, text: string): Promise<{ id?: string; error?: string }> {
   if (!WAHA_URL || !WAHA_API_KEY) return { error: "waha_not_configured" };
-  const chatId = phone.includes("@") ? phone : `${phone}@c.us`;
+  const chatId = destination.includes("@") ? destination : `${destination}@c.us`;
   try {
     const r = await fetch(`${WAHA_URL}/api/sendText`, {
       method: "POST",
@@ -252,11 +252,6 @@ Deno.serve(async (req) => {
     return json({ ok: true, ignored: "system_notification", type: msgType });
   }
 
-  // ⚠️ @lid is Meta's internal linked-ID (hosted business accounts) — not a real phone. Skip.
-  if (lowered.endsWith("@lid")) {
-    return json({ ok: true, ignored: "lid_no_phone", from: rawFrom });
-  }
-
   const phone = normalizePhone(rawFrom);
   if (!phone || phone.length < 8) return json({ ok: true, ignored: "invalid_phone", from: rawFrom });
 
@@ -264,6 +259,11 @@ Deno.serve(async (req) => {
   const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
   const hasMedia = payload?.hasMedia === true;
+  const isAudio = msgType === "audio" || msgType === "ptt" || payload?._data?.isPtt === true;
+  const storedBody = messageBody || (isAudio ? "[áudio]" : (hasMedia ? "[mídia]" : ""));
+  const aiInput = messageBody || (isAudio
+    ? "A pessoa enviou um áudio no WhatsApp. Responda de forma acolhedora, diga que recebeu o áudio e conduza para entender o interesse/agendar avaliação, sem fingir que ouviu o conteúdo."
+    : "");
 
   // Fetch profile picture (best-effort, non-blocking failure)
   const chatIdFull = rawFrom.includes("@") ? rawFrom : `${phone}@c.us`;
@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
     contact_id: contact.id,
     channel: "whatsapp",
     direction: "in",
-    body: hasMedia && !messageBody ? "[mídia]" : messageBody,
+    body: storedBody,
     external_id: externalId,
     msg_type: payload?.type ?? "text",
     author: "contact",
@@ -342,22 +342,22 @@ Deno.serve(async (req) => {
 
   await admin.from("conversations").update({
     last_message_at: new Date().toISOString(),
-    last_message_preview: (messageBody || "[mídia]").slice(0, 140),
+    last_message_preview: (storedBody || "[mensagem]").slice(0, 140),
     unread_count: convUnread + 1,
   }).eq("id", convId);
 
   // Decide: should AI reply?
   const takeoverActive = convTakeoverUntil && new Date(convTakeoverUntil) > new Date();
-  if (!convAiEnabled || takeoverActive || !messageBody) {
+  if (!convAiEnabled || takeoverActive || !aiInput) {
     return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : (!convAiEnabled ? "ai_disabled" : "empty_body") });
   }
 
   // Call AI
-  const reply = await generateAiReply(admin, convId, phone, contact.name ?? contactName, messageBody);
+  const reply = await generateAiReply(admin, convId, phone, contact.name ?? contactName, aiInput);
   if (!reply) return json({ ok: true, ai_no_reply: true });
 
   // Send via WAHA
-  const sent = await sendWhatsApp(phone, reply);
+  const sent = await sendWhatsApp(rawFrom, reply);
 
   // Save outbound message
   await admin.from("messages").insert({
