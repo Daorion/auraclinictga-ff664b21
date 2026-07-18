@@ -136,6 +136,15 @@ OBJETIVO PRINCIPAL: conduzir toda conversa para AGENDAR UMA AVALIAÇÃO (modo av
 Fluxo ideal: 1) cumprimente pelo nome, 2) entenda o interesse, 3) explique brevemente o procedimento, 4) proponha 2 opções de dia/horário para avaliação presencial, 5) confirme e peça nome completo + WhatsApp.
 Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
 
+  const guardrails = `
+
+=== REGRAS ABSOLUTAS (NUNCA quebre) ===
+- Você é APENAS a Aurora, atendente. NUNCA escreva no lugar da cliente, NUNCA continue nem complete a fala dela.
+- Se o histórico mostrar "[áudio]", "[mídia]", "[imagem]" ou similar: você NÃO tem acesso ao conteúdo. Apenas reconheça que recebeu ("recebi seu áudio", "recebi as imagens") e peça que ela descreva por texto o que precisa. NUNCA invente o que estava no áudio ou na mídia.
+- NUNCA use gírias ("amiga", "bicha", "mano"). Mantenha tom profissional-acolhedor.
+- NUNCA fale sobre assuntos fora da clínica (compras, festas, roupas, vida pessoal). Se a cliente puxar assunto assim, reconduza gentilmente ao motivo do contato com a Aura Clinic.
+- Responda SEMPRE em UMA única mensagem coesa, curta (2-4 frases). Não simule várias mensagens seguidas.`;
+
   const { data: procs } = await admin
     .from("procedures_pricing")
     .select("name, description, pricing_json, notes")
@@ -173,7 +182,7 @@ Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
     personText = `\n\n=== Contato novo ===\nAinda não temos o nome. Pergunte com gentileza como pode chamá-la.`;
   }
 
-  return persona + procText + personText;
+  return persona + guardrails + procText + personText;
 }
 
 async function generateAiReply(
@@ -193,10 +202,15 @@ async function generateAiReply(
     .order("sent_at", { ascending: false })
     .limit(10);
 
-  const historyMsgs = (history ?? []).reverse().map((m: any) => ({
-    role: m.direction === "in" ? "user" : "assistant",
-    content: m.body ?? "",
-  })).filter((m: any) => m.content);
+  const historyMsgs = (history ?? []).reverse().map((m: any) => {
+    let body = String(m.body ?? "").trim();
+    if (m.direction === "in") {
+      // Marca mídia/áudio de forma inequívoca para o modelo NÃO tentar adivinhar o conteúdo
+      if (body === "[áudio]" || body === "[audio]") body = "(A cliente enviou um áudio — você não tem acesso ao conteúdo.)";
+      else if (body === "[mídia]" || body === "[midia]" || body === "[imagem]") body = "(A cliente enviou uma mídia/imagem — você não tem acesso ao conteúdo.)";
+    }
+    return { role: m.direction === "in" ? "user" : "assistant", content: body };
+  }).filter((m: any) => m.content);
 
   // Look up client by phone
 
@@ -268,29 +282,22 @@ async function scheduleReply(
   contactId: string,
   contactName: string | null,
   arrivedAt: string,
+  myToken: string,
 ) {
-  // 1) Debounce — se chegar msg nova, aborta essa execução
+  // 1) Debounce — se chegar msg nova (que gera novo token), aborta essa execução
   await sleep(DEBOUNCE_MS);
 
-  const { data: newer } = await admin
-    .from("messages")
-    .select("id, sent_at")
-    .eq("conversation_id", convId)
-    .eq("direction", "in")
-    .gt("sent_at", arrivedAt)
-    .limit(1);
-  if (newer && newer.length > 0) {
-    console.log("debounce_aborted", { convId, arrivedAt });
-    return;
-  }
-
-  // 2) Re-checa estado da conversa (pode ter sido pausada nesses 8s)
+  // 2) Re-checa estado + token. Só o ÚLTIMO agendamento pode responder.
   const { data: conv } = await admin
     .from("conversations")
-    .select("ai_enabled, human_takeover_until")
+    .select("ai_enabled, human_takeover_until, pending_reply_token")
     .eq("id", convId)
     .maybeSingle();
   if (!conv) return;
+  if (conv.pending_reply_token !== myToken) {
+    console.log("debounce_superseded", { convId, myToken, current: conv.pending_reply_token });
+    return;
+  }
   if (conv.ai_enabled === false) return;
   if (conv.human_takeover_until && new Date(conv.human_takeover_until) > new Date()) return;
 
@@ -298,7 +305,22 @@ async function scheduleReply(
   const reply = await generateAiReply(admin, convId, phone, contactName, "");
   if (!reply) return;
 
-  // 4) Quebra em chunks e envia com "digitando…" entre eles
+  // 4) Marca como enviado ANTES de disparar (limpa o token) para evitar corrida.
+  //    Se um novo inbound chegou entre a checagem e agora, ele já reescreveu o token
+  //    e essa comparação abaixo protege.
+  const { data: claim } = await admin
+    .from("conversations")
+    .update({ pending_reply_token: null })
+    .eq("id", convId)
+    .eq("pending_reply_token", myToken)
+    .select("id")
+    .maybeSingle();
+  if (!claim) {
+    console.log("claim_lost", { convId, myToken });
+    return;
+  }
+
+  // 5) Quebra em chunks e envia com "digitando…" entre eles
   const chunks = splitReply(reply);
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
@@ -569,16 +591,22 @@ Deno.serve(async (req) => {
 
   // Decide: should AI reply?
   const takeoverActive = convTakeoverUntil && new Date(convTakeoverUntil) > new Date();
-  if (!convAiEnabled || takeoverActive || !aiInput) {
-    return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : (!convAiEnabled ? "ai_disabled" : "empty_body") });
+  if (!convAiEnabled || takeoverActive) {
+    return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : "ai_disabled" });
   }
+
+  // Lock por conversa: cada inbound gera um novo token; só o último vence.
+  const replyToken = crypto.randomUUID();
+  await admin.from("conversations")
+    .update({ pending_reply_token: replyToken })
+    .eq("id", convId);
 
   // Debounce + resposta particionada em background — responde SÓ depois de
   // DEBOUNCE_MS sem novas mensagens, e simula digitação humana entre chunks.
   // @ts-ignore — EdgeRuntime é global no Supabase Edge Runtime
   EdgeRuntime.waitUntil(
-    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt),
+    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt, replyToken),
   );
 
-  return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS });
+  return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS, token: replyToken });
 });
