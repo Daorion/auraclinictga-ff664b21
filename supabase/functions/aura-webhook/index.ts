@@ -124,7 +124,31 @@ async function generateAiReply(
     content: m.body ?? "",
   })).filter((m: any) => m.content);
 
-  const system = await buildSystemPrompt(admin, contactName);
+  // Look up client by phone (whatsapp_phone or phone)
+  const phoneDigits = (contactName ?? "").length ? undefined : undefined; // placeholder
+  const contactPhone = (await admin.from("contacts").select("phone").eq("id", (await admin.from("conversations").select("contact_id").eq("id", convId).maybeSingle()).data?.contact_id ?? "").maybeSingle()).data?.phone ?? "";
+  let clientInfo: any = null;
+  let recentAppts: any[] = [];
+  if (contactPhone) {
+    const { data: client } = await admin
+      .from("clients")
+      .select("id, name, birth_date, tags, notes")
+      .or(`whatsapp_phone.eq.${contactPhone},phone.eq.${contactPhone}`)
+      .eq("active", true)
+      .maybeSingle();
+    if (client) {
+      clientInfo = client;
+      const { data: appts } = await admin
+        .from("appointments")
+        .select("start_at, service_name, status")
+        .eq("client_id", client.id)
+        .order("start_at", { ascending: false })
+        .limit(5);
+      recentAppts = appts ?? [];
+    }
+  }
+
+  const system = await buildSystemPrompt(admin, contactName, clientInfo, recentAppts);
   const messages = [
     { role: "system", content: system },
     ...historyMsgs,
