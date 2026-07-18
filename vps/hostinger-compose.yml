@@ -1,7 +1,11 @@
 ##############################################################################
-# AURA CLINIC — Stack COMPLETO (WAHA + Postgres + Redis + API + Worker)
+# AURA CLINIC — Stack COMPLETO v2 (WAHA + Postgres + Redis + API + Worker)
 # Cole no Docker Manager do Hostinger. Sem build local — tudo via imagens
 # oficiais + git clone no start (o Hostinger não faz `build:`).
+#
+# IMPORTANTE: se o projeto antigo do Hostinger ficou com aurora-worker:latest,
+# apague o projeto antigo e crie um NOVO com este YAML. Esta versão usa nomes
+# diferentes (api-node / worker-node) para não reaproveitar cache quebrado.
 ##############################################################################
 
 services:
@@ -12,7 +16,7 @@ services:
       WAHA_API_KEY: ${WAHA_API_KEY}
       WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME}
       WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD}
-      WHATSAPP_HOOK_URL: http://api:3000/waha/events
+      WHATSAPP_HOOK_URL: http://api-node:3000/waha/events
       WHATSAPP_HOOK_EVENTS: message,message.ack,session.status
     volumes:
       - aura_waha_sessions:/app/.sessions
@@ -49,7 +53,7 @@ services:
     restart: unless-stopped
     networks: [aura]
 
-  api:
+  api-node:
     image: node:20-alpine
     restart: unless-stopped
     working_dir: /app
@@ -63,7 +67,7 @@ services:
       WAHA_API_KEY: ${WAHA_API_KEY}
       DATABASE_URL: postgres://aura:${POSTGRES_PASSWORD}@postgres:5432/aura
       REDIS_URL: redis://redis:6379
-      LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
+      LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
     entrypoint: >
       sh -c "apk add --no-cache git >/dev/null &&
              if [ ! -d /app/.git ]; then
@@ -77,7 +81,7 @@ services:
       - "3000:3000"
     networks: [aura]
 
-  worker:
+  worker-node:
     image: node:20-alpine
     restart: unless-stopped
     working_dir: /app
@@ -89,7 +93,7 @@ services:
       GEMINI_MODEL: gemini-2.0-flash
       WAHA_BASE_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY}
-      LOVABLE_WEBHOOK_URL: https://okizljseegzvhdpywzpr.supabase.co/functions/v1/aura-webhook
+      LOVABLE_WEBHOOK_URL: ${LOVABLE_WEBHOOK_URL}
       WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET}
     entrypoint: >
       sh -c "apk add --no-cache git >/dev/null &&
