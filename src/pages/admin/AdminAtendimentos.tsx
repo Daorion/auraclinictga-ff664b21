@@ -62,6 +62,7 @@ const AdminAtendimentos = () => {
   const [sending, setSending] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [apiUnavailable, setApiUnavailable] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const loadConversations = async () => {
@@ -276,7 +277,12 @@ const AdminAtendimentos = () => {
                   >
                     <div className="flex items-start gap-3">
                       {ct?.profile_picture_url ? (
-                        <img src={ct.profile_picture_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                        <img
+                          src={ct.profile_picture_url}
+                          alt=""
+                          onClick={(e) => { e.stopPropagation(); setLightboxUrl(ct.profile_picture_url!); }}
+                          className="w-10 h-10 rounded-full object-cover shrink-0 cursor-zoom-in hover:ring-2 hover:ring-primary/50 transition"
+                        />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
                           {(ct?.push_name ?? ct?.name ?? ct?.phone ?? "?").slice(0, 1).toUpperCase()}
@@ -331,7 +337,12 @@ const AdminAtendimentos = () => {
               <div className="p-3 border-b flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   {activeContact?.profile_picture_url ? (
-                    <img src={activeContact.profile_picture_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                    <img
+                      src={activeContact.profile_picture_url}
+                      alt=""
+                      onClick={() => setLightboxUrl(activeContact.profile_picture_url!)}
+                      className="w-10 h-10 rounded-full object-cover shrink-0 cursor-zoom-in hover:ring-2 hover:ring-primary/50 transition"
+                    />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
                       {(activeContact?.push_name ?? activeContact?.name ?? activeContact?.phone ?? "?").slice(0, 1).toUpperCase()}
@@ -433,8 +444,17 @@ const AdminAtendimentos = () => {
           )}
         </Card>
       </div>
+      {lightboxUrl && (
+        <div
+          onClick={() => setLightboxUrl(null)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 cursor-zoom-out"
+        >
+          <img src={lightboxUrl} alt="Foto de perfil" className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl object-contain" />
+        </div>
+      )}
     </div>
   );
+
 };
 
 export default AdminAtendimentos;

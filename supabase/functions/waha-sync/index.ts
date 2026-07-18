@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     // Profile pic (best-effort)
     let picUrl: string | null = null;
     try {
-      const pic = await wahaGet(`/api/${encodeURIComponent(WAHA_SESSION)}/contacts/profile-picture?contactId=${encodeURIComponent(chatId)}`);
+      const pic = await wahaGet(`/api/contacts/profile-picture?session=${encodeURIComponent(WAHA_SESSION)}&contactId=${encodeURIComponent(chatId)}`);
       picUrl = pic?.profilePictureURL ?? pic?.url ?? null;
     } catch { /* ignore */ }
 

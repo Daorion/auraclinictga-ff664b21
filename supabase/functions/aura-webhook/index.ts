@@ -32,7 +32,7 @@ async function fetchProfilePicture(chatId: string): Promise<string | null> {
   if (!WAHA_URL || !WAHA_API_KEY) return null;
   try {
     const r = await fetch(
-      `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/contacts/profile-picture?contactId=${encodeURIComponent(chatId)}`,
+      `${WAHA_URL}/api/contacts/profile-picture?session=${encodeURIComponent(WAHA_SESSION)}&contactId=${encodeURIComponent(chatId)}`,
       { headers: { "X-Api-Key": WAHA_API_KEY } },
     );
     if (!r.ok) return null;
@@ -45,7 +45,7 @@ async function fetchWahaContact(chatId: string): Promise<{ savedName: string | n
   if (!WAHA_URL || !WAHA_API_KEY) return { savedName: null, pushName: null };
   try {
     const r = await fetch(
-      `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/contacts?contactId=${encodeURIComponent(chatId)}`,
+      `${WAHA_URL}/api/contacts?session=${encodeURIComponent(WAHA_SESSION)}&contactId=${encodeURIComponent(chatId)}`,
       { headers: { "X-Api-Key": WAHA_API_KEY } },
     );
     if (!r.ok) return { savedName: null, pushName: null };
