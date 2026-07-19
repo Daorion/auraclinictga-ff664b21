@@ -1,0 +1,1 @@
+TRUNCATE TABLE public.messages, public.conversations, public.contacts RESTART IDENTITY CASCADE;
