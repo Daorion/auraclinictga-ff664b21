@@ -104,7 +104,127 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "buscar_cliente",
+      description: "Busca clientes pelo nome ou telefone (parcial). Use antes de criar agendamento.",
+      parameters: {
+        type: "object",
+        properties: { termo: { type: "string" } },
+        required: ["termo"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "criar_cliente",
+      description: "Cadastra um novo cliente rapidamente.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          phone: { type: "string", description: "WhatsApp com DDD, ex.: 63999999999" },
+          notes: { type: "string" },
+        },
+        required: ["name", "phone"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "listar_agenda",
+      description: "Lista agendamentos da Sirlei (ou outra profissional) em um intervalo de datas.",
+      parameters: {
+        type: "object",
+        properties: {
+          data_inicio: { type: "string", description: "ISO 8601 com offset (-03:00). Ex.: 2026-07-19T00:00:00-03:00" },
+          data_fim: { type: "string", description: "ISO 8601 com offset (-03:00)." },
+          professional_slug: { type: "string", description: "Opcional. Padrão: sirlei." },
+        },
+        required: ["data_inicio", "data_fim"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "verificar_disponibilidade",
+      description: "Verifica horários livres em um dia para a profissional (padrão Sirlei), considerando duração desejada.",
+      parameters: {
+        type: "object",
+        properties: {
+          data: { type: "string", description: "Dia (YYYY-MM-DD)." },
+          duracao_min: { type: "number", description: "Duração em minutos (padrão 60)." },
+          professional_slug: { type: "string" },
+          hora_inicio: { type: "string", description: "HH:MM local, padrão 08:00" },
+          hora_fim: { type: "string", description: "HH:MM local, padrão 19:00" },
+        },
+        required: ["data"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "criar_agendamento",
+      description: "Cria um agendamento na agenda da profissional (padrão Sirlei). Requer client_id (use buscar_cliente/criar_cliente antes).",
+      parameters: {
+        type: "object",
+        properties: {
+          client_id: { type: "string" },
+          service_name: { type: "string" },
+          start_at: { type: "string", description: "ISO 8601 com offset -03:00." },
+          duracao_min: { type: "number", description: "Padrão 60." },
+          professional_slug: { type: "string" },
+          notes: { type: "string" },
+          price_cents: { type: "number" },
+        },
+        required: ["client_id", "service_name", "start_at"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "reagendar_agendamento",
+      description: "Move um agendamento existente para um novo horário.",
+      parameters: {
+        type: "object",
+        properties: {
+          appointment_id: { type: "string" },
+          novo_start_at: { type: "string", description: "ISO 8601 com offset -03:00." },
+          nova_duracao_min: { type: "number" },
+        },
+        required: ["appointment_id", "novo_start_at"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "cancelar_agendamento",
+      description: "Cancela um agendamento (status = cancelado).",
+      parameters: {
+        type: "object",
+        properties: {
+          appointment_id: { type: "string" },
+          motivo: { type: "string" },
+        },
+        required: ["appointment_id"],
+      },
+    },
+  },
 ];
+
+async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
+  if (!slug) return SIRLEI_PROFESSIONAL_ID;
+  const { data } = await admin.from("professionals").select("id").eq("slug", slug).maybeSingle();
+  return data?.id ?? SIRLEI_PROFESSIONAL_ID;
+}
+
 
 async function executeTool(admin: any, userId: string, name: string, args: any): Promise<any> {
   try {
