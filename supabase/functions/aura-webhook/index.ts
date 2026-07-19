@@ -244,7 +244,7 @@ Se perguntarem qualquer coisa desse tipo, responda educadamente: "Essa informaç
 Você tem 3 ferramentas para agendar:
 1. \`listar_servicos\` — quando a cliente pedir opções ou você precisar do id de um serviço.
 2. \`verificar_horarios\` — quando a cliente sugerir um dia ou pedir horários livres. Passe service_id e a data (YYYY-MM-DD).
-3. \`criar_pre_agendamento\` — SÓ chame depois que a cliente CONFIRMAR expressamente ("pode marcar", "confirmo", "fecha esse"). Requer service_id + start_at (ISO com fuso -03:00) e o nome dela.
+3. \`criar_pre_agendamento\` — SÓ chame depois que a cliente CONFIRMAR expressamente ("pode marcar", "confirmo", "fecha esse"). Requer service_id + start_at (ISO com fuso -04:00) e o nome dela.
 
 Fluxo padrão de agendamento:
 - Entenda qual procedimento ela quer → se tiver dúvida, use \`listar_servicos\`.
@@ -383,7 +383,7 @@ async function generateAiReply(
       type: "function",
       function: {
         name: "verificar_horarios",
-        description: "Retorna horários disponíveis (slots de 1h, seg-sáb 9h-19h, fuso America/Araguaina -03:00) para um serviço em uma data. Não retorna dados de outros clientes, apenas se o slot está livre ou ocupado.",
+        description: "Retorna horários disponíveis (slots de 1h, seg-sáb 9h-19h, fuso America/Cuiaba -04:00) para um serviço em uma data. Não retorna dados de outros clientes, apenas se o slot está livre ou ocupado.",
         parameters: {
           type: "object",
           properties: {
@@ -404,7 +404,7 @@ async function generateAiReply(
           type: "object",
           properties: {
             service_id: { type: "string" },
-            start_at: { type: "string", description: "Data-hora ISO com fuso -03:00, ex: 2026-01-15T14:00:00-03:00" },
+            start_at: { type: "string", description: "Data-hora ISO com fuso -04:00, ex: 2026-01-15T14:00:00-04:00" },
             client_name: { type: "string", description: "Nome completo da cliente" },
             observacoes: { type: "string", description: "Anotações relevantes (opcional)" },
           },
@@ -498,8 +498,8 @@ async function executeAuroraTool(
       if (dow === 0) return { ok: true, data: dateStr, horarios: [], mensagem: "Domingo a clínica não abre." };
 
       // Buscar ocupações do dia (todas as pros; se temos professionalId, filtramos)
-      const dayStart = `${dateStr}T00:00:00-03:00`;
-      const dayEnd = `${dateStr}T23:59:59-03:00`;
+      const dayStart = `${dateStr}T00:00:00-04:00`;
+      const dayEnd = `${dateStr}T23:59:59-04:00`;
       let q = admin.from("appointments")
         .select("start_at, end_at, professional_id, status")
         .gte("start_at", dayStart).lte("start_at", dayEnd)
@@ -511,7 +511,7 @@ async function executeAuroraTool(
       const durationMin = Number(svc.duration_minutes ?? 60) || 60;
       for (let hour = 9; hour + Math.ceil(durationMin / 60) <= 19; hour++) {
         const hh = String(hour).padStart(2, "0");
-        const slotStart = new Date(`${dateStr}T${hh}:00:00-03:00`).getTime();
+        const slotStart = new Date(`${dateStr}T${hh}:00:00-04:00`).getTime();
         const slotEnd = slotStart + durationMin * 60_000;
         const conflict = (busy ?? []).some((b: any) => {
           const bs = new Date(b.start_at).getTime();
@@ -541,7 +541,7 @@ async function executeAuroraTool(
       if (!professionalId) return { ok: false, erro: "Sem profissional disponível para este serviço." };
 
       const startAt = new Date(startAtStr);
-      if (isNaN(startAt.getTime())) return { ok: false, erro: "start_at inválido (use ISO com fuso -03:00)." };
+      if (isNaN(startAt.getTime())) return { ok: false, erro: "start_at inválido (use ISO com fuso -04:00)." };
       const durationMin = Number(svc.duration_minutes ?? 60) || 60;
       const endAt = new Date(startAt.getTime() + durationMin * 60_000);
 
@@ -584,7 +584,7 @@ async function executeAuroraTool(
         return { ok: false, erro: "Não consegui registrar agora, tente daqui a pouco." };
       }
 
-      const fmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "full", timeStyle: "short", timeZone: "America/Araguaina" }).format(startAt);
+      const fmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "full", timeStyle: "short", timeZone: "America/Cuiaba" }).format(startAt);
       return { ok: true, id: appt?.id, status: "pendente", quando: fmt, mensagem: "Pré-agendamento criado. Avise a cliente que a equipe confirma em seguida." };
     }
 
