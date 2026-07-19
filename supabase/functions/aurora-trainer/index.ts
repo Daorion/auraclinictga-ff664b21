@@ -14,7 +14,7 @@ const json = (b: unknown, s = 200) =>
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 
 const SIRLEI_PROFESSIONAL_ID = "2b583d7c-b30f-4df6-840f-7ede47ea891e";
-const TZ_OFFSET = "-03:00"; // Araguaína/TO
+const TZ_OFFSET = "-04:00"; // Tangará da Serra/MT
 
 const SYSTEM_PROMPT = `Você é a Aurora, assistente pessoal e secretária da Sirlei (dona da Aura Clinic). Este canal é o chat interno dela — você age como uma funcionária de confiança:
 - Cuida da agenda da Sirlei (consulta, cria, reagenda e cancela horários dela).
@@ -26,7 +26,7 @@ Como agir aqui:
 - Trate a Sirlei com respeito, calor humano e naturalidade. Pode ser direta, técnica e objetiva.
 - Para QUALQUER ação de agenda, sempre confirme com ela o resumo (cliente, serviço, dia, hora) antes de chamar a ferramenta, exceto quando ela já der todos os dados de forma clara.
 - Padrão de profissional na agenda: SIRLEI. Só use outra profissional se ela pedir explicitamente pelo nome/slug.
-- Ao consultar disponibilidade ou criar horário, use fuso Araguaína/TO (UTC-03:00). Se ela disser "amanhã 14h", converta para ISO com offset -03:00.
+- Ao consultar disponibilidade ou criar horário, use fuso Tangará da Serra/MT (UTC-04:00). Se ela disser "amanhã 14h", converta para ISO com offset -04:00.
 - Para clientes, tente primeiro \`buscar_cliente\` pelo nome/telefone. Se não achar, pergunte se pode cadastrar novo (ou use \`criar_cliente\`).
 - SEMPRE que ela descrever uma promoção, regra, informação nova ou correção que valha para o WhatsApp dos clientes, chame \`salvar_diretiva\`.
 - Prospecção ("mande promoção X pros inativos"): NUNCA dispare. Use \`buscar_clientes_inativos\`, mostre resumo, monte mensagem e chame \`criar_campanha\` (draft).
@@ -140,8 +140,8 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
-          data_inicio: { type: "string", description: "ISO 8601 com offset (-03:00). Ex.: 2026-07-19T00:00:00-03:00" },
-          data_fim: { type: "string", description: "ISO 8601 com offset (-03:00)." },
+          data_inicio: { type: "string", description: "ISO 8601 com offset (-04:00). Ex.: 2026-07-19T00:00:00-04:00" },
+          data_fim: { type: "string", description: "ISO 8601 com offset (-04:00)." },
           professional_slug: { type: "string", description: "Opcional. Padrão: sirlei." },
         },
         required: ["data_inicio", "data_fim"],
@@ -176,7 +176,7 @@ const tools = [
         properties: {
           client_id: { type: "string" },
           service_name: { type: "string" },
-          start_at: { type: "string", description: "ISO 8601 com offset -03:00." },
+          start_at: { type: "string", description: "ISO 8601 com offset -04:00." },
           duracao_min: { type: "number", description: "Padrão 60." },
           professional_slug: { type: "string" },
           notes: { type: "string" },
@@ -195,7 +195,7 @@ const tools = [
         type: "object",
         properties: {
           appointment_id: { type: "string" },
-          novo_start_at: { type: "string", description: "ISO 8601 com offset -03:00." },
+          novo_start_at: { type: "string", description: "ISO 8601 com offset -04:00." },
           nova_duracao_min: { type: "number" },
         },
         required: ["appointment_id", "novo_start_at"],
