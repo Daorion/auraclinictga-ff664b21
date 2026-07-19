@@ -294,6 +294,107 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       }
       return { ok: true, campaign_id: campaign.id, name: campaign.name, targets: 0 };
     }
+    if (name === "buscar_cliente") {
+      const termo = String(args.termo ?? "").trim();
+      if (!termo) return { error: "termo_vazio" };
+      const digits = termo.replace(/\D/g, "");
+      let q = admin.from("clients").select("id, name, phone, whatsapp_phone, email").eq("active", true).limit(20);
+      if (digits.length >= 4) {
+        q = q.or(`phone.ilike.%${digits}%,whatsapp_phone.ilike.%${digits}%`);
+      } else {
+        q = q.ilike("name", `%${termo}%`);
+      }
+      const { data } = await q;
+      return { total: data?.length ?? 0, clientes: data ?? [] };
+    }
+    if (name === "criar_cliente") {
+      const { data, error } = await admin.from("clients").insert({
+        name: args.name, whatsapp_phone: args.phone, phone: args.phone,
+        notes: args.notes ?? null, active: true, created_by: userId,
+      }).select("id, name, whatsapp_phone").single();
+      if (error) return { error: error.message };
+      return { ok: true, cliente: data };
+    }
+    if (name === "listar_agenda") {
+      const profId = await resolveProfessionalId(admin, args.professional_slug);
+      const { data, error } = await admin.from("appointments")
+        .select("id, start_at, end_at, status, service_name, notes, price_cents, client_id, clients(name, whatsapp_phone)")
+        .eq("professional_id", profId)
+        .gte("start_at", args.data_inicio)
+        .lte("start_at", args.data_fim)
+        .order("start_at", { ascending: true });
+      if (error) return { error: error.message };
+      return {
+        total: data?.length ?? 0,
+        agendamentos: (data ?? []).map((a: any) => ({
+          id: a.id, start_at: a.start_at, end_at: a.end_at, status: a.status,
+          service: a.service_name, cliente: a.clients?.name, telefone: a.clients?.whatsapp_phone,
+          notas: a.notes,
+        })),
+      };
+    }
+    if (name === "verificar_disponibilidade") {
+      const profId = await resolveProfessionalId(admin, args.professional_slug);
+      const dur = Math.max(15, Number(args.duracao_min) || 60);
+      const dia = String(args.data);
+      const hIni = String(args.hora_inicio ?? "08:00");
+      const hFim = String(args.hora_fim ?? "19:00");
+      const inicio = new Date(`${dia}T${hIni}:00${TZ_OFFSET}`);
+      const fim = new Date(`${dia}T${hFim}:00${TZ_OFFSET}`);
+      const { data: ocupados } = await admin.from("appointments")
+        .select("start_at, end_at, status")
+        .eq("professional_id", profId)
+        .gte("start_at", inicio.toISOString())
+        .lte("start_at", fim.toISOString())
+        .not("status", "in", "(cancelado,faltou)");
+      const busy = (ocupados ?? []).map((o: any) => ({ s: new Date(o.start_at).getTime(), e: new Date(o.end_at).getTime() }));
+      const slots: string[] = [];
+      const step = 30 * 60 * 1000;
+      const durMs = dur * 60 * 1000;
+      for (let t = inicio.getTime(); t + durMs <= fim.getTime(); t += step) {
+        const conflict = busy.some((b) => t < b.e && t + durMs > b.s);
+        if (!conflict) slots.push(new Date(t).toISOString());
+      }
+      return { data: dia, duracao_min: dur, livres: slots, ocupados: busy.length };
+    }
+    if (name === "criar_agendamento") {
+      const profId = await resolveProfessionalId(admin, args.professional_slug);
+      const dur = Math.max(15, Number(args.duracao_min) || 60);
+      const start = new Date(args.start_at);
+      const end = new Date(start.getTime() + dur * 60 * 1000);
+      const { data, error } = await admin.from("appointments").insert({
+        client_id: args.client_id, professional_id: profId,
+        service_name: args.service_name, start_at: start.toISOString(), end_at: end.toISOString(),
+        status: "confirmado", notes: args.notes ?? null,
+        price_cents: args.price_cents ?? 0, created_by: userId,
+      }).select("id, start_at, end_at, service_name, status").single();
+      if (error) return { error: error.message };
+      return { ok: true, agendamento: data };
+    }
+    if (name === "reagendar_agendamento") {
+      const { data: cur } = await admin.from("appointments").select("start_at, end_at").eq("id", args.appointment_id).maybeSingle();
+      if (!cur) return { error: "agendamento_nao_encontrado" };
+      const dur = args.nova_duracao_min
+        ? Number(args.nova_duracao_min) * 60 * 1000
+        : new Date(cur.end_at).getTime() - new Date(cur.start_at).getTime();
+      const start = new Date(args.novo_start_at);
+      const end = new Date(start.getTime() + dur);
+      const { data, error } = await admin.from("appointments")
+        .update({ start_at: start.toISOString(), end_at: end.toISOString() })
+        .eq("id", args.appointment_id)
+        .select("id, start_at, end_at, service_name").single();
+      if (error) return { error: error.message };
+      return { ok: true, agendamento: data };
+    }
+    if (name === "cancelar_agendamento") {
+      const patch: any = { status: "cancelado" };
+      if (args.motivo) patch.notes = `[Cancelado] ${args.motivo}`;
+      const { data, error } = await admin.from("appointments")
+        .update(patch).eq("id", args.appointment_id)
+        .select("id, status").single();
+      if (error) return { error: error.message };
+      return { ok: true, agendamento: data };
+    }
     return { error: `unknown_tool_${name}` };
   } catch (e) {
     return { error: String(e) };
