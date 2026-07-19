@@ -13,17 +13,26 @@ const json = (b: unknown, s = 200) =>
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 
-const SYSTEM_PROMPT = `Você é a Aurora, assistente virtual da Aura Clinic, conversando agora em modo TREINAMENTO com a administradora (Sirlei/equipe). Este canal NÃO fala com clientes — é um chat interno para você:
-- Receber ordens, novas informações, correções de persona.
-- Registrar promoções/campanhas ativas que você deve mencionar no WhatsApp com clientes.
-- Propor ações de prospecção (sempre com aprovação humana antes de qualquer disparo).
+const SIRLEI_PROFESSIONAL_ID = "2b583d7c-b30f-4df6-840f-7ede47ea891e";
+const TZ_OFFSET = "-03:00"; // Araguaína/TO
+
+const SYSTEM_PROMPT = `Você é a Aurora, assistente pessoal e secretária da Sirlei (dona da Aura Clinic). Este canal é o chat interno dela — você age como uma funcionária de confiança:
+- Cuida da agenda da Sirlei (consulta, cria, reagenda e cancela horários dela).
+- Registra promoções, ordens e correções de persona que devem valer no WhatsApp com clientes.
+- Propõe campanhas de prospecção (sempre com aprovação humana antes de qualquer disparo).
+- Ajuda a Sirlei a lembrar de coisas, tirar dúvidas do dia e organizar o atendimento.
 
 Como agir aqui:
-- Trate a administradora com respeito e naturalidade. Pode ser mais direta e técnica do que no WhatsApp.
-- SEMPRE que a admin descrever uma promoção, regra, informação nova ou correção, chame a ferramenta \`salvar_diretiva\` para registrar (assim você lembra em todas as conversas futuras).
-- Quando ela pedir prospecção ("mande promoção X pros clientes inativos"), NUNCA envie nada direto. Use \`buscar_clientes_inativos\` para levantar a lista, mostre um resumo, monte a mensagem sugerida, e só então chame \`criar_campanha\` para deixar a campanha em DRAFT esperando aprovação manual dela.
-- Nunca invente clientes ou telefones. Só use dados reais retornados pelas ferramentas.
-- Responda em português BR, tom profissional e claro. Confirme sempre o que foi salvo/criado citando o título e id curto.`;
+- Trate a Sirlei com respeito, calor humano e naturalidade. Pode ser direta, técnica e objetiva.
+- Para QUALQUER ação de agenda, sempre confirme com ela o resumo (cliente, serviço, dia, hora) antes de chamar a ferramenta, exceto quando ela já der todos os dados de forma clara.
+- Padrão de profissional na agenda: SIRLEI. Só use outra profissional se ela pedir explicitamente pelo nome/slug.
+- Ao consultar disponibilidade ou criar horário, use fuso Araguaína/TO (UTC-03:00). Se ela disser "amanhã 14h", converta para ISO com offset -03:00.
+- Para clientes, tente primeiro \`buscar_cliente\` pelo nome/telefone. Se não achar, pergunte se pode cadastrar novo (ou use \`criar_cliente\`).
+- SEMPRE que ela descrever uma promoção, regra, informação nova ou correção que valha para o WhatsApp dos clientes, chame \`salvar_diretiva\`.
+- Prospecção ("mande promoção X pros inativos"): NUNCA dispare. Use \`buscar_clientes_inativos\`, mostre resumo, monte mensagem e chame \`criar_campanha\` (draft).
+- Nunca invente clientes, telefones ou horários. Só use dados reais das ferramentas.
+- Responda em português BR, tom profissional e acolhedor. Confirme sempre o que foi feito citando cliente, dia/hora e id curto.
+- Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
   {
@@ -95,7 +104,127 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "buscar_cliente",
+      description: "Busca clientes pelo nome ou telefone (parcial). Use antes de criar agendamento.",
+      parameters: {
+        type: "object",
+        properties: { termo: { type: "string" } },
+        required: ["termo"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "criar_cliente",
+      description: "Cadastra um novo cliente rapidamente.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          phone: { type: "string", description: "WhatsApp com DDD, ex.: 63999999999" },
+          notes: { type: "string" },
+        },
+        required: ["name", "phone"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "listar_agenda",
+      description: "Lista agendamentos da Sirlei (ou outra profissional) em um intervalo de datas.",
+      parameters: {
+        type: "object",
+        properties: {
+          data_inicio: { type: "string", description: "ISO 8601 com offset (-03:00). Ex.: 2026-07-19T00:00:00-03:00" },
+          data_fim: { type: "string", description: "ISO 8601 com offset (-03:00)." },
+          professional_slug: { type: "string", description: "Opcional. Padrão: sirlei." },
+        },
+        required: ["data_inicio", "data_fim"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "verificar_disponibilidade",
+      description: "Verifica horários livres em um dia para a profissional (padrão Sirlei), considerando duração desejada.",
+      parameters: {
+        type: "object",
+        properties: {
+          data: { type: "string", description: "Dia (YYYY-MM-DD)." },
+          duracao_min: { type: "number", description: "Duração em minutos (padrão 60)." },
+          professional_slug: { type: "string" },
+          hora_inicio: { type: "string", description: "HH:MM local, padrão 08:00" },
+          hora_fim: { type: "string", description: "HH:MM local, padrão 19:00" },
+        },
+        required: ["data"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "criar_agendamento",
+      description: "Cria um agendamento na agenda da profissional (padrão Sirlei). Requer client_id (use buscar_cliente/criar_cliente antes).",
+      parameters: {
+        type: "object",
+        properties: {
+          client_id: { type: "string" },
+          service_name: { type: "string" },
+          start_at: { type: "string", description: "ISO 8601 com offset -03:00." },
+          duracao_min: { type: "number", description: "Padrão 60." },
+          professional_slug: { type: "string" },
+          notes: { type: "string" },
+          price_cents: { type: "number" },
+        },
+        required: ["client_id", "service_name", "start_at"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "reagendar_agendamento",
+      description: "Move um agendamento existente para um novo horário.",
+      parameters: {
+        type: "object",
+        properties: {
+          appointment_id: { type: "string" },
+          novo_start_at: { type: "string", description: "ISO 8601 com offset -03:00." },
+          nova_duracao_min: { type: "number" },
+        },
+        required: ["appointment_id", "novo_start_at"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "cancelar_agendamento",
+      description: "Cancela um agendamento (status = cancelado).",
+      parameters: {
+        type: "object",
+        properties: {
+          appointment_id: { type: "string" },
+          motivo: { type: "string" },
+        },
+        required: ["appointment_id"],
+      },
+    },
+  },
 ];
+
+async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
+  if (!slug) return SIRLEI_PROFESSIONAL_ID;
+  const { data } = await admin.from("professionals").select("id").eq("slug", slug).maybeSingle();
+  return data?.id ?? SIRLEI_PROFESSIONAL_ID;
+}
+
 
 async function executeTool(admin: any, userId: string, name: string, args: any): Promise<any> {
   try {
@@ -164,6 +293,107 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
         return { ok: true, campaign_id: campaign.id, name: campaign.name, targets: rows.length };
       }
       return { ok: true, campaign_id: campaign.id, name: campaign.name, targets: 0 };
+    }
+    if (name === "buscar_cliente") {
+      const termo = String(args.termo ?? "").trim();
+      if (!termo) return { error: "termo_vazio" };
+      const digits = termo.replace(/\D/g, "");
+      let q = admin.from("clients").select("id, name, phone, whatsapp_phone, email").eq("active", true).limit(20);
+      if (digits.length >= 4) {
+        q = q.or(`phone.ilike.%${digits}%,whatsapp_phone.ilike.%${digits}%`);
+      } else {
+        q = q.ilike("name", `%${termo}%`);
+      }
+      const { data } = await q;
+      return { total: data?.length ?? 0, clientes: data ?? [] };
+    }
+    if (name === "criar_cliente") {
+      const { data, error } = await admin.from("clients").insert({
+        name: args.name, whatsapp_phone: args.phone, phone: args.phone,
+        notes: args.notes ?? null, active: true, created_by: userId,
+      }).select("id, name, whatsapp_phone").single();
+      if (error) return { error: error.message };
+      return { ok: true, cliente: data };
+    }
+    if (name === "listar_agenda") {
+      const profId = await resolveProfessionalId(admin, args.professional_slug);
+      const { data, error } = await admin.from("appointments")
+        .select("id, start_at, end_at, status, service_name, notes, price_cents, client_id, clients(name, whatsapp_phone)")
+        .eq("professional_id", profId)
+        .gte("start_at", args.data_inicio)
+        .lte("start_at", args.data_fim)
+        .order("start_at", { ascending: true });
+      if (error) return { error: error.message };
+      return {
+        total: data?.length ?? 0,
+        agendamentos: (data ?? []).map((a: any) => ({
+          id: a.id, start_at: a.start_at, end_at: a.end_at, status: a.status,
+          service: a.service_name, cliente: a.clients?.name, telefone: a.clients?.whatsapp_phone,
+          notas: a.notes,
+        })),
+      };
+    }
+    if (name === "verificar_disponibilidade") {
+      const profId = await resolveProfessionalId(admin, args.professional_slug);
+      const dur = Math.max(15, Number(args.duracao_min) || 60);
+      const dia = String(args.data);
+      const hIni = String(args.hora_inicio ?? "08:00");
+      const hFim = String(args.hora_fim ?? "19:00");
+      const inicio = new Date(`${dia}T${hIni}:00${TZ_OFFSET}`);
+      const fim = new Date(`${dia}T${hFim}:00${TZ_OFFSET}`);
+      const { data: ocupados } = await admin.from("appointments")
+        .select("start_at, end_at, status")
+        .eq("professional_id", profId)
+        .gte("start_at", inicio.toISOString())
+        .lte("start_at", fim.toISOString())
+        .not("status", "in", "(cancelado,faltou)");
+      const busy = (ocupados ?? []).map((o: any) => ({ s: new Date(o.start_at).getTime(), e: new Date(o.end_at).getTime() }));
+      const slots: string[] = [];
+      const step = 30 * 60 * 1000;
+      const durMs = dur * 60 * 1000;
+      for (let t = inicio.getTime(); t + durMs <= fim.getTime(); t += step) {
+        const conflict = busy.some((b) => t < b.e && t + durMs > b.s);
+        if (!conflict) slots.push(new Date(t).toISOString());
+      }
+      return { data: dia, duracao_min: dur, livres: slots, ocupados: busy.length };
+    }
+    if (name === "criar_agendamento") {
+      const profId = await resolveProfessionalId(admin, args.professional_slug);
+      const dur = Math.max(15, Number(args.duracao_min) || 60);
+      const start = new Date(args.start_at);
+      const end = new Date(start.getTime() + dur * 60 * 1000);
+      const { data, error } = await admin.from("appointments").insert({
+        client_id: args.client_id, professional_id: profId,
+        service_name: args.service_name, start_at: start.toISOString(), end_at: end.toISOString(),
+        status: "confirmado", notes: args.notes ?? null,
+        price_cents: args.price_cents ?? 0, created_by: userId,
+      }).select("id, start_at, end_at, service_name, status").single();
+      if (error) return { error: error.message };
+      return { ok: true, agendamento: data };
+    }
+    if (name === "reagendar_agendamento") {
+      const { data: cur } = await admin.from("appointments").select("start_at, end_at").eq("id", args.appointment_id).maybeSingle();
+      if (!cur) return { error: "agendamento_nao_encontrado" };
+      const dur = args.nova_duracao_min
+        ? Number(args.nova_duracao_min) * 60 * 1000
+        : new Date(cur.end_at).getTime() - new Date(cur.start_at).getTime();
+      const start = new Date(args.novo_start_at);
+      const end = new Date(start.getTime() + dur);
+      const { data, error } = await admin.from("appointments")
+        .update({ start_at: start.toISOString(), end_at: end.toISOString() })
+        .eq("id", args.appointment_id)
+        .select("id, start_at, end_at, service_name").single();
+      if (error) return { error: error.message };
+      return { ok: true, agendamento: data };
+    }
+    if (name === "cancelar_agendamento") {
+      const patch: any = { status: "cancelado" };
+      if (args.motivo) patch.notes = `[Cancelado] ${args.motivo}`;
+      const { data, error } = await admin.from("appointments")
+        .update(patch).eq("id", args.appointment_id)
+        .select("id, status").single();
+      if (error) return { error: error.message };
+      return { ok: true, agendamento: data };
     }
     return { error: `unknown_tool_${name}` };
   } catch (e) {
