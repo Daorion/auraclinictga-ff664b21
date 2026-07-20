@@ -24,7 +24,11 @@ interface Conversation {
   last_message_preview: string | null;
   status: string;
   internal_notes: string | null;
+  needs_review: boolean;
+  review_reason: string | null;
+  review_requested_at: string | null;
 }
+
 interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; aurora_blocked?: boolean | null; }
 interface Message {
   id: string;
