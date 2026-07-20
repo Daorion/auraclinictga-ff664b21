@@ -16,22 +16,24 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const SIRLEI_PROFESSIONAL_ID = "2b583d7c-b30f-4df6-840f-7ede47ea891e";
 const TZ_OFFSET = "-04:00"; // Tangará da Serra/MT
 
-const SYSTEM_PROMPT = `Você é a Aurora, assistente pessoal e secretária da Sirlei (dona da Aura Clinic). Este canal é o chat interno dela — você age como uma funcionária de confiança:
-- Cuida da agenda da Sirlei (consulta, cria, reagenda e cancela horários dela).
+const SYSTEM_PROMPT = `Você é a Aurora, assistente pessoal e secretária da Sirlei (dona da Aura Clinic). Este canal é o chat interno dela — você age como uma funcionária de confiança com acesso completo ao painel:
+- Cuida da agenda (consulta, cria, reagenda e cancela horários — padrão Sirlei).
+- Gerencia o catálogo de SERVIÇOS (listar, criar, atualizar preço/duração/ativar/desativar).
+- Gerencia a equipe de PROFISSIONAIS (listar, atualizar bio, título, comissão, ativa, foto).
+- Gerencia CLIENTES (buscar, criar, atualizar cadastro).
 - Registra promoções, ordens e correções de persona que devem valer no WhatsApp com clientes.
 - Propõe campanhas de prospecção (sempre com aprovação humana antes de qualquer disparo).
-- Ajuda a Sirlei a lembrar de coisas, tirar dúvidas do dia e organizar o atendimento.
 
 Como agir aqui:
 - Trate a Sirlei com respeito, calor humano e naturalidade. Pode ser direta, técnica e objetiva.
-- Para QUALQUER ação de agenda, sempre confirme com ela o resumo (cliente, serviço, dia, hora) antes de chamar a ferramenta, exceto quando ela já der todos os dados de forma clara.
-- Padrão de profissional na agenda: SIRLEI. Só use outra profissional se ela pedir explicitamente pelo nome/slug.
-- Ao consultar disponibilidade ou criar horário, use fuso Tangará da Serra/MT (UTC-04:00). Se ela disser "amanhã 14h", converta para ISO com offset -04:00.
-- Para clientes, tente primeiro \`buscar_cliente\` pelo nome/telefone. Se não achar, pergunte se pode cadastrar novo (ou use \`criar_cliente\`).
-- SEMPRE que ela descrever uma promoção, regra, informação nova ou correção que valha para o WhatsApp dos clientes, chame \`salvar_diretiva\`.
-- Prospecção ("mande promoção X pros inativos"): NUNCA dispare. Use \`buscar_clientes_inativos\`, mostre resumo, monte mensagem e chame \`criar_campanha\` (draft).
-- Nunca invente clientes, telefones ou horários. Só use dados reais das ferramentas.
-- Responda em português BR, tom profissional e acolhedor. Confirme sempre o que foi feito citando cliente, dia/hora e id curto.
+- Para QUALQUER alteração (agenda, serviço, profissional, cliente), confirme um resumo curto antes de chamar a ferramenta, exceto quando ela já der todos os dados de forma clara.
+- Padrão de profissional na agenda: SIRLEI. Só use outra se ela pedir explicitamente pelo nome/slug.
+- Preços sempre em CENTAVOS (ex.: R$ 850,00 = 85000). Ao mostrar para ela, formate em reais.
+- Antes de atualizar serviço/profissional/cliente, use listar_/buscar_ para pegar o id correto.
+- Ao consultar disponibilidade ou criar horário, use fuso Tangará da Serra/MT (UTC-04:00).
+- Prospecção: NUNCA dispare. Use buscar_clientes_inativos + criar_campanha (draft).
+- Nunca invente dados. Só use resultados reais das ferramentas.
+- Responda em português BR, tom profissional e acolhedor. Confirme sempre citando o id curto do que foi alterado.
 - Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
@@ -217,6 +219,128 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "listar_servicos",
+      description: "Lista serviços cadastrados. Filtros opcionais por texto (nome/categoria) e por profissional.",
+      parameters: {
+        type: "object",
+        properties: {
+          termo: { type: "string" },
+          professional_slug: { type: "string" },
+          incluir_inativos: { type: "boolean" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "criar_servico",
+      description: "Cadastra um novo serviço no catálogo (aparece no site e no atendimento da Aurora).",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          description: { type: "string" },
+          category: { type: "string" },
+          professional_slug: { type: "string" },
+          professional_name: { type: "string" },
+          duration: { type: "string", description: "Ex.: '60 min'" },
+          duration_minutes: { type: "number" },
+          price_cents: { type: "number", description: "Preço em centavos (opcional; 0 para não exibir)." },
+          image_url: { type: "string" },
+          active: { type: "boolean" },
+        },
+        required: ["name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "atualizar_servico",
+      description: "Atualiza campos de um serviço existente (nome, preço, duração, ativo, etc.).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string" },
+          description: { type: "string" },
+          category: { type: "string" },
+          professional_slug: { type: "string" },
+          professional_name: { type: "string" },
+          duration: { type: "string" },
+          duration_minutes: { type: "number" },
+          price_cents: { type: "number" },
+          image_url: { type: "string" },
+          active: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "listar_profissionais",
+      description: "Lista profissionais da clínica (equipe).",
+      parameters: {
+        type: "object",
+        properties: { incluir_inativos: { type: "boolean" } },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "atualizar_profissional",
+      description: "Atualiza dados de uma profissional (bio, título, comissão, ativa, foto, whatsapp).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string", description: "Alternativa ao id." },
+          name: { type: "string" },
+          title: { type: "string" },
+          bio: { type: "string" },
+          photo_url: { type: "string" },
+          whatsapp_phone: { type: "string" },
+          email: { type: "string" },
+          commission_percent: { type: "number" },
+          active: { type: "boolean" },
+          display_order: { type: "number" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "atualizar_cliente",
+      description: "Atualiza dados cadastrais de um cliente (telefone, email, tags, notas, ativo, etc.).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string" },
+          phone: { type: "string" },
+          whatsapp_phone: { type: "string" },
+          email: { type: "string" },
+          birth_date: { type: "string", description: "YYYY-MM-DD" },
+          cpf: { type: "string" },
+          address: { type: "string" },
+          city: { type: "string" },
+          state: { type: "string" },
+          notes: { type: "string" },
+          tags: { type: "array", items: { type: "string" } },
+          active: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
 ];
 
 async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
@@ -394,6 +518,79 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
         .select("id, status").single();
       if (error) return { error: error.message };
       return { ok: true, agendamento: data };
+    }
+    if (name === "listar_servicos") {
+      let q = admin.from("services")
+        .select("id, name, category, professional_slug, professional_name, duration, duration_minutes, price_cents, active, image_url")
+        .order("display_order").order("name").limit(200);
+      if (!args.incluir_inativos) q = q.eq("active", true);
+      if (args.professional_slug) q = q.eq("professional_slug", args.professional_slug);
+      if (args.termo) q = q.or(`name.ilike.%${args.termo}%,category.ilike.%${args.termo}%`);
+      const { data, error } = await q;
+      if (error) return { error: error.message };
+      return { total: data?.length ?? 0, servicos: data ?? [] };
+    }
+    if (name === "criar_servico") {
+      const payload: any = {
+        name: args.name, description: args.description ?? null,
+        category: args.category ?? null,
+        professional_slug: args.professional_slug ?? null,
+        professional_name: args.professional_name ?? null,
+        duration: args.duration ?? null,
+        duration_minutes: args.duration_minutes ?? 60,
+        price_cents: args.price_cents ?? 0,
+        image_url: args.image_url ?? null,
+        active: args.active ?? true,
+        created_by: userId,
+      };
+      const { data, error } = await admin.from("services").insert(payload)
+        .select("id, name, price_cents, duration_minutes, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, servico: data };
+    }
+    if (name === "atualizar_servico") {
+      const { id, ...rest } = args;
+      const patch: any = {};
+      for (const k of ["name","description","category","professional_slug","professional_name","duration","duration_minutes","price_cents","image_url","active"]) {
+        if (rest[k] !== undefined) patch[k] = rest[k];
+      }
+      const { data, error } = await admin.from("services").update(patch).eq("id", id)
+        .select("id, name, price_cents, duration_minutes, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, servico: data };
+    }
+    if (name === "listar_profissionais") {
+      let q = admin.from("professionals")
+        .select("id, slug, name, title, commission_percent, active, whatsapp_phone, email, display_order")
+        .order("display_order").order("name");
+      if (!args.incluir_inativos) q = q.eq("active", true);
+      const { data, error } = await q;
+      if (error) return { error: error.message };
+      return { total: data?.length ?? 0, profissionais: data ?? [] };
+    }
+    if (name === "atualizar_profissional") {
+      const patch: any = {};
+      for (const k of ["name","title","bio","photo_url","whatsapp_phone","email","commission_percent","active","display_order"]) {
+        if (args[k] !== undefined) patch[k] = args[k];
+      }
+      let q = admin.from("professionals").update(patch);
+      if (args.id) q = q.eq("id", args.id);
+      else if (args.slug) q = q.eq("slug", args.slug);
+      else return { error: "informe_id_ou_slug" };
+      const { data, error } = await q.select("id, slug, name, title, commission_percent, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, profissional: data };
+    }
+    if (name === "atualizar_cliente") {
+      const { id, ...rest } = args;
+      const patch: any = {};
+      for (const k of ["name","phone","whatsapp_phone","email","birth_date","cpf","address","city","state","notes","tags","active"]) {
+        if (rest[k] !== undefined) patch[k] = rest[k];
+      }
+      const { data, error } = await admin.from("clients").update(patch).eq("id", id)
+        .select("id, name, whatsapp_phone, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, cliente: data };
     }
     return { error: `unknown_tool_${name}` };
   } catch (e) {
