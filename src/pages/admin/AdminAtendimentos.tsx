@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle, RefreshCw, Check, CheckCheck, Clock, XCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle, RefreshCw, Check, CheckCheck, Clock, XCircle, ArrowLeft, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,7 +24,11 @@ interface Conversation {
   last_message_preview: string | null;
   status: string;
   internal_notes: string | null;
+  needs_review: boolean;
+  review_reason: string | null;
+  review_requested_at: string | null;
 }
+
 interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; aurora_blocked?: boolean | null; }
 interface Message {
   id: string;
@@ -68,10 +72,12 @@ const AdminAtendimentos = () => {
   const loadConversations = async () => {
     const { data: convs } = await supabase
       .from("conversations")
-      .select("id,contact_id,stage,assigned_to,ai_enabled,human_takeover_until,interest,unread_count,last_message_at,last_message_preview,status,internal_notes")
+      .select("id,contact_id,stage,assigned_to,ai_enabled,human_takeover_until,interest,unread_count,last_message_at,last_message_preview,status,internal_notes,needs_review,review_reason,review_requested_at")
       .eq("status", "open")
+      .order("needs_review", { ascending: false })
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .limit(200);
+
     const list = (convs ?? []) as Conversation[];
     setConversations(list);
     const ids = list.map((c) => c.contact_id);
@@ -302,7 +308,13 @@ const AdminAtendimentos = () => {
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
+                          {c.needs_review && (
+                            <Badge className="text-[10px] py-0 h-4 gap-1 bg-amber-500 hover:bg-amber-500 text-white border-0 animate-pulse">
+                              <HelpCircle className="w-3 h-3" /> Aurora pediu revisão
+                            </Badge>
+                          )}
                           {(() => {
+
                             const takeover = c.human_takeover_until && new Date(c.human_takeover_until) > new Date();
                             if (ct?.aurora_blocked) {
                               return (
@@ -394,6 +406,36 @@ const AdminAtendimentos = () => {
                   })()}
                 </div>
               </div>
+
+
+              {active.needs_review && (
+                <div className="px-4 py-2 bg-amber-500/15 border-b border-amber-500/40 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+                  <HelpCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p><strong>Aurora pediu sua orientação antes de responder.</strong> Nenhuma mensagem foi enviada no WhatsApp.</p>
+                    {active.review_reason && (
+                      <p className="mt-0.5 italic opacity-90">Motivo: "{active.review_reason}"</p>
+                    )}
+                    <p className="mt-0.5 opacity-75">Responda manualmente abaixo — o alerta some quando você enviar.</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs shrink-0"
+                    onClick={async () => {
+                      await supabase.from("conversations").update({
+                        needs_review: false,
+                        review_reason: null,
+                        review_requested_at: null,
+                      }).eq("id", active.id);
+                      toast.success("Alerta descartado.");
+                      loadConversations();
+                    }}
+                  >
+                    Descartar
+                  </Button>
+                </div>
+              )}
 
 
               {(() => {

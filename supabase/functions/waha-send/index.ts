@@ -87,7 +87,11 @@ Deno.serve(async (req) => {
     last_message_at: new Date().toISOString(),
     last_message_preview: text.slice(0, 140),
     unread_count: 0,
+    needs_review: false,
+    review_reason: null,
+    review_requested_at: null,
   };
+
   if (pause_ai !== false) {
     const until = new Date(Date.now() + HUMAN_PAUSE_HOURS * 3600 * 1000).toISOString();
     patch.human_takeover_until = until;
