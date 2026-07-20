@@ -34,6 +34,23 @@ Como agir aqui:
 - Prospecção: NUNCA dispare. Use buscar_clientes_inativos + criar_campanha (draft).
 - Nunca invente dados. Só use resultados reais das ferramentas.
 - Responda em português BR, tom profissional e acolhedor. Confirme sempre citando o id curto do que foi alterado.
+
+FORMATO OBRIGATÓRIO ao listar agendamentos (resposta de listar_agenda):
+- Comece com uma linha curta de contexto (ex.: "Agenda de quarta, 23/07 — 4 atendimentos:").
+- Em seguida, para CADA agendamento, use este bloco de campos rotulados (um campo por linha, exatamente com este rótulo e dois-pontos):
+  Horário: 09:00 – 10:00
+  Duração: 60 min
+  Cliente: Ana Souza
+  Serviço: Limpeza de pele
+  Profissional: Sirlei
+  Sala: Sala 2
+  Telefone: (65) 99999-0000
+  Status: confirmado
+- Separe os blocos por UMA linha em branco.
+- Omita campos vazios/nulos (não escreva "—", "não informado" etc.).
+- Nada de tabelas markdown, nada de JSON, nada de bullets antes dos rótulos.
+- Fecha com uma frase curta oferecendo próxima ação (ex.: "Quer que eu reagende alguma?").
+
 - Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
@@ -442,7 +459,7 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
     if (name === "listar_agenda") {
       const profId = await resolveProfessionalId(admin, args.professional_slug);
       const { data, error } = await admin.from("appointments")
-        .select("id, start_at, end_at, status, service_name, notes, price_cents, client_id, clients(name, whatsapp_phone)")
+        .select("id, start_at, end_at, status, service_name, notes, price_cents, client_id, professional_id, room_id, clients(name, whatsapp_phone), professionals(name), rooms(name), services(duration_min)")
         .eq("professional_id", profId)
         .gte("start_at", args.data_inicio)
         .lte("start_at", args.data_fim)
@@ -450,11 +467,27 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       if (error) return { error: error.message };
       return {
         total: data?.length ?? 0,
-        agendamentos: (data ?? []).map((a: any) => ({
-          id: a.id, start_at: a.start_at, end_at: a.end_at, status: a.status,
-          service: a.service_name, cliente: a.clients?.name, telefone: a.clients?.whatsapp_phone,
-          notas: a.notes,
-        })),
+        agendamentos: (data ?? []).map((a: any) => {
+          const ini = new Date(a.start_at), fim = new Date(a.end_at);
+          const durMin = Math.max(0, Math.round((fim.getTime() - ini.getTime()) / 60000));
+          return {
+            id: a.id,
+            start_at: a.start_at,
+            end_at: a.end_at,
+            data: ini.toLocaleDateString("pt-BR", { timeZone: "America/Cuiaba", day: "2-digit", month: "2-digit", year: "numeric" }),
+            hora_inicio: ini.toLocaleTimeString("pt-BR", { timeZone: "America/Cuiaba", hour: "2-digit", minute: "2-digit" }),
+            hora_fim: fim.toLocaleTimeString("pt-BR", { timeZone: "America/Cuiaba", hour: "2-digit", minute: "2-digit" }),
+            duracao_min: durMin,
+            status: a.status,
+            servico: a.service_name,
+            cliente: a.clients?.name ?? "Sem nome",
+            telefone: a.clients?.whatsapp_phone,
+            profissional: a.professionals?.name ?? "—",
+            sala: a.rooms?.name ?? "—",
+            valor_reais: a.price_cents != null ? (a.price_cents / 100).toFixed(2).replace(".", ",") : null,
+            notas: a.notes,
+          };
+        }),
       };
     }
     if (name === "verificar_disponibilidade") {
