@@ -217,6 +217,128 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "listar_servicos",
+      description: "Lista serviços cadastrados. Filtros opcionais por texto (nome/categoria) e por profissional.",
+      parameters: {
+        type: "object",
+        properties: {
+          termo: { type: "string" },
+          professional_slug: { type: "string" },
+          incluir_inativos: { type: "boolean" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "criar_servico",
+      description: "Cadastra um novo serviço no catálogo (aparece no site e no atendimento da Aurora).",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          description: { type: "string" },
+          category: { type: "string" },
+          professional_slug: { type: "string" },
+          professional_name: { type: "string" },
+          duration: { type: "string", description: "Ex.: '60 min'" },
+          duration_minutes: { type: "number" },
+          price_cents: { type: "number", description: "Preço em centavos (opcional; 0 para não exibir)." },
+          image_url: { type: "string" },
+          active: { type: "boolean" },
+        },
+        required: ["name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "atualizar_servico",
+      description: "Atualiza campos de um serviço existente (nome, preço, duração, ativo, etc.).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string" },
+          description: { type: "string" },
+          category: { type: "string" },
+          professional_slug: { type: "string" },
+          professional_name: { type: "string" },
+          duration: { type: "string" },
+          duration_minutes: { type: "number" },
+          price_cents: { type: "number" },
+          image_url: { type: "string" },
+          active: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "listar_profissionais",
+      description: "Lista profissionais da clínica (equipe).",
+      parameters: {
+        type: "object",
+        properties: { incluir_inativos: { type: "boolean" } },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "atualizar_profissional",
+      description: "Atualiza dados de uma profissional (bio, título, comissão, ativa, foto, whatsapp).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string", description: "Alternativa ao id." },
+          name: { type: "string" },
+          title: { type: "string" },
+          bio: { type: "string" },
+          photo_url: { type: "string" },
+          whatsapp_phone: { type: "string" },
+          email: { type: "string" },
+          commission_percent: { type: "number" },
+          active: { type: "boolean" },
+          display_order: { type: "number" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "atualizar_cliente",
+      description: "Atualiza dados cadastrais de um cliente (telefone, email, tags, notas, ativo, etc.).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string" },
+          phone: { type: "string" },
+          whatsapp_phone: { type: "string" },
+          email: { type: "string" },
+          birth_date: { type: "string", description: "YYYY-MM-DD" },
+          cpf: { type: "string" },
+          address: { type: "string" },
+          city: { type: "string" },
+          state: { type: "string" },
+          notes: { type: "string" },
+          tags: { type: "array", items: { type: "string" } },
+          active: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
 ];
 
 async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
