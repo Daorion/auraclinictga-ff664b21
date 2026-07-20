@@ -308,7 +308,13 @@ const AdminAtendimentos = () => {
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
+                          {c.needs_review && (
+                            <Badge className="text-[10px] py-0 h-4 gap-1 bg-amber-500 hover:bg-amber-500 text-white border-0 animate-pulse">
+                              <HelpCircle className="w-3 h-3" /> Aurora pediu revisão
+                            </Badge>
+                          )}
                           {(() => {
+
                             const takeover = c.human_takeover_until && new Date(c.human_takeover_until) > new Date();
                             if (ct?.aurora_blocked) {
                               return (
