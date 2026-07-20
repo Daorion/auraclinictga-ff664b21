@@ -408,6 +408,36 @@ const AdminAtendimentos = () => {
               </div>
 
 
+              {active.needs_review && (
+                <div className="px-4 py-2 bg-amber-500/15 border-b border-amber-500/40 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+                  <HelpCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p><strong>Aurora pediu sua orientação antes de responder.</strong> Nenhuma mensagem foi enviada no WhatsApp.</p>
+                    {active.review_reason && (
+                      <p className="mt-0.5 italic opacity-90">Motivo: "{active.review_reason}"</p>
+                    )}
+                    <p className="mt-0.5 opacity-75">Responda manualmente abaixo — o alerta some quando você enviar.</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs shrink-0"
+                    onClick={async () => {
+                      await supabase.from("conversations").update({
+                        needs_review: false,
+                        review_reason: null,
+                        review_requested_at: null,
+                      }).eq("id", active.id);
+                      toast.success("Alerta descartado.");
+                      loadConversations();
+                    }}
+                  >
+                    Descartar
+                  </Button>
+                </div>
+              )}
+
+
               {(() => {
                 const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
                 if (activeContact?.aurora_blocked) {
