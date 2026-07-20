@@ -466,8 +466,23 @@ async function generateAiReply(
           additionalProperties: false,
         },
       },
+    {
+      type: "function",
+      function: {
+        name: "solicitar_revisao_humana",
+        description: "Use quando tiver QUALQUER dúvida real antes de responder a cliente: preço específico incerto, pedido fora do catálogo, cliente irritada/reclamação, decisão que exige a Sirlei, mensagem ambígua, informação médica sensível, ou qualquer risco de errar. Marca a conversa como aguardando revisão da Sirlei e NÃO envia nenhuma mensagem no WhatsApp. Sempre prefira pedir revisão a arriscar uma resposta errada.",
+        parameters: {
+          type: "object",
+          properties: {
+            motivo: { type: "string", description: "Motivo curto (1 frase) explicando por que precisa de revisão humana. Ex: 'cliente pediu preço específico do botox', 'cliente irritada com resultado anterior', 'pedido de encaixe fora do horário'." },
+          },
+          required: ["motivo"],
+          additionalProperties: false,
+        },
+      },
     },
   ];
+
 
   const callGateway = async (msgs: any[]) => {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
