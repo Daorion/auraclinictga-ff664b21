@@ -1,8 +1,9 @@
-import { ReactNode } from "react";
-import { NavLink, useNavigate, Outlet } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet, MessageSquare, Bot, Plug, ShieldAlert, ShieldOff, MessagesSquare, Megaphone } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { LayoutDashboard, ScrollText, History, LogOut, Loader2, Image as ImageIcon, Palette, Users, UserCog, CalendarDays, Wallet, MessageSquare, Bot, Plug, ShieldAlert, ShieldOff, MessagesSquare, Megaphone, Menu } from "lucide-react";
 import { toast } from "sonner";
 
 const nav = [
@@ -27,6 +28,8 @@ const nav = [
 const AdminLayout = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   if (loading) {
     return (
@@ -47,42 +50,79 @@ const AdminLayout = () => {
     navigate("/admin/login", { replace: true });
   };
 
+  const currentLabel = nav.find((n) =>
+    n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)
+  )?.label ?? "Painel";
+
+  const NavItems = ({ onClick }: { onClick?: () => void }) => (
+    <>
+      {nav.map(({ to, label, icon: Icon, end }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          onClick={onClick}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "text-foreground/70 hover:bg-muted hover:text-foreground"
+            }`
+          }
+        >
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          {label}
+        </NavLink>
+      ))}
+    </>
+  );
+
+  const SidebarInner = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <div className="flex flex-col h-full">
+      <div className="p-6 border-b border-border/50">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Aura Clinic</p>
+        <h1 className="text-lg font-bold mt-1">Painel Admin</h1>
+      </div>
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <NavItems onClick={onNavigate} />
+      </nav>
+      <div className="p-3 border-t border-border/50 space-y-2">
+        <p className="text-xs text-muted-foreground px-3 truncate">{user.email}</p>
+        <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleSignOut}>
+          <LogOut className="w-4 h-4 mr-2" /> Sair
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="w-64 border-r border-border/50 bg-card/30 backdrop-blur-xl flex flex-col">
-        <div className="p-6 border-b border-border/50">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Aura Clinic</p>
-          <h1 className="text-lg font-bold mt-1">Painel Admin</h1>
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {nav.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground/70 hover:bg-muted hover:text-foreground"
-                }`
-              }
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-border/50 space-y-2">
-          <p className="text-xs text-muted-foreground px-3 truncate">{user.email}</p>
-          <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" /> Sair
-          </Button>
-        </div>
+      <aside className="hidden lg:flex w-64 border-r border-border/50 bg-card/30 backdrop-blur-xl flex-col">
+        <SidebarInner />
       </aside>
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto p-8">
-          <Outlet />
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-border/50 bg-card/50 backdrop-blur-xl sticky top-0 z-30">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-72">
+              <SidebarInner onNavigate={() => setMobileOpen(false)} />
+            </SheetContent>
+          </Sheet>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none">Aura Clinic</p>
+            <p className="text-sm font-semibold truncate">{currentLabel}</p>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>
