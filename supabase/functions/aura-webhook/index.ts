@@ -348,7 +348,7 @@ Fluxo padrão de agendamento:
       ).join("\n");
   }
 
-  return persona + guardrails + procText + personText + directivesText;
+  return persona + guardrails + servicesText + procText + personText + directivesText;
 }
 
 async function generateAiReply(
