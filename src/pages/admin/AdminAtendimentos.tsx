@@ -230,14 +230,15 @@ const AdminAtendimentos = () => {
 
   return (
     <div className="space-y-4">
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Atendimentos</h1>
-          <p className="text-muted-foreground mt-1">Caixa de entrada em tempo real do WhatsApp da clínica</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Atendimentos</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Caixa de entrada em tempo real do WhatsApp da clínica</p>
         </div>
-        <Button onClick={handleSync} disabled={syncing} variant="outline">
+        <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="sm:size-default self-start sm:self-auto">
           {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-          Atualizar do WhatsApp
+          <span className="hidden xs:inline">Atualizar do WhatsApp</span>
+          <span className="xs:hidden">Atualizar</span>
         </Button>
       </header>
 
@@ -254,8 +255,9 @@ const AdminAtendimentos = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[540px]">
-        <Card className="flex flex-col overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-180px)] lg:h-[calc(100vh-220px)] min-h-[540px]">
+        <Card className={`flex-col overflow-hidden ${activeId ? "hidden lg:flex" : "flex"}`}>
+
           <div className="p-3 border-b">
             <Input placeholder="Buscar conversa…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
