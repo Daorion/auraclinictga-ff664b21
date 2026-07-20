@@ -519,6 +519,79 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       if (error) return { error: error.message };
       return { ok: true, agendamento: data };
     }
+    if (name === "listar_servicos") {
+      let q = admin.from("services")
+        .select("id, name, category, professional_slug, professional_name, duration, duration_minutes, price_cents, active, image_url")
+        .order("display_order").order("name").limit(200);
+      if (!args.incluir_inativos) q = q.eq("active", true);
+      if (args.professional_slug) q = q.eq("professional_slug", args.professional_slug);
+      if (args.termo) q = q.or(`name.ilike.%${args.termo}%,category.ilike.%${args.termo}%`);
+      const { data, error } = await q;
+      if (error) return { error: error.message };
+      return { total: data?.length ?? 0, servicos: data ?? [] };
+    }
+    if (name === "criar_servico") {
+      const payload: any = {
+        name: args.name, description: args.description ?? null,
+        category: args.category ?? null,
+        professional_slug: args.professional_slug ?? null,
+        professional_name: args.professional_name ?? null,
+        duration: args.duration ?? null,
+        duration_minutes: args.duration_minutes ?? 60,
+        price_cents: args.price_cents ?? 0,
+        image_url: args.image_url ?? null,
+        active: args.active ?? true,
+        created_by: userId,
+      };
+      const { data, error } = await admin.from("services").insert(payload)
+        .select("id, name, price_cents, duration_minutes, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, servico: data };
+    }
+    if (name === "atualizar_servico") {
+      const { id, ...rest } = args;
+      const patch: any = {};
+      for (const k of ["name","description","category","professional_slug","professional_name","duration","duration_minutes","price_cents","image_url","active"]) {
+        if (rest[k] !== undefined) patch[k] = rest[k];
+      }
+      const { data, error } = await admin.from("services").update(patch).eq("id", id)
+        .select("id, name, price_cents, duration_minutes, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, servico: data };
+    }
+    if (name === "listar_profissionais") {
+      let q = admin.from("professionals")
+        .select("id, slug, name, title, commission_percent, active, whatsapp_phone, email, display_order")
+        .order("display_order").order("name");
+      if (!args.incluir_inativos) q = q.eq("active", true);
+      const { data, error } = await q;
+      if (error) return { error: error.message };
+      return { total: data?.length ?? 0, profissionais: data ?? [] };
+    }
+    if (name === "atualizar_profissional") {
+      const patch: any = {};
+      for (const k of ["name","title","bio","photo_url","whatsapp_phone","email","commission_percent","active","display_order"]) {
+        if (args[k] !== undefined) patch[k] = args[k];
+      }
+      let q = admin.from("professionals").update(patch);
+      if (args.id) q = q.eq("id", args.id);
+      else if (args.slug) q = q.eq("slug", args.slug);
+      else return { error: "informe_id_ou_slug" };
+      const { data, error } = await q.select("id, slug, name, title, commission_percent, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, profissional: data };
+    }
+    if (name === "atualizar_cliente") {
+      const { id, ...rest } = args;
+      const patch: any = {};
+      for (const k of ["name","phone","whatsapp_phone","email","birth_date","cpf","address","city","state","notes","tags","active"]) {
+        if (rest[k] !== undefined) patch[k] = rest[k];
+      }
+      const { data, error } = await admin.from("clients").update(patch).eq("id", id)
+        .select("id, name, whatsapp_phone, active").single();
+      if (error) return { error: error.message };
+      return { ok: true, cliente: data };
+    }
     return { error: `unknown_tool_${name}` };
   } catch (e) {
     return { error: String(e) };
