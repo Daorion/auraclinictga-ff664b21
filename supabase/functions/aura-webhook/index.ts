@@ -63,10 +63,25 @@ async function fetchWahaContact(chatId: string): Promise<{ savedName: string | n
 const MAX_AUDIO_SECONDS = 240; // 4 min
 const MAX_AUDIO_BYTES = 15 * 1024 * 1024; // 15 MB
 
+// Rewrite WAHA-internal localhost URLs (http://localhost:3000/...) to the
+// public WAHA_URL so the edge function can actually reach the file.
+function normalizeWahaMediaUrl(url: string): string {
+  if (!url) return url;
+  if (!WAHA_URL) return url;
+  try {
+    const u = new URL(url);
+    if (u.hostname === "localhost" || u.hostname === "127.0.0.1" || u.hostname === "waha") {
+      const base = WAHA_URL.replace(/\/+$/, "");
+      return `${base}${u.pathname}${u.search}`;
+    }
+  } catch { /* not a URL */ }
+  return url;
+}
+
 async function downloadWahaMedia(payload: any): Promise<{ bytes: Uint8Array; mime: string } | null> {
   const mime = String(payload?.media?.mimetype ?? payload?._data?.mimetype ?? "audio/ogg").split(";")[0].trim() || "audio/ogg";
-  // 1) URL direta no payload (WAHA com downloadMedia ativado)
-  const directUrl = payload?.media?.url ?? payload?._data?.mediaUrl ?? null;
+  const rawUrl = payload?.media?.url ?? payload?._data?.mediaUrl ?? null;
+  const directUrl = rawUrl ? normalizeWahaMediaUrl(String(rawUrl)) : null;
   const tryFetch = async (url: string, withKey: boolean) => {
     const headers: Record<string, string> = {};
     if (withKey && WAHA_API_KEY) headers["X-Api-Key"] = WAHA_API_KEY;
@@ -75,22 +90,23 @@ async function downloadWahaMedia(payload: any): Promise<{ bytes: Uint8Array; mim
     const buf = new Uint8Array(await r.arrayBuffer());
     return buf;
   };
-  try {
-    if (directUrl) {
-      const bytes = await tryFetch(directUrl, directUrl.startsWith(WAHA_URL));
-      if (bytes.byteLength > MAX_AUDIO_BYTES) return null;
-      return { bytes, mime };
-    }
-  } catch (e) { console.warn("[audio] direct url failed:", String(e)); }
-  // 2) Endpoint de download por id
-  const msgId = payload?.id?._serialized ?? payload?.id ?? null;
-  if (msgId && WAHA_URL && WAHA_API_KEY) {
-    const url = `${WAHA_URL}/api/${encodeURIComponent(WAHA_SESSION)}/messages/${encodeURIComponent(String(msgId))}/download-media`;
+  if (directUrl) {
+    console.log("[audio] fetching media url:", directUrl.slice(0, 120));
     try {
-      const bytes = await tryFetch(url, true);
-      if (bytes.byteLength > MAX_AUDIO_BYTES) return null;
+      // WAHA files endpoint requires the API key when auth is on.
+      const bytes = await tryFetch(directUrl, true);
+      if (bytes.byteLength > MAX_AUDIO_BYTES) { console.warn("[audio] too large:", bytes.byteLength); return null; }
       return { bytes, mime };
-    } catch (e) { console.warn("[audio] download-media failed:", String(e)); }
+    } catch (e) { console.warn("[audio] direct url failed:", String(e)); }
+    // Retry via query-param API key (WAHA accepts ?apikey= for /api/files/*)
+    if (WAHA_API_KEY) {
+      try {
+        const sep = directUrl.includes("?") ? "&" : "?";
+        const bytes = await tryFetch(`${directUrl}${sep}apikey=${encodeURIComponent(WAHA_API_KEY)}`, false);
+        if (bytes.byteLength > MAX_AUDIO_BYTES) return null;
+        return { bytes, mime };
+      } catch (e) { console.warn("[audio] direct url (apikey qs) failed:", String(e)); }
+    }
   }
   return null;
 }
