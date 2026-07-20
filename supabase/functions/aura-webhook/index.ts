@@ -105,39 +105,69 @@ function bytesToBase64(bytes: Uint8Array): string {
 }
 
 async function transcribeAudio(bytes: Uint8Array, mime: string): Promise<string | null> {
-  if (!LOVABLE_API_KEY) return null;
-  const audioMime = mime.startsWith("audio/") ? mime : "audio/ogg";
-  const b64 = bytesToBase64(bytes);
-  try {
-    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  if (!LOVABLE_API_KEY) { console.warn("[transcribe] no LOVABLE_API_KEY"); return null; }
+  const audioMime = (mime || "audio/ogg").toLowerCase();
+  // WhatsApp sends OGG/Opus. gpt-4o-transcribe rejects raw ogg, so we relabel
+  // the same Opus bytes as WebM (both containers wrap Opus) — the model decodes it fine.
+  const ext = audioMime.includes("mp4") || audioMime.includes("m4a") ? "m4a"
+    : audioMime.includes("mpeg") || audioMime.includes("mp3") ? "mp3"
+    : audioMime.includes("wav") ? "wav"
+    : "webm";
+  const uploadMime = ext === "m4a" ? "audio/mp4"
+    : ext === "mp3" ? "audio/mpeg"
+    : ext === "wav" ? "audio/wav"
+    : "audio/webm";
+  console.log("[transcribe] input mime:", audioMime, "→ upload as", uploadMime, "size:", bytes.byteLength);
+
+  const tryOnce = async (model: string) => {
+    const form = new FormData();
+    form.append("model", model);
+    form.append("file", new Blob([bytes], { type: uploadMime }), `audio.${ext}`);
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "Você é um transcritor de áudio profissional. Transcreva EXATAMENTE o que a pessoa disse em português do Brasil, sem inventar, sem interpretar, sem comentar. Retorne SOMENTE a transcrição literal. Se não houver fala compreensível, responda exatamente: [inaudível]",
-          },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Transcreva este áudio literalmente." },
-              { type: "input_audio", input_audio: { data: b64, format: audioMime.includes("mp4") || audioMime.includes("m4a") ? "m4a" : audioMime.includes("mpeg") || audioMime.includes("mp3") ? "mp3" : audioMime.includes("wav") ? "wav" : "ogg" } },
-            ],
-          },
-        ],
-      }),
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      body: form,
     });
     if (!r.ok) {
-      console.warn("[transcribe] status", r.status, await r.text().catch(() => ""));
+      const err = await r.text().catch(() => "");
+      console.warn("[transcribe]", model, "status", r.status, err.slice(0, 300));
       return null;
     }
-    const data = await r.json();
-    const text = String(data?.choices?.[0]?.message?.content ?? "").trim();
+    const data = await r.json().catch(() => null) as any;
+    const text = String(data?.text ?? "").trim();
+    console.log("[transcribe]", model, "text:", text.slice(0, 120));
+    return text || null;
+  };
+
+  try {
+    // Primary: dedicated STT endpoint.
+    let text = await tryOnce("openai/gpt-4o-transcribe");
+    if (!text) text = await tryOnce("openai/gpt-4o-mini-transcribe");
+    if (!text) {
+      // Fallback: Gemini via chat completions with base64 audio.
+      const b64 = bytesToBase64(bytes);
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: "Transcreva o áudio EXATAMENTE em pt-BR. Retorne só a transcrição literal. Se inaudível, responda [inaudível]." },
+            { role: "user", content: [
+              { type: "text", text: "Transcreva:" },
+              { type: "input_audio", input_audio: { data: b64, format: ext === "webm" ? "webm" : ext } },
+            ]},
+          ],
+        }),
+      });
+      if (r.ok) {
+        const data = await r.json().catch(() => null) as any;
+        text = String(data?.choices?.[0]?.message?.content ?? "").trim();
+        console.log("[transcribe] gemini fallback text:", text.slice(0, 120));
+      } else {
+        console.warn("[transcribe] gemini fallback status", r.status, (await r.text().catch(() => "")).slice(0, 300));
+      }
+    }
     if (!text || text === "[inaudível]") return null;
     return text;
   } catch (e) {
