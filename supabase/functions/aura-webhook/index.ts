@@ -904,11 +904,15 @@ Deno.serve(async (req) => {
   // Tenta transcrever áudio (até 4 min). Se conseguir, o body vira "🎤 <transcrição>".
   let transcript: string | null = null;
   if (isAudio && !fromMe) {
+    console.log("[audio] detected — type:", msgType, "duration:", audioSeconds, "hasMedia:", hasMedia);
     if (audioSeconds && audioSeconds > MAX_AUDIO_SECONDS) {
       console.log("[audio] skipping — too long:", audioSeconds, "s");
     } else {
       const media = await downloadWahaMedia(payload);
-      if (media) {
+      if (!media) {
+        console.warn("[audio] download failed — no media bytes");
+      } else {
+        console.log("[audio] downloaded", media.bytes.byteLength, "bytes,", media.mime);
         transcript = await transcribeAudio(media.bytes, media.mime);
         console.log("[audio] transcript:", transcript ? `${transcript.slice(0, 80)}...` : "(none)");
       }
