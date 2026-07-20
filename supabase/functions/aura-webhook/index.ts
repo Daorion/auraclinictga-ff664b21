@@ -430,7 +430,7 @@ Fluxo:
       ).join("\n");
   }
 
-  return persona + guardrails + servicesText + procText + personText + directivesText;
+  return persona + guardrails + dateContext + servicesText + procText + personText + directivesText;
 }
 
 async function generateAiReply(
