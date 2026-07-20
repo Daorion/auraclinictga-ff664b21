@@ -423,17 +423,33 @@ async function generateAiReply(
   // Fetch last 10 messages for context
   const { data: history } = await admin
     .from("messages")
-    .select("direction, body, author")
+    .select("direction, body, author, created_at")
     .eq("conversation_id", convId)
     .order("sent_at", { ascending: false })
     .limit(10);
 
-  const historyMsgs = (history ?? []).reverse().map((m: any) => {
+  const chronologicalHistory = (history ?? []).reverse();
+  const latestInbound = [...chronologicalHistory]
+    .reverse()
+    .find((m: any) => m.direction === "in" && String(m.body ?? "").trim());
+  const latestInboundBody = String(latestInbound?.body ?? "").trim();
+
+  const historyMsgs = chronologicalHistory.map((m: any) => {
     let body = String(m.body ?? "").trim();
     if (m.direction === "in") {
       // Marca mídia/áudio de forma inequívoca para o modelo NÃO tentar adivinhar o conteúdo
-      if (body === "[áudio]" || body === "[audio]") body = "(A cliente enviou um áudio — você não tem acesso ao conteúdo.)";
-      else if (body === "[mídia]" || body === "[midia]" || body === "[imagem]") body = "(A cliente enviou uma mídia/imagem — você não tem acesso ao conteúdo.)";
+      const isLatestInbound = latestInbound && m.created_at === latestInbound.created_at;
+      if (body === "[áudio]" || body === "[audio]") {
+        body = isLatestInbound
+          ? "(MENSAGEM ATUAL: a cliente enviou um áudio sem transcrição. Peça para reenviar ou descrever por texto.)"
+          : "(Mensagem antiga: áudio sem transcrição. Ignore esta pendência antiga e NÃO peça texto sobre ela agora.)";
+      } else if (body === "[mídia]" || body === "[midia]" || body === "[imagem]") {
+        body = isLatestInbound
+          ? "(MENSAGEM ATUAL: a cliente enviou mídia/imagem sem conteúdo acessível. Peça descrição por texto.)"
+          : "(Mensagem antiga: mídia sem conteúdo acessível. Ignore esta pendência antiga agora.)";
+      } else if (body.startsWith("🎤 ")) {
+        body = `Transcrição de áudio da cliente: ${body.replace(/^🎤\s*/, "")}`;
+      }
     }
     return { role: m.direction === "in" ? "user" : "assistant", content: body };
   }).filter((m: any) => m.content);
@@ -465,6 +481,12 @@ async function generateAiReply(
   const messages: any[] = [
     { role: "system", content: system },
     ...historyMsgs,
+    {
+      role: "system",
+      content: latestInboundBody
+        ? `FOCO OBRIGATÓRIO: responda somente à mensagem MAIS RECENTE da cliente. Se ela começa com "🎤", isso é transcrição válida de áudio e deve ser respondida como texto normal. Ignore pedidos antigos sobre áudios/mídias sem transcrição. Mensagem mais recente: "${latestInboundBody.slice(0, 600)}"`
+        : "FOCO OBRIGATÓRIO: responda somente à mensagem mais recente da cliente e ignore pendências antigas.",
+    },
   ];
   if (userMessage && userMessage.trim()) {
     messages.push({ role: "user", content: userMessage });
