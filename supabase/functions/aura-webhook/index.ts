@@ -305,7 +305,7 @@ Fluxo padrão de agendamento:
     }
     servicesText = "\n\n=== CATÁLOGO COMPLETO DE SERVIÇOS DA AURA CLINIC (fonte da verdade) ===\n" +
       Array.from(byCat.entries()).map(([cat, list]) => `• ${cat}: ${list.join(", ")}`).join("\n") +
-      "\n\nREGRA DE OURO: se um serviço aparece nesta lista, a clínica OFERECE. NUNCA diga 'não oferecemos' sobre algo que está aqui. Se a cliente pedir algo que você não encontra, diga 'vou confirmar com a Sirlei' — NUNCA negue de imediato. Design/modelagem de sobrancelhas, henna, micropigmentação, massagens (relaxante, modeladora, drenagem, pedras quentes, etc.), depilação a laser, botox, preenchimento, unhas e muito mais estão disponíveis.";
+      "\n\nREGRA DE OURO: se um serviço aparece nesta lista, a clínica OFERECE. Se NÃO aparece, isso NÃO significa que a clínica não faz — o catálogo pode estar incompleto. NUNCA, em hipótese alguma, diga "não oferecemos", "não fazemos" ou "não temos". Sempre peça pra cliente aguardar a Sirlei confirmar e chame `solicitar_revisao_humana`. Design/modelagem de sobrancelhas, henna, micropigmentação, massagens (relaxante, modeladora, drenagem, pedras quentes, etc.), depilação a laser, botox, preenchimento, unhas e muito mais estão disponíveis.";
   }
 
   const { data: procs } = await admin
