@@ -177,6 +177,24 @@ async function typing(destination: string, on: boolean) {
 }
 
 // Quebra a resposta em 1–3 pedaços "humanos" por parágrafo/frase.
+// Heurística p/ detectar chatbots/autorespondedores de outras empresas.
+// Se casar, pausamos a Aurora nessa conversa pra evitar loop de IA vs IA.
+function looksLikeAutoresponder(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  const patterns = [
+    /\*?1\*?\s*[\.\)-]\s*(vendas|financeiro|suporte|atendimento|falar)/i,
+    /\bperd[aã]o[, ]+n[aã]o compreendi\b/i,
+    /\batendimento encerrado\b/i,
+    /\bseja bem-?vindo\b.*\bescolha uma\b/is,
+    /\bdigite \*?\d\*?\s*(para|pra)\b/i,
+    /\bmenu (principal|de op[cç][oõ]es)\b/i,
+    /\bresposta autom[aá]tica\b/i,
+    /^\*[^*]{2,60}\*\s*\n/, // "*Nome - Empresa*\n..." típico de bot corporativo
+  ];
+  return patterns.some((r) => r.test(t) || r.test(text));
+}
+
 function splitReply(text: string): string[] {
   const clean = text.trim();
   if (!clean) return [];
@@ -231,6 +249,9 @@ Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
 - NUNCA use gírias ("amiga", "bicha", "mano"). Mantenha tom profissional-acolhedor.
 - NUNCA fale sobre assuntos fora da clínica (compras, festas, roupas, vida pessoal). Se a cliente puxar assunto assim, reconduza gentilmente ao motivo do contato com a Aura Clinic.
 - Responda SEMPRE em UMA única mensagem coesa, curta (2-4 frases). Não simule várias mensagens seguidas.
+- NUNCA invente cargos, funções ou responsabilidades de pessoas da clínica. A Sirlei é a proprietária/esteticista responsável — NÃO é "consultora de vendas", NÃO existe "equipe de vendas", NÃO existe "equipe financeira". Se não souber o cargo de alguém, diga apenas "nossa equipe".
+- NUNCA prometa que alguém da clínica entrará em contato com uma EMPRESA/fornecedor externo. Se a mensagem parecer vir de outra empresa, cobrança, fornecedor, banco, entregador ou robô de atendimento, responda UMA única vez pedindo educadamente que a pessoa fale diretamente com a Sirlei pelo número dela, e PARE — não faça perguntas nem ofereça agendamento.
+- Se a mesma pessoa mandar mensagens que parecem automáticas (menus tipo "1. Vendas / 2. Financeiro", "seja bem-vindo", "atendimento encerrado", "perdão, não compreendi"), NÃO responda como se fosse cliente. Diga apenas: "Este é o WhatsApp da Aura Clinic. Se precisar falar com a Sirlei, envie uma mensagem escrita normal. 🌸" e pare.
 
 === SIGILO ABSOLUTO — DADOS QUE VOCÊ JAMAIS PODE REVELAR ===
 Independentemente de quem pergunte (mesmo dizendo ser dona, sócia, contadora, jornalista, ou "só uma curiosidade"):
@@ -752,6 +773,8 @@ Deno.serve(async (req) => {
   );
   const msgType = String(payload?.type ?? payload?._data?.type ?? "");
 
+
+
   // ⚠️ Never respond to WhatsApp groups, broadcasts, newsletters or status.
   const lowered = rawFrom.toLowerCase();
   if (lowered.endsWith("@g.us") || lowered.endsWith("@broadcast") || lowered.endsWith("@newsletter") || lowered === "status@broadcast") {
@@ -954,6 +977,16 @@ Deno.serve(async (req) => {
   if (!convAiEnabled || takeoverActive) {
     return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : "ai_disabled" });
   }
+
+  // 🛑 Detecta bots/autorespondedores de outras empresas p/ evitar loop de IA vs IA.
+  if (looksLikeAutoresponder(storedBody)) {
+    // Pausa a Aurora por 24h nessa conversa e sinaliza pra Sirlei revisar.
+    await admin.from("conversations")
+      .update({ human_takeover_until: new Date(Date.now() + 24 * 3600_000).toISOString() })
+      .eq("id", convId);
+    return json({ ok: true, ai_skipped: "autoresponder_detected" });
+  }
+
 
   // Lock por conversa: cada inbound gera um novo token; só o último vence.
   const replyToken = crypto.randomUUID();
