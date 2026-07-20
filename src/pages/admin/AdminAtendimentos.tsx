@@ -426,16 +426,17 @@ const AdminAtendimentos = () => {
                 );
               })()}
 
-              <div ref={scrollRef} className="flex-1 overflow-auto p-4 space-y-2 bg-muted/20">
+              <div ref={scrollRef} className="flex-1 overflow-auto p-3 sm:p-4 space-y-2 bg-muted/20">
                 {messages.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">Nenhuma mensagem ainda.</p>
                 ) : messages.map((m) => (
                   <div key={m.id} className={`flex ${m.direction === "out" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
+                    <div className={`max-w-[85%] sm:max-w-[75%] rounded-lg px-3 py-2 text-sm ${
                       m.direction === "out"
                         ? "bg-primary text-primary-foreground"
                         : "bg-card border"
                     } ${m.is_draft ? "opacity-70 border-dashed" : ""}`}>
+
                       <p className="whitespace-pre-wrap">{m.body}</p>
                       <div className="text-[10px] opacity-70 mt-1 flex items-center gap-1">
                         {m.author === "aurora" && <Bot className="w-3 h-3" />}
