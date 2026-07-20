@@ -335,7 +335,7 @@ const AdminAtendimentos = () => {
           </div>
         </Card>
 
-        <Card className="flex flex-col overflow-hidden">
+        <Card className={`flex-col overflow-hidden ${activeId ? "flex" : "hidden lg:flex"}`}>
           {!active ? (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
               <MessageCircle className="w-8 h-8" />
@@ -343,25 +343,34 @@ const AdminAtendimentos = () => {
             </div>
           ) : (
             <>
-              <div className="p-3 border-b flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 sm:p-3 border-b flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 shrink-0 lg:hidden"
+                    onClick={() => setActiveId(null)}
+                    aria-label="Voltar"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
                   {activeContact?.profile_picture_url ? (
                     <img
                       src={activeContact.profile_picture_url}
                       alt=""
                       onClick={() => setLightboxUrl(activeContact.profile_picture_url!)}
-                      className="w-10 h-10 rounded-full object-cover shrink-0 cursor-zoom-in hover:ring-2 hover:ring-primary/50 transition"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover shrink-0 cursor-zoom-in hover:ring-2 hover:ring-primary/50 transition"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
                       {(activeContact?.push_name ?? activeContact?.name ?? activeContact?.phone ?? "?").slice(0, 1).toUpperCase()}
                     </div>
                   )}
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{activeContact?.client_name ?? activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
-                    <div className="text-xs text-muted-foreground truncate flex items-center gap-2 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold truncate text-sm sm:text-base">{activeContact?.client_name ?? activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
+                    <div className="text-[11px] sm:text-xs text-muted-foreground truncate flex items-center gap-2 flex-wrap">
                       {activeContact?.push_name && activeContact.push_name !== (activeContact.client_name ?? activeContact.name) && (
-                        <span>WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
+                        <span className="truncate">WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
                       )}
                       {activeContact?.phone && <span>+{activeContact.phone}</span>}
                     </div>
@@ -372,17 +381,20 @@ const AdminAtendimentos = () => {
                     const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
                     const aiOn = active.ai_enabled && !takeover;
                     return aiOn ? (
-                      <Button size="sm" variant="outline" onClick={() => handleToggleAi(false)}>
-                        <UserCheck className="w-4 h-4 mr-1" /> Pausar IA / Assumir
+                      <Button size="sm" variant="outline" onClick={() => handleToggleAi(false)} className="px-2 sm:px-3">
+                        <UserCheck className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Pausar IA / Assumir</span>
                       </Button>
                     ) : (
-                      <Button size="sm" onClick={() => handleToggleAi(true)}>
-                        <Bot className="w-4 h-4 mr-1" /> Reativar IA
+                      <Button size="sm" onClick={() => handleToggleAi(true)} className="px-2 sm:px-3">
+                        <Bot className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Reativar IA</span>
                       </Button>
                     );
                   })()}
                 </div>
               </div>
+
 
               {(() => {
                 const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
