@@ -510,6 +510,21 @@ async function generateAiReply(
         const name = tc.function?.name;
         let args: any = {};
         try { args = JSON.parse(tc.function?.arguments ?? "{}"); } catch { args = {}; }
+
+        // Intercept: quando a Aurora pede revisão humana, marcamos a conversa e abortamos o envio.
+        if (name === "solicitar_revisao_humana") {
+          const motivo = String(args?.motivo ?? "").slice(0, 500) || "Aurora sinalizou dúvida sem detalhar o motivo.";
+          console.log("aurora_review_requested", { convId, motivo });
+          await admin.from("conversations").update({
+            needs_review: true,
+            review_reason: motivo,
+            review_requested_at: new Date().toISOString(),
+            human_takeover_until: new Date(Date.now() + 24 * 3600_000).toISOString(),
+            assigned_to: "sirlei",
+          }).eq("id", convId);
+          return null; // NÃO envia nada para o WhatsApp
+        }
+
         const result = await executeAuroraTool(admin, contactPhone, contactName, clientInfo, name, args);
         messages.push({
           role: "tool",
@@ -517,6 +532,7 @@ async function generateAiReply(
           content: JSON.stringify(result),
         });
       }
+
     }
     console.warn("ai_tool_loop_maxed");
     return null;
