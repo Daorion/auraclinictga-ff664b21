@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Send, Bot, User as UserIcon, Wrench, Trash2, MessageSquare, Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { AuroraMessage } from "@/components/aurora/AuroraMessage";
 
 interface TrainerMsg {
   id: string;
@@ -187,10 +188,16 @@ const AdminAuroraChat = () => {
                       <Bot className="w-4 h-4 text-primary" />
                     </div>
                   )}
-                  <div className={`max-w-[75%] ${isUser
+                  <div className={`max-w-[85%] ${isUser
                     ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2"
                     : "text-foreground"}`}>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content || (m.parts?.tool_calls ? "..." : "")}</p>
+                    {isUser ? (
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
+                    ) : m.content ? (
+                      <AuroraMessage content={m.content} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">{m.parts?.tool_calls ? "..." : ""}</p>
+                    )}
                   </div>
                   {isUser && (
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
