@@ -275,6 +275,26 @@ Fluxo padrão de agendamento:
 - Se ainda não tem o nome completo dela, peça antes de criar.`;
 
 
+  // ---- Catálogo REAL de serviços ativos (para NUNCA inventar que a clínica não oferece algo) ----
+  const { data: activeServices } = await admin
+    .from("services")
+    .select("name, category")
+    .eq("active", true)
+    .order("category", { ascending: true });
+
+  let servicesText = "";
+  if (activeServices && activeServices.length) {
+    const byCat = new Map<string, string[]>();
+    for (const s of activeServices as any[]) {
+      const cat = s.category ?? "Outros";
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push(s.name);
+    }
+    servicesText = "\n\n=== CATÁLOGO COMPLETO DE SERVIÇOS DA AURA CLINIC (fonte da verdade) ===\n" +
+      Array.from(byCat.entries()).map(([cat, list]) => `• ${cat}: ${list.join(", ")}`).join("\n") +
+      "\n\nREGRA DE OURO: se um serviço aparece nesta lista, a clínica OFERECE. NUNCA diga 'não oferecemos' sobre algo que está aqui. Se a cliente pedir algo que você não encontra, diga 'vou confirmar com a Sirlei' — NUNCA negue de imediato. Design/modelagem de sobrancelhas, henna, micropigmentação, massagens (relaxante, modeladora, drenagem, pedras quentes, etc.), depilação a laser, botox, preenchimento, unhas e muito mais estão disponíveis.";
+  }
+
   const { data: procs } = await admin
     .from("procedures_pricing")
     .select("name, description, pricing_json, notes")
@@ -284,7 +304,7 @@ Fluxo padrão de agendamento:
 
   let procText = "";
   if (procs && procs.length) {
-    procText = "\n\nProcedimentos disponíveis:\n" + procs.map((p: any) => {
+    procText = "\n\nProcedimentos com detalhes internos:\n" + procs.map((p: any) => {
       const price = p.pricing_json ? ` — ${JSON.stringify(p.pricing_json)}` : "";
       return `- ${p.name}${p.description ? `: ${p.description}` : ""}${price}${p.notes ? ` (${p.notes})` : ""}`;
     }).join("\n");
