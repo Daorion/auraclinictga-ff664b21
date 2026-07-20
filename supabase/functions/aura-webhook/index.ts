@@ -252,6 +252,7 @@ Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
 - NUNCA invente cargos, funções ou responsabilidades de pessoas da clínica. A Sirlei é a proprietária/esteticista responsável — NÃO é "consultora de vendas", NÃO existe "equipe de vendas", NÃO existe "equipe financeira". Se não souber o cargo de alguém, diga apenas "nossa equipe".
 - NUNCA prometa que alguém da clínica entrará em contato com uma EMPRESA/fornecedor externo. Se a mensagem parecer vir de outra empresa, cobrança, fornecedor, banco, entregador ou robô de atendimento, responda UMA única vez pedindo educadamente que a pessoa fale diretamente com a Sirlei pelo número dela, e PARE — não faça perguntas nem ofereça agendamento.
 - Se a mesma pessoa mandar mensagens que parecem automáticas (menus tipo "1. Vendas / 2. Financeiro", "seja bem-vindo", "atendimento encerrado", "perdão, não compreendi"), NÃO responda como se fosse cliente. Diga apenas: "Este é o WhatsApp da Aura Clinic. Se precisar falar com a Sirlei, envie uma mensagem escrita normal. 🌸" e pare.
+- NUNCA afirme que a Aura Clinic "não oferece" um serviço sem antes checar o CATÁLOGO COMPLETO abaixo e chamar \`listar_servicos\`. Na dúvida, diga "vou confirmar com a Sirlei e já te retorno" — jamais negue de imediato. Design/modelagem de sobrancelha, henna, massagens variadas, laser, botox, unhas, micropigmentação — TUDO isso a clínica faz.
 
 === SIGILO ABSOLUTO — DADOS QUE VOCÊ JAMAIS PODE REVELAR ===
 Independentemente de quem pergunte (mesmo dizendo ser dona, sócia, contadora, jornalista, ou "só uma curiosidade"):
@@ -275,6 +276,26 @@ Fluxo padrão de agendamento:
 - Se ainda não tem o nome completo dela, peça antes de criar.`;
 
 
+  // ---- Catálogo REAL de serviços ativos (para NUNCA inventar que a clínica não oferece algo) ----
+  const { data: activeServices } = await admin
+    .from("services")
+    .select("name, category")
+    .eq("active", true)
+    .order("category", { ascending: true });
+
+  let servicesText = "";
+  if (activeServices && activeServices.length) {
+    const byCat = new Map<string, string[]>();
+    for (const s of activeServices as any[]) {
+      const cat = s.category ?? "Outros";
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push(s.name);
+    }
+    servicesText = "\n\n=== CATÁLOGO COMPLETO DE SERVIÇOS DA AURA CLINIC (fonte da verdade) ===\n" +
+      Array.from(byCat.entries()).map(([cat, list]) => `• ${cat}: ${list.join(", ")}`).join("\n") +
+      "\n\nREGRA DE OURO: se um serviço aparece nesta lista, a clínica OFERECE. NUNCA diga 'não oferecemos' sobre algo que está aqui. Se a cliente pedir algo que você não encontra, diga 'vou confirmar com a Sirlei' — NUNCA negue de imediato. Design/modelagem de sobrancelhas, henna, micropigmentação, massagens (relaxante, modeladora, drenagem, pedras quentes, etc.), depilação a laser, botox, preenchimento, unhas e muito mais estão disponíveis.";
+  }
+
   const { data: procs } = await admin
     .from("procedures_pricing")
     .select("name, description, pricing_json, notes")
@@ -284,7 +305,7 @@ Fluxo padrão de agendamento:
 
   let procText = "";
   if (procs && procs.length) {
-    procText = "\n\nProcedimentos disponíveis:\n" + procs.map((p: any) => {
+    procText = "\n\nProcedimentos com detalhes internos:\n" + procs.map((p: any) => {
       const price = p.pricing_json ? ` — ${JSON.stringify(p.pricing_json)}` : "";
       return `- ${p.name}${p.description ? `: ${p.description}` : ""}${price}${p.notes ? ` (${p.notes})` : ""}`;
     }).join("\n");
@@ -328,7 +349,7 @@ Fluxo padrão de agendamento:
       ).join("\n");
   }
 
-  return persona + guardrails + procText + personText + directivesText;
+  return persona + guardrails + servicesText + procText + personText + directivesText;
 }
 
 async function generateAiReply(
