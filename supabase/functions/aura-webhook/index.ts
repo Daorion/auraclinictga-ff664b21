@@ -466,7 +466,9 @@ async function generateAiReply(
           additionalProperties: false,
         },
       },
+    },
     {
+
       type: "function",
       function: {
         name: "solicitar_revisao_humana",
