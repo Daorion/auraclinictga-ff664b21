@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle, RefreshCw, Check, CheckCheck, Clock, XCircle } from "lucide-react";
+import { Loader2, Send, Sparkles, UserCheck, Bot, MessageCircle, AlertTriangle, RefreshCw, Check, CheckCheck, Clock, XCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -230,14 +230,15 @@ const AdminAtendimentos = () => {
 
   return (
     <div className="space-y-4">
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Atendimentos</h1>
-          <p className="text-muted-foreground mt-1">Caixa de entrada em tempo real do WhatsApp da clínica</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Atendimentos</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Caixa de entrada em tempo real do WhatsApp da clínica</p>
         </div>
-        <Button onClick={handleSync} disabled={syncing} variant="outline">
+        <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="sm:size-default self-start sm:self-auto">
           {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-          Atualizar do WhatsApp
+          <span className="hidden xs:inline">Atualizar do WhatsApp</span>
+          <span className="xs:hidden">Atualizar</span>
         </Button>
       </header>
 
@@ -254,8 +255,9 @@ const AdminAtendimentos = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[540px]">
-        <Card className="flex flex-col overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-180px)] lg:h-[calc(100vh-220px)] min-h-[540px]">
+        <Card className={`flex-col overflow-hidden ${activeId ? "hidden lg:flex" : "flex"}`}>
+
           <div className="p-3 border-b">
             <Input placeholder="Buscar conversa…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
@@ -333,7 +335,7 @@ const AdminAtendimentos = () => {
           </div>
         </Card>
 
-        <Card className="flex flex-col overflow-hidden">
+        <Card className={`flex-col overflow-hidden ${activeId ? "flex" : "hidden lg:flex"}`}>
           {!active ? (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
               <MessageCircle className="w-8 h-8" />
@@ -341,25 +343,34 @@ const AdminAtendimentos = () => {
             </div>
           ) : (
             <>
-              <div className="p-3 border-b flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 sm:p-3 border-b flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 shrink-0 lg:hidden"
+                    onClick={() => setActiveId(null)}
+                    aria-label="Voltar"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
                   {activeContact?.profile_picture_url ? (
                     <img
                       src={activeContact.profile_picture_url}
                       alt=""
                       onClick={() => setLightboxUrl(activeContact.profile_picture_url!)}
-                      className="w-10 h-10 rounded-full object-cover shrink-0 cursor-zoom-in hover:ring-2 hover:ring-primary/50 transition"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover shrink-0 cursor-zoom-in hover:ring-2 hover:ring-primary/50 transition"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
                       {(activeContact?.push_name ?? activeContact?.name ?? activeContact?.phone ?? "?").slice(0, 1).toUpperCase()}
                     </div>
                   )}
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{activeContact?.client_name ?? activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
-                    <div className="text-xs text-muted-foreground truncate flex items-center gap-2 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold truncate text-sm sm:text-base">{activeContact?.client_name ?? activeContact?.name ?? activeContact?.push_name ?? activeContact?.phone}</p>
+                    <div className="text-[11px] sm:text-xs text-muted-foreground truncate flex items-center gap-2 flex-wrap">
                       {activeContact?.push_name && activeContact.push_name !== (activeContact.client_name ?? activeContact.name) && (
-                        <span>WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
+                        <span className="truncate">WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
                       )}
                       {activeContact?.phone && <span>+{activeContact.phone}</span>}
                     </div>
@@ -370,17 +381,20 @@ const AdminAtendimentos = () => {
                     const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
                     const aiOn = active.ai_enabled && !takeover;
                     return aiOn ? (
-                      <Button size="sm" variant="outline" onClick={() => handleToggleAi(false)}>
-                        <UserCheck className="w-4 h-4 mr-1" /> Pausar IA / Assumir
+                      <Button size="sm" variant="outline" onClick={() => handleToggleAi(false)} className="px-2 sm:px-3">
+                        <UserCheck className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Pausar IA / Assumir</span>
                       </Button>
                     ) : (
-                      <Button size="sm" onClick={() => handleToggleAi(true)}>
-                        <Bot className="w-4 h-4 mr-1" /> Reativar IA
+                      <Button size="sm" onClick={() => handleToggleAi(true)} className="px-2 sm:px-3">
+                        <Bot className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Reativar IA</span>
                       </Button>
                     );
                   })()}
                 </div>
               </div>
+
 
               {(() => {
                 const takeover = active.human_takeover_until && new Date(active.human_takeover_until) > new Date();
@@ -412,16 +426,17 @@ const AdminAtendimentos = () => {
                 );
               })()}
 
-              <div ref={scrollRef} className="flex-1 overflow-auto p-4 space-y-2 bg-muted/20">
+              <div ref={scrollRef} className="flex-1 overflow-auto p-3 sm:p-4 space-y-2 bg-muted/20">
                 {messages.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">Nenhuma mensagem ainda.</p>
                 ) : messages.map((m) => (
                   <div key={m.id} className={`flex ${m.direction === "out" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
+                    <div className={`max-w-[85%] sm:max-w-[75%] rounded-lg px-3 py-2 text-sm ${
                       m.direction === "out"
                         ? "bg-primary text-primary-foreground"
                         : "bg-card border"
                     } ${m.is_draft ? "opacity-70 border-dashed" : ""}`}>
+
                       <p className="whitespace-pre-wrap">{m.body}</p>
                       <div className="text-[10px] opacity-70 mt-1 flex items-center gap-1">
                         {m.author === "aurora" && <Bot className="w-3 h-3" />}
