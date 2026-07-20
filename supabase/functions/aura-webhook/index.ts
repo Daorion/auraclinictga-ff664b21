@@ -755,6 +755,8 @@ Deno.serve(async (req) => {
   );
   const msgType = String(payload?.type ?? payload?._data?.type ?? "");
 
+
+
   // ⚠️ Never respond to WhatsApp groups, broadcasts, newsletters or status.
   const lowered = rawFrom.toLowerCase();
   if (lowered.endsWith("@g.us") || lowered.endsWith("@broadcast") || lowered.endsWith("@newsletter") || lowered === "status@broadcast") {
