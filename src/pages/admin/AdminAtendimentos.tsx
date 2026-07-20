@@ -72,10 +72,12 @@ const AdminAtendimentos = () => {
   const loadConversations = async () => {
     const { data: convs } = await supabase
       .from("conversations")
-      .select("id,contact_id,stage,assigned_to,ai_enabled,human_takeover_until,interest,unread_count,last_message_at,last_message_preview,status,internal_notes")
+      .select("id,contact_id,stage,assigned_to,ai_enabled,human_takeover_until,interest,unread_count,last_message_at,last_message_preview,status,internal_notes,needs_review,review_reason,review_requested_at")
       .eq("status", "open")
+      .order("needs_review", { ascending: false })
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .limit(200);
+
     const list = (convs ?? []) as Conversation[];
     setConversations(list);
     const ids = list.map((c) => c.contact_id);
