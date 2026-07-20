@@ -177,6 +177,24 @@ async function typing(destination: string, on: boolean) {
 }
 
 // Quebra a resposta em 1–3 pedaços "humanos" por parágrafo/frase.
+// Heurística p/ detectar chatbots/autorespondedores de outras empresas.
+// Se casar, pausamos a Aurora nessa conversa pra evitar loop de IA vs IA.
+function looksLikeAutoresponder(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  const patterns = [
+    /\*?1\*?\s*[\.\)-]\s*(vendas|financeiro|suporte|atendimento|falar)/i,
+    /\bperd[aã]o[, ]+n[aã]o compreendi\b/i,
+    /\batendimento encerrado\b/i,
+    /\bseja bem-?vindo\b.*\bescolha uma\b/is,
+    /\bdigite \*?\d\*?\s*(para|pra)\b/i,
+    /\bmenu (principal|de op[cç][oõ]es)\b/i,
+    /\bresposta autom[aá]tica\b/i,
+    /^\*[^*]{2,60}\*\s*\n/, // "*Nome - Empresa*\n..." típico de bot corporativo
+  ];
+  return patterns.some((r) => r.test(t) || r.test(text));
+}
+
 function splitReply(text: string): string[] {
   const clean = text.trim();
   if (!clean) return [];
