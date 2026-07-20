@@ -958,6 +958,16 @@ Deno.serve(async (req) => {
     return json({ ok: true, ai_skipped: takeoverActive ? "human_takeover" : "ai_disabled" });
   }
 
+  // 🛑 Detecta bots/autorespondedores de outras empresas p/ evitar loop de IA vs IA.
+  if (looksLikeAutoresponder(storedBody)) {
+    // Pausa a Aurora por 24h nessa conversa e sinaliza pra Sirlei revisar.
+    await admin.from("conversations")
+      .update({ human_takeover_until: new Date(Date.now() + 24 * 3600_000).toISOString() })
+      .eq("id", convId);
+    return json({ ok: true, ai_skipped: "autoresponder_detected" });
+  }
+
+
   // Lock por conversa: cada inbound gera um novo token; só o último vence.
   const replyToken = crypto.randomUUID();
   await admin.from("conversations")
