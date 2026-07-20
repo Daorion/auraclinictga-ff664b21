@@ -524,7 +524,10 @@ async function generateAiReply(
             human_takeover_until: new Date(Date.now() + 24 * 3600_000).toISOString(),
             assigned_to: "sirlei",
           }).eq("id", convId);
-          return null; // NÃO envia nada para o WhatsApp
+          const firstName = (contactName ?? "").trim().split(/\s+/)[0];
+          const saudacao = firstName ? `${firstName}, ` : "";
+          return `${saudacao}deixa eu confirmar isso certinho com a Sirlei pra não te passar informação errada 💛 Em instantes ela mesma te responde por aqui, tá bom?`;
+
         }
 
         const result = await executeAuroraTool(admin, contactPhone, contactName, clientInfo, name, args);
