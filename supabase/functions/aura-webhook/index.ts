@@ -1004,7 +1004,7 @@ Deno.serve(async (req) => {
 
   // Tenta transcrever áudio (até 4 min). Se conseguir, o body vira "🎤 <transcrição>".
   let transcript: string | null = null;
-  if (isAudio && !fromMe) {
+  if (isAudio) {
     console.log("[audio] detected — type:", msgType, "duration:", audioSeconds, "hasMedia:", hasMedia);
     if (audioSeconds && audioSeconds > MAX_AUDIO_SECONDS) {
       console.log("[audio] skipping — too long:", audioSeconds, "s");
