@@ -102,7 +102,7 @@ const AdminAtendimentos = () => {
         const { data: cls } = await supabase.from("clients").select("id,name").in("id", clientIds);
         (cls ?? []).forEach((cl: any) => { clientsById[cl.id] = cl.name; });
       }
-      const unlinkedPhones = rows.filter((c) => !c.client_id).map((c) => c.phone.slice(-10)).filter((p) => p.length >= 8);
+      const unlinkedPhones = rows.filter((c) => !c.client_id && !isLidContact(c)).map((c) => c.phone.slice(-10)).filter((p) => p.length >= 8);
       const clientsByLast10: Record<string, { id: string; name: string }> = {};
       if (unlinkedPhones.length) {
         const { data: cls2 } = await supabase.from("clients").select("id,name,phone");
