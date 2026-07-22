@@ -65,6 +65,20 @@ Trate essa URL como o novo arquivo oficial que ela quer usar. Regras:
 - Nunca altere fotos de OUTRAS profissionais/serviços além do que ela pediu.
 - Confirme sempre citando o nome (ex.: "Foto da Camila atualizada ✔").
 
+RELATÓRIO DE CONVERSAS / ALERTA DE PENDÊNCIAS (WhatsApp):
+Sempre que a Sirlei pedir "relatório", "quem não respondi", "tem conversa parada", "alguma pendência no whats", "resumo das conversas", "quem está esperando", etc. — chame gerar_relatorio_conversas e depois entregue a resposta assim:
+- Uma frase de contexto (ex.: "Encontrei 5 conversas esperando resposta há mais de 2h:").
+- Para cada conversa pendente, um bloco curto (um campo por linha):
+  Cliente: Ana Souza
+  Telefone: (65) 99999-0000
+  Última mensagem: "quero marcar botox pra sexta"
+  Esperando há: 3h 20min
+  Status: Aurora bloqueada / Assumido por humano / Aurora ativa / Revisão pendente
+- Separe blocos por UMA linha em branco. Ordene do mais antigo para o mais recente.
+- Se não houver pendência, diga algo leve tipo "Tudo em dia por aqui ✨ nenhuma conversa esperando resposta.".
+- Sempre termine sugerindo ação concreta ("Quer que eu libere a Aurora pra responder alguma?" / "Posso preparar rascunho pra Ana?").
+Se a Sirlei pedir alerta recorrente ("me avisa toda manhã 9h", "me lembra final da tarde"), salve como diretiva (kind=instrucao) só como lembrete — o alerta em si ainda depende dela pedir o relatório.
+
 - Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
@@ -394,6 +408,21 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "gerar_relatorio_conversas",
+      description: "Gera relatório das conversas do WhatsApp que estão SEM RESPOSTA (última mensagem foi do cliente e ninguém — nem Aurora, nem humano — respondeu). Use quando a Sirlei pedir relatório/pendências/quem não respondi.",
+      parameters: {
+        type: "object",
+        properties: {
+          horas_min: { type: "number", description: "Só considera pendentes há pelo menos N horas (padrão 1)." },
+          limite: { type: "number", description: "Máximo de conversas (padrão 30)." },
+          incluir_bloqueadas: { type: "boolean", description: "Incluir contatos com Aurora bloqueada (padrão true)." },
+        },
+      },
+    },
+  },
 ];
 
 async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
@@ -674,6 +703,65 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
         .select("id, name, whatsapp_phone, active").single();
       if (error) return { error: error.message };
       return { ok: true, cliente: data };
+    }
+    if (name === "gerar_relatorio_conversas") {
+      const horasMin = Math.max(0, Number(args.horas_min ?? 1));
+      const limite = Math.min(100, Number(args.limite ?? 30));
+      const incluirBloqueadas = args.incluir_bloqueadas !== false;
+      const cutoff = new Date(Date.now() - horasMin * 3600 * 1000).toISOString();
+
+      // Conversas com última msg recebida antes do cutoff
+      const { data: convs, error: convErr } = await admin
+        .from("conversations")
+        .select("id, contact_id, last_message_at, human_takeover_until, ai_enabled, needs_review, review_reason, assigned_to, contacts:contact_id(name, push_name, phone, wa_id, aurora_blocked)")
+        .lte("last_message_at", cutoff)
+        .order("last_message_at", { ascending: true })
+        .limit(200);
+      if (convErr) return { error: convErr.message };
+
+      const pendentes: any[] = [];
+      for (const c of convs ?? []) {
+        const { data: lastMsg } = await admin
+          .from("messages")
+          .select("direction, body, created_at, author")
+          .eq("conversation_id", c.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!lastMsg || lastMsg.direction !== "inbound") continue;
+        const contact: any = c.contacts ?? {};
+        if (!incluirBloqueadas && contact.aurora_blocked) continue;
+
+        const nowMs = Date.now();
+        const waitingMs = nowMs - new Date(lastMsg.created_at).getTime();
+        const takeoverActive = c.human_takeover_until && new Date(c.human_takeover_until).getTime() > nowMs;
+
+        let status = "Aurora ativa";
+        if (contact.aurora_blocked) status = "Aurora bloqueada";
+        else if (c.needs_review) status = `Revisão pendente${c.review_reason ? `: ${c.review_reason}` : ""}`;
+        else if (takeoverActive) status = "Assumido por humano";
+        else if (c.ai_enabled === false) status = "Aurora desativada nessa conversa";
+
+        pendentes.push({
+          conversation_id: c.id,
+          cliente: contact.name || contact.push_name || contact.phone || "Sem nome",
+          telefone: contact.phone || contact.wa_id || null,
+          ultima_mensagem: (lastMsg.body || "").slice(0, 200),
+          ultima_mensagem_em: lastMsg.created_at,
+          esperando_ha_min: Math.round(waitingMs / 60000),
+          status,
+          aurora_blocked: !!contact.aurora_blocked,
+          human_takeover: !!takeoverActive,
+        });
+        if (pendentes.length >= limite) break;
+      }
+
+      return {
+        total_pendentes: pendentes.length,
+        horas_min: horasMin,
+        gerado_em: new Date().toISOString(),
+        pendentes,
+      };
     }
     return { error: `unknown_tool_${name}` };
   } catch (e) {
