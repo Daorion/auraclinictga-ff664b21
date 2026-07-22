@@ -50,7 +50,7 @@ const AdminAuroraChat = () => {
         .select("id, title, kind, content, ends_at, active")
         .eq("active", true).order("created_at", { ascending: false }),
     ]);
-    setMessages((msg.data as TrainerMsg[]) ?? []);
+    setMessages(((msg.data as TrainerMsg[]) ?? []).slice().reverse());
     setDirectives((dir.data as Directive[]) ?? []);
     setLoading(false);
   };
