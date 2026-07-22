@@ -120,8 +120,6 @@ const AdminAtendimentos = () => {
           const match = clientsByLast10[c.phone.slice(-10)];
           if (match) clientName = match.name;
         }
-          if (match) clientName = match.name;
-        }
         map[c.id] = { ...c, client_name: clientName };
       });
       setContactsById(map);
