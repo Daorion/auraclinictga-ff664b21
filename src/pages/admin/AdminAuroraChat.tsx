@@ -63,22 +63,55 @@ const AdminAuroraChat = () => {
 
   const send = async () => {
     const text = input.trim();
-    if (!text || sending) return;
+    if ((!text && attachments.length === 0) || sending) return;
     setSending(true);
+    const attachSuffix = attachments.length
+      ? (text ? "\n\n" : "") + attachments.map((a) => `[Imagem anexada: ${a.url}]`).join("\n")
+      : "";
+    const fullText = (text + attachSuffix).trim();
     setInput("");
+    setAttachments([]);
     // Optimistic
     setMessages((cur) => [...cur, {
-      id: "tmp-" + Date.now(), role: "user", content: text, parts: null,
+      id: "tmp-" + Date.now(), role: "user", content: fullText, parts: null,
       created_at: new Date().toISOString(),
     }]);
     const { data, error } = await supabase.functions.invoke("aurora-trainer", {
-      body: { message: text },
+      body: { message: fullText },
     });
     setSending(false);
     if (error || (data as any)?.error) {
       toast.error("Falha ao falar com a Aurora: " + (error?.message ?? (data as any)?.error));
     }
     await load();
+  };
+
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) {
+          toast.error(`${file.name}: não é imagem`);
+          continue;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name}: acima de 10MB`);
+          continue;
+        }
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `aurora-chat/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("service-images").upload(path, file, {
+          contentType: file.type, upsert: false,
+        });
+        if (upErr) { toast.error("Falha ao enviar: " + upErr.message); continue; }
+        const { data: pub } = supabase.storage.from("service-images").getPublicUrl(path);
+        setAttachments((cur) => [...cur, { url: pub.publicUrl, name: file.name }]);
+      }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const deactivate = async (id: string) => {
