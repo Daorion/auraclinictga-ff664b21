@@ -291,6 +291,31 @@ async function typing(destination: string, on: boolean) {
   } catch { /* best effort */ }
 }
 
+async function sendReaction(messageId: string, reaction: string): Promise<boolean> {
+  if (!WAHA_URL || !WAHA_API_KEY || !messageId) return false;
+  try {
+    const r = await fetch(`${WAHA_URL}/api/reaction`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Api-Key": WAHA_API_KEY },
+      body: JSON.stringify({ session: WAHA_SESSION, messageId, reaction }),
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+// Detecta comandos que a Sirlei manda pelo próprio WhatsApp para controlar a Aurora.
+// Retorna 'block' | 'unblock' | null
+function detectAuroraCommand(text: string | null | undefined): "block" | "unblock" | null {
+  if (!text) return null;
+  const t = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  if (!/\baurora\b/.test(t)) return null;
+  const blockRe = /\b(ignora|ignore|ignorar|para|pare|parar|nao\s+responda|nao\s+responde|bloqueia|bloquear|bloqueie|silencia|silenciar|cala|calar|fica\s+quieta|blacklist)\b/;
+  const unblockRe = /\b(volta|volte|voltar|retorna|retorne|retornar|desbloqueia|desbloquear|desbloqueie|responda|responder|reativa|reativar|libera|liberar|assume|assumir)\b/;
+  if (unblockRe.test(t)) return "unblock";
+  if (blockRe.test(t)) return "block";
+  return null;
+}
+
 // Quebra a resposta em 1–3 pedaços "humanos" por parágrafo/frase.
 // Heurística p/ detectar chatbots/autorespondedores de outras empresas.
 // Se casar, pausamos a Aurora nessa conversa pra evitar loop de IA vs IA.
