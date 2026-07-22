@@ -409,7 +409,8 @@ const AdminAtendimentos = () => {
                       {activeContact?.push_name && activeContact.push_name !== (activeContact.client_name ?? activeContact.name) && (
                         <span className="truncate">WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
                       )}
-                      {activeContact?.phone && <span>+{activeContact.phone}</span>}
+                      {displayPhone(activeContact) && <span>{displayPhone(activeContact)}</span>}
+                      {isLidContact(activeContact) && <span className="italic opacity-70">nº oculto pelo WhatsApp</span>}
                     </div>
                   </div>
                 </div>
