@@ -423,6 +423,34 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "analisar_contato",
+      description: "Faz uma análise INTELIGENTE e FRESCA da conversa de UMA pessoa no WhatsApp — devolve estágio no funil, interesse principal, objeções, próxima ação recomendada, score de oportunidade (0-100) e resumo executivo. Use sempre que a Sirlei perguntar 'analisa o fulano', 'como tá o lead X', 'o que passou com a Michelly', 'me diz o que essa pessoa quer', 'vale a pena ligar pra ele?', etc. Passe o nome/telefone que a Sirlei mencionou.",
+      parameters: {
+        type: "object",
+        properties: {
+          nome_ou_telefone: { type: "string", description: "Nome, apelido ou telefone que a Sirlei mencionou. Ex.: 'Michelly', 'Henrique Lopes', '65999...'." },
+          contact_id: { type: "string", description: "UUID direto do contato (se já souber)." },
+          forcar_reanalise: { type: "boolean", description: "Ignora cache e roda análise nova (padrão true quando a Sirlei pede)." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "briefing_do_dia",
+      description: "Devolve um briefing executivo para a Sirlei com base nas análises dos contatos: TOP oportunidades quentes (score alto sem agendamento), leads esfriando, quem tem alerta, resumo por estágio do funil. Use quando ela pedir 'briefing', 'panorama', 'o que preciso olhar hoje', 'onde estão as oportunidades', 'me dá um resumo geral'.",
+      parameters: {
+        type: "object",
+        properties: {
+          limite_por_bloco: { type: "number", description: "Quantos itens por bloco (padrão 5)." },
+        },
+      },
+    },
+  },
 ];
 
 async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
