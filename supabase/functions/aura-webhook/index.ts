@@ -784,6 +784,7 @@ async function executeAuroraTool(
 }
 
 const DEBOUNCE_MS = 8_000; // aguarda a pessoa terminar de mandar as msgs
+const STALE_EVENT_MS = 2 * 60_000; // histórico/replay do WAHA: salva, mas não dispara IA
 const TYPING_CPS = 45;     // ~45 caracteres por segundo "digitados"
 const TYPING_MIN_MS = 1200;
 const TYPING_MAX_MS = 4500;
@@ -818,6 +819,20 @@ async function scheduleReply(
   const { data: ctBlk } = await admin.from("contacts").select("aurora_blocked").eq("id", contactId).maybeSingle();
   if (ctBlk?.aurora_blocked) { console.log("aurora_blocked_contact", { contactId }); return; }
 
+  // Lock real por CONTATO: se entrou qualquer mensagem depois desta (inclusive da Sirlei), aborta.
+  // Isso protege mesmo se algum caminho legado criar/usar outra conversation_id.
+  const { data: latestContactMsg } = await admin
+    .from("messages")
+    .select("direction, author, created_at")
+    .eq("contact_id", contactId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!latestContactMsg || latestContactMsg.direction !== "in" || new Date(latestContactMsg.created_at).getTime() > new Date(arrivedAt).getTime()) {
+    console.log("contact_debounce_superseded", { contactId, convId, arrivedAt, latest: latestContactMsg?.created_at, direction: latestContactMsg?.direction });
+    return;
+  }
+
   // 3) Gera resposta com base em TODO o histórico acumulado
   const reply = await generateAiReply(admin, convId, phone, contactName, "");
   if (!reply) return;
@@ -834,6 +849,21 @@ async function scheduleReply(
     .maybeSingle();
   if (!claim) {
     console.log("claim_lost", { convId, myToken });
+    return;
+  }
+
+  // Última barreira antes de enviar: se Sirlei respondeu durante a geração, não manda nada.
+  const { data: humanAfterClaim } = await admin
+    .from("messages")
+    .select("id")
+    .eq("contact_id", contactId)
+    .eq("direction", "out")
+    .in("author", ["human", "sirlei"])
+    .gt("created_at", arrivedAt)
+    .limit(1)
+    .maybeSingle();
+  if (humanAfterClaim) {
+    console.log("human_intervened_before_send", { contactId, convId });
     return;
   }
 
