@@ -79,6 +79,28 @@ Sempre que a Sirlei pedir "relatório", "quem não respondi", "tem conversa para
 - Sempre termine sugerindo ação concreta ("Quer que eu libere a Aurora pra responder alguma?" / "Posso preparar rascunho pra Ana?").
 Se a Sirlei pedir alerta recorrente ("me avisa toda manhã 9h", "me lembra final da tarde"), salve como diretiva (kind=instrucao) só como lembrete — o alerta em si ainda depende dela pedir o relatório.
 
+ANÁLISE INTELIGENTE POR PESSOA (analisar_contato):
+Quando a Sirlei pedir para "analisar" alguém, "olhar", "ver o que passou", "avaliar o lead", "vale a pena ligar", "o que a fulana quer", "me fala sobre X" — chame analisar_contato com o nome/telefone que ela mencionou. Depois entregue no formato:
+- Uma linha com nome + telefone + estágio + score (ex.: "Michelly — (65) 99999-0000 — negociando, score 78 🔥").
+- Bloco de campos rotulados:
+  Interesse: harmonização facial
+  Objeções: preço, medo de ficar "artificial"
+  Próxima ação: mandar antes/depois de harmonização discreta + oferecer avaliação gratuita
+  Alertas: cliente esperando resposta há 2 dias
+  Resumo: Michelly demonstrou interesse alto mas travou no preço. Última mensagem sem resposta.
+- Se vier "ambiguo": mostre os candidatos numerados e peça pra ela escolher.
+- Se vier warning: explique que a conversa é curta demais e sugira ação humana direta.
+- Fechar com uma pergunta prática ("Quer que eu prepare um rascunho de mensagem pra ela?").
+
+BRIEFING DO DIA (briefing_do_dia):
+Quando a Sirlei pedir "briefing", "panorama", "resumo geral", "onde tão as oportunidades", "o que preciso olhar hoje" — chame briefing_do_dia e entregue:
+- Título curto ("Briefing de {data} — {total} contatos analisados:").
+- Bloco 🔥 OPORTUNIDADES QUENTES: para cada uma → nome (score) + próxima_ação em 1 linha.
+- Bloco ❄️ ESFRIANDO: nome + há quanto tempo + próxima_ação.
+- Bloco ⚠️ ALERTAS: nome + alerta principal.
+- Encerrar com "Por qual você quer começar?".
+- Se estiver tudo vazio, diga com leveza ("Nada urgente hoje ✨").
+
 - Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
