@@ -351,9 +351,16 @@ Fluxo:
   const now = new Date();
   const fmtDate = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
   const fmtHuman = (d: Date) => new Intl.DateTimeFormat("pt-BR", { timeZone: tz, weekday: "long", day: "2-digit", month: "long" }).format(d);
+  const fmtTime = (d: Date) => new Intl.DateTimeFormat("pt-BR", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
   const tomorrow = new Date(now.getTime() + 24 * 3600 * 1000);
   const dayAfter = new Date(now.getTime() + 48 * 3600 * 1000);
-  const dateContext = `\n\n=== CONTEXTO TEMPORAL (fuso America/Cuiaba, UTC-4) ===\n- HOJE: ${fmtDate(now)} (${fmtHuman(now)})\n- AMANHÃ: ${fmtDate(tomorrow)} (${fmtHuman(tomorrow)})\n- DEPOIS DE AMANHÃ: ${fmtDate(dayAfter)} (${fmtHuman(dayAfter)})\nUse essas datas diretamente ao chamar \`verificar_horarios\`. NUNCA pergunte à cliente qual é a data.`;
+  const hourStr = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "2-digit", hour12: false }).format(now);
+  const hour = parseInt(hourStr, 10);
+  let periodo: string; let saudacao: string;
+  if (hour >= 5 && hour < 12) { periodo = "manhã"; saudacao = "bom dia"; }
+  else if (hour >= 12 && hour < 18) { periodo = "tarde"; saudacao = "boa tarde"; }
+  else { periodo = "noite"; saudacao = "boa noite"; }
+  const dateContext = `\n\n=== CONTEXTO TEMPORAL (fuso America/Cuiaba, UTC-4) ===\n- AGORA: ${fmtTime(now)} (${periodo})\n- HOJE: ${fmtDate(now)} (${fmtHuman(now)})\n- AMANHÃ: ${fmtDate(tomorrow)} (${fmtHuman(tomorrow)})\n- DEPOIS DE AMANHÃ: ${fmtDate(dayAfter)} (${fmtHuman(dayAfter)})\n\nSAUDAÇÃO CORRETA AGORA: "${saudacao}". NUNCA use outra saudação de período (não diga "bom dia" à tarde/noite, não diga "boa noite" de manhã). Se a cliente já cumprimentou nesta conversa hoje, NÃO repita a saudação — vá direto ao ponto. Use essas datas diretamente ao chamar \`verificar_horarios\`. NUNCA pergunte à cliente qual é a data.`;
 
 
 
