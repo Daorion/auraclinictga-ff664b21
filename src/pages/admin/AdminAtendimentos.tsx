@@ -329,7 +329,7 @@ const AdminAtendimentos = () => {
                         {ct?.push_name && ct.push_name !== (ct.client_name ?? ct.name) && (
                           <p className="text-[11px] text-muted-foreground truncate">WhatsApp: {ct.push_name}</p>
                         )}
-                        {ct?.phone && <p className="text-[11px] text-muted-foreground truncate">+{ct.phone}</p>}
+                        {displayPhone(ct) && <p className="text-[11px] text-muted-foreground truncate">{displayPhone(ct)}</p>}
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
