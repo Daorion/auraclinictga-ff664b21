@@ -1236,19 +1236,43 @@ Deno.serve(async (req) => {
     if (existing) return json({ ok: true, deduped: true });
   }
 
+  // Se for mídia visual, baixa do WAHA e sobe pro bucket antes de gravar a mensagem
+  if (isVisualMedia) {
+    const media = await downloadWahaMediaAny(payload);
+    if (media) {
+      mediaMime = media.mime;
+      mediaKind = msgType;
+      const uploaded = await uploadMediaToStorage(admin, contact.id, String(externalId ?? crypto.randomUUID()), media.bytes, media.mime);
+      if (uploaded) { mediaUrl = uploaded.url; mediaPath = uploaded.path; }
+    }
+  }
+
+  const finalStoredBody = storedBody || captionText || (isVisualMedia
+    ? (msgType === "image" ? "[imagem]" : msgType === "video" ? "[vídeo]" : msgType === "sticker" ? "[sticker]" : "[documento]")
+    : "");
+
   const arrivedAt = new Date().toISOString();
   await admin.from("messages").insert({
     conversation_id: convId,
     contact_id: contact.id,
     channel: "whatsapp",
     direction: fromMe ? "out" : "in",
-    body: storedBody,
+    body: finalStoredBody,
     external_id: externalId,
     msg_type: payload?.type ?? "text",
     author: fromMe ? "human" : "contact",
     status: fromMe ? "sent" : "delivered",
     sent_at: eventSentAt,
-    metadata: { waha_event: event, from_phone: fromMe, raw: payload },
+    metadata: {
+      waha_event: event,
+      from_phone: fromMe,
+      media_url: mediaUrl,
+      media_mime: mediaMime,
+      media_path: mediaPath,
+      media_kind: mediaKind,
+      caption: captionText || null,
+      raw: payload,
+    },
   });
 
   const convUpdate: any = {
