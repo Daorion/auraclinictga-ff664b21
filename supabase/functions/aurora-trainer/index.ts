@@ -704,6 +704,65 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       if (error) return { error: error.message };
       return { ok: true, cliente: data };
     }
+    if (name === "gerar_relatorio_conversas") {
+      const horasMin = Math.max(0, Number(args.horas_min ?? 1));
+      const limite = Math.min(100, Number(args.limite ?? 30));
+      const incluirBloqueadas = args.incluir_bloqueadas !== false;
+      const cutoff = new Date(Date.now() - horasMin * 3600 * 1000).toISOString();
+
+      // Conversas com última msg recebida antes do cutoff
+      const { data: convs, error: convErr } = await admin
+        .from("conversations")
+        .select("id, contact_id, last_message_at, human_takeover_until, ai_enabled, needs_review, review_reason, assigned_to, contacts:contact_id(name, push_name, phone, wa_id, aurora_blocked)")
+        .lte("last_message_at", cutoff)
+        .order("last_message_at", { ascending: true })
+        .limit(200);
+      if (convErr) return { error: convErr.message };
+
+      const pendentes: any[] = [];
+      for (const c of convs ?? []) {
+        const { data: lastMsg } = await admin
+          .from("messages")
+          .select("direction, body, created_at, author")
+          .eq("conversation_id", c.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!lastMsg || lastMsg.direction !== "inbound") continue;
+        const contact: any = c.contacts ?? {};
+        if (!incluirBloqueadas && contact.aurora_blocked) continue;
+
+        const nowMs = Date.now();
+        const waitingMs = nowMs - new Date(lastMsg.created_at).getTime();
+        const takeoverActive = c.human_takeover_until && new Date(c.human_takeover_until).getTime() > nowMs;
+
+        let status = "Aurora ativa";
+        if (contact.aurora_blocked) status = "Aurora bloqueada";
+        else if (c.needs_review) status = `Revisão pendente${c.review_reason ? `: ${c.review_reason}` : ""}`;
+        else if (takeoverActive) status = "Assumido por humano";
+        else if (c.ai_enabled === false) status = "Aurora desativada nessa conversa";
+
+        pendentes.push({
+          conversation_id: c.id,
+          cliente: contact.name || contact.push_name || contact.phone || "Sem nome",
+          telefone: contact.phone || contact.wa_id || null,
+          ultima_mensagem: (lastMsg.body || "").slice(0, 200),
+          ultima_mensagem_em: lastMsg.created_at,
+          esperando_ha_min: Math.round(waitingMs / 60000),
+          status,
+          aurora_blocked: !!contact.aurora_blocked,
+          human_takeover: !!takeoverActive,
+        });
+        if (pendentes.length >= limite) break;
+      }
+
+      return {
+        total_pendentes: pendentes.length,
+        horas_min: horasMin,
+        gerado_em: new Date().toISOString(),
+        pendentes,
+      };
+    }
     return { error: `unknown_tool_${name}` };
   } catch (e) {
     return { error: String(e) };
