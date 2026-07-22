@@ -1089,6 +1089,16 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Baixa e armazena imagem/vídeo/documento no bucket (URL assinada 3 dias)
+  const isVisualMedia = !isAudio && hasMedia && (
+    msgType === "image" || msgType === "video" || msgType === "sticker" || msgType === "document"
+  );
+  let mediaUrl: string | null = null;
+  let mediaMime: string | null = null;
+  let mediaPath: string | null = null;
+  let mediaKind: string | null = null;
+  const captionText = String(payload?.caption ?? payload?._data?.caption ?? "").trim();
+
   const storedBody = messageBody
     || (transcript ? `🎤 ${transcript}` : (isAudio ? "[áudio]" : (hasMedia ? "[mídia]" : "")));
   const aiInput = messageBody
