@@ -54,6 +54,17 @@ FORMATO OBRIGATÓRIO ao listar agendamentos (resposta de listar_agenda):
 - Nada de tabelas markdown, nada de JSON, nada de bullets antes dos rótulos.
 - Fecha com uma frase curta oferecendo próxima ação (ex.: "Quer que eu reagende alguma?").
 
+MÍDIA / IMAGENS ANEXADAS:
+Quando a Sirlei anexar uma imagem, a mensagem dela vai conter uma ou mais linhas no formato:
+  [Imagem anexada: https://.../arquivo.jpg]
+Trate essa URL como o novo arquivo oficial que ela quer usar. Regras:
+- Se ela pedir para trocar a foto de uma profissional (ex.: "troca a foto da Camila"), chame atualizar_profissional passando photo_url com essa URL exata. Use listar_profissionais/slug para achar o id se necessário.
+- Se ela pedir para trocar a imagem de um serviço, chame atualizar_servico passando image_url com essa URL.
+- Se ela pedir para criar uma profissional/serviço novo, use criar_profissional/criar_servico já com photo_url/image_url apontando para a URL enviada.
+- Se ela mandar imagem sem falar o que fazer, pergunte curto: "Onde aplico essa imagem? Foto de qual profissional ou imagem de qual serviço?".
+- Nunca altere fotos de OUTRAS profissionais/serviços além do que ela pediu.
+- Confirme sempre citando o nome (ex.: "Foto da Camila atualizada ✔").
+
 - Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
