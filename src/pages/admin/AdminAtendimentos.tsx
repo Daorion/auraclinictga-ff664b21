@@ -29,7 +29,15 @@ interface Conversation {
   review_requested_at: string | null;
 }
 
-interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; aurora_blocked?: boolean | null; }
+interface Contact { id: string; phone: string; wa_id?: string | null; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; aurora_blocked?: boolean | null; }
+
+// @lid é um identificador sintético do WhatsApp (privacidade), não é telefone real.
+const isLidContact = (c?: Pick<Contact, "wa_id"> | null) => !!c?.wa_id && /@lid$/i.test(c.wa_id);
+const displayPhone = (c?: Pick<Contact, "wa_id" | "phone"> | null): string | null => {
+  if (!c?.phone) return null;
+  if (isLidContact(c)) return null;
+  return `+${c.phone}`;
+};
 interface Message {
   id: string;
   conversation_id: string;
@@ -84,7 +92,7 @@ const AdminAtendimentos = () => {
     const ids = list.map((c) => c.contact_id);
     if (ids.length) {
       const { data: contacts } = await supabase
-        .from("contacts").select("id,phone,name,push_name,profile_picture_url,client_id,aurora_blocked").in("id", ids);
+        .from("contacts").select("id,phone,wa_id,name,push_name,profile_picture_url,client_id,aurora_blocked").in("id", ids);
       const rows = (contacts ?? []) as Contact[];
 
       // Fetch linked clients (by client_id first, then by matching last 10 digits of phone)
@@ -94,7 +102,7 @@ const AdminAtendimentos = () => {
         const { data: cls } = await supabase.from("clients").select("id,name").in("id", clientIds);
         (cls ?? []).forEach((cl: any) => { clientsById[cl.id] = cl.name; });
       }
-      const unlinkedPhones = rows.filter((c) => !c.client_id).map((c) => c.phone.slice(-10)).filter((p) => p.length >= 8);
+      const unlinkedPhones = rows.filter((c) => !c.client_id && !isLidContact(c)).map((c) => c.phone.slice(-10)).filter((p) => p.length >= 8);
       const clientsByLast10: Record<string, { id: string; name: string }> = {};
       if (unlinkedPhones.length) {
         const { data: cls2 } = await supabase.from("clients").select("id,name,phone");
@@ -108,7 +116,7 @@ const AdminAtendimentos = () => {
       rows.forEach((c) => {
         let clientName: string | null = null;
         if (c.client_id && clientsById[c.client_id]) clientName = clientsById[c.client_id];
-        else {
+        else if (!isLidContact(c)) {
           const match = clientsByLast10[c.phone.slice(-10)];
           if (match) clientName = match.name;
         }
@@ -321,7 +329,7 @@ const AdminAtendimentos = () => {
                         {ct?.push_name && ct.push_name !== (ct.client_name ?? ct.name) && (
                           <p className="text-[11px] text-muted-foreground truncate">WhatsApp: {ct.push_name}</p>
                         )}
-                        {ct?.phone && <p className="text-[11px] text-muted-foreground truncate">+{ct.phone}</p>}
+                        {displayPhone(ct) && <p className="text-[11px] text-muted-foreground truncate">{displayPhone(ct)}</p>}
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{c.last_message_preview ?? "…"}</p>
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <Badge variant="outline" className="text-[10px] py-0 h-4">{stageLabel[c.stage] ?? c.stage}</Badge>
@@ -401,7 +409,8 @@ const AdminAtendimentos = () => {
                       {activeContact?.push_name && activeContact.push_name !== (activeContact.client_name ?? activeContact.name) && (
                         <span className="truncate">WhatsApp: <strong className="text-foreground/80">{activeContact.push_name}</strong></span>
                       )}
-                      {activeContact?.phone && <span>+{activeContact.phone}</span>}
+                      {displayPhone(activeContact) && <span>{displayPhone(activeContact)}</span>}
+                      {isLidContact(activeContact) && <span className="italic opacity-70">nº oculto pelo WhatsApp</span>}
                     </div>
                   </div>
                 </div>
