@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Badge } from '@/components/ui/badge';
@@ -5,15 +6,32 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { ArrowLeft, MessageCircle, Phone, Star, HelpCircle, Sparkles, Heart, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProfissionalById } from '@/data/profissionais';
+import { supabase } from '@/integrations/supabase/client';
 import sirleiWork1 from '@/assets/sirlei-work1.png';
 import sirleiWork2 from '@/assets/sirlei-work2.png';
 
 const ProfissionalDetail = () => {
   const { id } = useParams<{ id: string }>();
-  
+  const [dbPhoto, setDbPhoto] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancel = false;
+    (async () => {
+      const { data } = await supabase
+        .from('professionals')
+        .select('photo_url')
+        .eq('slug', id)
+        .maybeSingle();
+      if (!cancel && data?.photo_url) setDbPhoto(data.photo_url);
+    })();
+    return () => { cancel = true; };
+  }, [id]);
+
   if (!id) return <Navigate to="/profissionais" replace />;
-  const profissional = getProfissionalById(id);
-  if (!profissional) return <Navigate to="/profissionais" replace />;
+  const staticData = getProfissionalById(id);
+  if (!staticData) return <Navigate to="/profissionais" replace />;
+  const profissional = { ...staticData, imagem: dbPhoto ?? staticData.imagem };
 
   return (
     <div className="min-h-screen bg-background">
