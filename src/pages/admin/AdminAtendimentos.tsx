@@ -29,7 +29,15 @@ interface Conversation {
   review_requested_at: string | null;
 }
 
-interface Contact { id: string; phone: string; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; aurora_blocked?: boolean | null; }
+interface Contact { id: string; phone: string; wa_id?: string | null; name: string | null; push_name?: string | null; profile_picture_url?: string | null; client_id?: string | null; client_name?: string | null; aurora_blocked?: boolean | null; }
+
+// @lid é um identificador sintético do WhatsApp (privacidade), não é telefone real.
+const isLidContact = (c?: Pick<Contact, "wa_id"> | null) => !!c?.wa_id && /@lid$/i.test(c.wa_id);
+const displayPhone = (c?: Pick<Contact, "wa_id" | "phone"> | null): string | null => {
+  if (!c?.phone) return null;
+  if (isLidContact(c)) return null;
+  return `+${c.phone}`;
+};
 interface Message {
   id: string;
   conversation_id: string;
