@@ -619,12 +619,26 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
     }
     if (name === "listar_profissionais") {
       let q = admin.from("professionals")
-        .select("id, slug, name, title, commission_percent, active, whatsapp_phone, email, display_order")
+        .select("id, slug, name, title, bio, photo_url, commission_percent, active, whatsapp_phone, email, display_order")
         .order("display_order").order("name");
       if (!args.incluir_inativos) q = q.eq("active", true);
       const { data, error } = await q;
       if (error) return { error: error.message };
       return { total: data?.length ?? 0, profissionais: data ?? [] };
+    }
+    if (name === "criar_profissional") {
+      const slug = (args.slug ?? args.name ?? "")
+        .toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      if (!slug) return { error: "nome_invalido" };
+      const insert: any = { slug, active: args.active ?? true };
+      for (const k of ["name","title","bio","photo_url","whatsapp_phone","commission_percent","display_order"]) {
+        if (args[k] !== undefined) insert[k] = args[k];
+      }
+      const { data, error } = await admin.from("professionals").insert(insert)
+        .select("id, slug, name, title").single();
+      if (error) return { error: error.message };
+      return { ok: true, profissional: data };
     }
     if (name === "atualizar_profissional") {
       const patch: any = {};
@@ -635,7 +649,7 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       if (args.id) q = q.eq("id", args.id);
       else if (args.slug) q = q.eq("slug", args.slug);
       else return { error: "informe_id_ou_slug" };
-      const { data, error } = await q.select("id, slug, name, title, commission_percent, active").single();
+      const { data, error } = await q.select("id, slug, name, title, bio, photo_url, commission_percent, active").single();
       if (error) return { error: error.message };
       return { ok: true, profissional: data };
     }
