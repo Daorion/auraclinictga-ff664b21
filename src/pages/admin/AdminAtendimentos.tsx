@@ -40,6 +40,7 @@ interface Message {
   is_draft: boolean;
   error: string | null;
   created_at: string;
+  metadata?: any;
 }
 
 const stageLabel: Record<string, string> = {
