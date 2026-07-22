@@ -116,8 +116,10 @@ const AdminAtendimentos = () => {
       rows.forEach((c) => {
         let clientName: string | null = null;
         if (c.client_id && clientsById[c.client_id]) clientName = clientsById[c.client_id];
-        else {
+        else if (!isLidContact(c)) {
           const match = clientsByLast10[c.phone.slice(-10)];
+          if (match) clientName = match.name;
+        }
           if (match) clientName = match.name;
         }
         map[c.id] = { ...c, client_name: clientName };
