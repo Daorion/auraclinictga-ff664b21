@@ -46,7 +46,7 @@ Regras:
 
 async function analyzeContact(admin: any, contactId: string): Promise<any> {
   const { data: contact } = await admin.from("contacts")
-    .select("id, name, push_name, phone, wa_id, aurora_blocked, notes")
+    .select("id, name, push_name, phone, wa_id, aurora_blocked")
     .eq("id", contactId).maybeSingle();
   if (!contact) return { contact_id: contactId, skipped: "not_found" };
 
