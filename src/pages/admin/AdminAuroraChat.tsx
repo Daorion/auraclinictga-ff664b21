@@ -227,9 +227,25 @@ const AdminAuroraChat = () => {
                   <div className={`max-w-[85%] ${isUser
                     ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2"
                     : "text-foreground"}`}>
-                    {isUser ? (
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
-                    ) : m.content ? (
+                    {isUser ? (() => {
+                      const imgRegex = /\[Imagem anexada:\s*(https?:\/\/[^\]\s]+)\s*\]/g;
+                      const imgs: string[] = [];
+                      const cleaned = m.content.replace(imgRegex, (_, u) => { imgs.push(u); return ""; }).trim();
+                      return (
+                        <div className="space-y-2">
+                          {imgs.length > 0 && (
+                            <div className="flex flex-wrap gap-2 justify-end">
+                              {imgs.map((u, i) => (
+                                <a key={i} href={u} target="_blank" rel="noreferrer">
+                                  <img src={u} alt="anexo" className="w-24 h-24 object-cover rounded-md border border-primary-foreground/20" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          {cleaned && <p className="whitespace-pre-wrap text-sm leading-relaxed">{cleaned}</p>}
+                        </div>
+                      );
+                    })() : m.content ? (
                       <AuroraMessage content={m.content} />
                     ) : (
                       <p className="text-sm text-muted-foreground italic">{m.parts?.tool_calls ? "..." : ""}</p>
