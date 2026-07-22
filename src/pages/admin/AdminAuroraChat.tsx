@@ -45,12 +45,12 @@ const AdminAuroraChat = () => {
     const [msg, dir] = await Promise.all([
       supabase.from("aurora_trainer_messages")
         .select("id, role, content, parts, created_at")
-        .order("created_at", { ascending: true }).limit(200),
+        .order("created_at", { ascending: false }).limit(200),
       supabase.from("aurora_directives")
         .select("id, title, kind, content, ends_at, active")
         .eq("active", true).order("created_at", { ascending: false }),
     ]);
-    setMessages((msg.data as TrainerMsg[]) ?? []);
+    setMessages(((msg.data as TrainerMsg[]) ?? []).slice().reverse());
     setDirectives((dir.data as Directive[]) ?? []);
     setLoading(false);
   };
