@@ -315,8 +315,30 @@ const tools = [
   {
     type: "function",
     function: {
+      name: "criar_profissional",
+      description: "Cadastra uma nova profissional na equipe da clínica. Slug é gerado do nome se não informado.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          slug: { type: "string" },
+          title: { type: "string", description: "Especialidade / cargo curto. Ex: 'Esteticista'." },
+          bio: { type: "string" },
+          photo_url: { type: "string", description: "URL pública da foto (bucket service-images ou externa)." },
+          whatsapp_phone: { type: "string" },
+          commission_percent: { type: "number" },
+          display_order: { type: "number" },
+          active: { type: "boolean" },
+        },
+        required: ["name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "atualizar_profissional",
-      description: "Atualiza dados de uma profissional (bio, título, comissão, ativa, foto, whatsapp).",
+      description: "Atualiza dados de uma profissional (nome, título/especialidade, bio, foto, whatsapp, comissão, ordem, ativa).",
       parameters: {
         type: "object",
         properties: {
