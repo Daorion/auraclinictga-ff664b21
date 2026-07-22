@@ -408,6 +408,21 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "gerar_relatorio_conversas",
+      description: "Gera relatório das conversas do WhatsApp que estão SEM RESPOSTA (última mensagem foi do cliente e ninguém — nem Aurora, nem humano — respondeu). Use quando a Sirlei pedir relatório/pendências/quem não respondi.",
+      parameters: {
+        type: "object",
+        properties: {
+          horas_min: { type: "number", description: "Só considera pendentes há pelo menos N horas (padrão 1)." },
+          limite: { type: "number", description: "Máximo de conversas (padrão 30)." },
+          incluir_bloqueadas: { type: "boolean", description: "Incluir contatos com Aurora bloqueada (padrão true)." },
+        },
+      },
+    },
+  },
 ];
 
 async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
