@@ -156,9 +156,25 @@ const AdminAtendimentos = () => {
     else setMessages([]);
   }, [activeId]);
 
+  const prevCountRef = useRef(0);
+  const prevActiveRef = useRef<string | null>(null);
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages]);
+    const el = scrollRef.current;
+    if (!el) return;
+    const switched = prevActiveRef.current !== activeId;
+    prevActiveRef.current = activeId;
+    if (switched) {
+      el.scrollTo({ top: el.scrollHeight });
+      prevCountRef.current = messages.length;
+      return;
+    }
+    const grew = messages.length > prevCountRef.current;
+    prevCountRef.current = messages.length;
+    if (!grew) return;
+    // Only auto-scroll if user is already near the bottom (within 120px).
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (nearBottom) el.scrollTo({ top: el.scrollHeight });
+  }, [messages, activeId]);
 
   const active = useMemo(() => conversations.find((c) => c.id === activeId) ?? null, [conversations, activeId]);
   const activeContact = active ? contactsById[active.contact_id] : null;
