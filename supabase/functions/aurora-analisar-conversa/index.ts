@@ -141,11 +141,13 @@ Deno.serve(async (req) => {
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, SERVICE_ROLE);
 
-  // Auth: admin user OR service role bearer
+  // Auth: admin user JWT, service role bearer, ou cron secret header
   const auth = req.headers.get("Authorization") ?? "";
   const jwt = auth.replace(/^Bearer\s+/i, "");
-  let isService = jwt === SERVICE_ROLE;
-  if (!isService) {
+  const cronHeader = req.headers.get("X-Cron-Secret") ?? "";
+  const CRON_SECRET = Deno.env.get("AURORA_CRON_SECRET") ?? "";
+  let isTrusted = jwt === SERVICE_ROLE || (!!CRON_SECRET && cronHeader === CRON_SECRET);
+  if (!isTrusted) {
     if (!jwt) return json({ error: "unauthenticated" }, 401);
     const { data: userData } = await admin.auth.getUser(jwt);
     const user = userData?.user;
