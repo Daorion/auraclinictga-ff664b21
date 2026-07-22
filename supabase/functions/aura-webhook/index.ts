@@ -1277,7 +1277,11 @@ Deno.serve(async (req) => {
     : "");
 
   const arrivedAt = new Date().toISOString();
-  await admin.from("messages").insert({
+  // Capturamos o created_at real da linha inserida para usar como referência
+  // no debounce. Sem isso, comparar `arrivedAt` (calculado antes do insert) com
+  // `created_at` do próprio row faz a checagem tratar a mensagem atual como
+  // "mais nova" que ela mesma e cancela a resposta da Aurora.
+  const { data: insertedMsg } = await admin.from("messages").insert({
     conversation_id: convId,
     contact_id: contact.id,
     channel: "whatsapp",
@@ -1298,7 +1302,8 @@ Deno.serve(async (req) => {
       caption: captionText || null,
       raw: payload,
     },
-  });
+  }).select("created_at").maybeSingle();
+  const messageCreatedAt = (insertedMsg as any)?.created_at ?? arrivedAt;
 
   const convUpdate: any = {
     last_message_at: arrivedAt,
@@ -1371,7 +1376,7 @@ Deno.serve(async (req) => {
   // DEBOUNCE_MS sem novas mensagens, e simula digitação humana entre chunks.
   // @ts-ignore — EdgeRuntime é global no Supabase Edge Runtime
   EdgeRuntime.waitUntil(
-    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt, replyToken),
+    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, messageCreatedAt, replyToken),
   );
 
   return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS, token: replyToken });
