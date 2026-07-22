@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, Bot, User as UserIcon, Wrench, Trash2, MessageSquare, Mic, Square } from "lucide-react";
+import { Loader2, Send, Bot, User as UserIcon, Wrench, Trash2, MessageSquare, Mic, Square, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { AuroraMessage } from "@/components/aurora/AuroraMessage";
