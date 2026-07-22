@@ -1376,7 +1376,7 @@ Deno.serve(async (req) => {
   // DEBOUNCE_MS sem novas mensagens, e simula digitação humana entre chunks.
   // @ts-ignore — EdgeRuntime é global no Supabase Edge Runtime
   EdgeRuntime.waitUntil(
-    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, arrivedAt, replyToken),
+    scheduleReply(admin, convId, rawFrom, phone, contact.id, contact.name ?? contactName, messageCreatedAt, replyToken),
   );
 
   return json({ ok: true, scheduled: true, debounce_ms: DEBOUNCE_MS, token: replyToken });
