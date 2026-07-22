@@ -111,6 +111,75 @@ async function downloadWahaMedia(payload: any): Promise<{ bytes: Uint8Array; mim
   return null;
 }
 
+// Download qualquer mídia (image/video/document) sem cap de áudio.
+async function downloadWahaMediaAny(payload: any, maxBytes = 20 * 1024 * 1024): Promise<{ bytes: Uint8Array; mime: string } | null> {
+  const mime = String(payload?.media?.mimetype ?? payload?._data?.mimetype ?? "application/octet-stream").split(";")[0].trim();
+  const rawUrl = payload?.media?.url ?? payload?._data?.mediaUrl ?? null;
+  const directUrl = rawUrl ? normalizeWahaMediaUrl(String(rawUrl)) : null;
+  if (!directUrl) return null;
+  const tryFetch = async (url: string, withKey: boolean) => {
+    const headers: Record<string, string> = {};
+    if (withKey && WAHA_API_KEY) headers["X-Api-Key"] = WAHA_API_KEY;
+    const r = await fetch(url, { headers });
+    if (!r.ok) throw new Error(`http_${r.status}`);
+    return new Uint8Array(await r.arrayBuffer());
+  };
+  try {
+    const bytes = await tryFetch(directUrl, true);
+    if (bytes.byteLength > maxBytes) { console.warn("[media] too large:", bytes.byteLength); return null; }
+    return { bytes, mime };
+  } catch (e) { console.warn("[media] direct failed:", String(e)); }
+  if (WAHA_API_KEY) {
+    try {
+      const sep = directUrl.includes("?") ? "&" : "?";
+      const bytes = await tryFetch(`${directUrl}${sep}apikey=${encodeURIComponent(WAHA_API_KEY)}`, false);
+      if (bytes.byteLength > maxBytes) return null;
+      return { bytes, mime };
+    } catch (e) { console.warn("[media] qs apikey failed:", String(e)); }
+  }
+  return null;
+}
+
+function extFromMime(mime: string): string {
+  const m = mime.toLowerCase();
+  if (m.includes("jpeg") || m.includes("jpg")) return "jpg";
+  if (m.includes("png")) return "png";
+  if (m.includes("webp")) return "webp";
+  if (m.includes("gif")) return "gif";
+  if (m.includes("mp4")) return "mp4";
+  if (m.includes("quicktime")) return "mov";
+  if (m.includes("pdf")) return "pdf";
+  if (m.includes("webm")) return "webm";
+  return "bin";
+}
+
+// Faz upload no bucket privado e devolve URL assinada válida por 3 dias.
+async function uploadMediaToStorage(
+  admin: any,
+  contactId: string,
+  externalId: string,
+  bytes: Uint8Array,
+  mime: string,
+): Promise<{ url: string; path: string } | null> {
+  try {
+    const ext = extFromMime(mime);
+    const safeId = externalId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60) || crypto.randomUUID();
+    const path = `${contactId}/${safeId}.${ext}`;
+    const { error: upErr } = await admin.storage.from("whatsapp-media").upload(path, bytes, {
+      contentType: mime || "application/octet-stream",
+      upsert: true,
+    });
+    if (upErr) { console.warn("[media] upload error:", upErr.message); return null; }
+    const { data: signed, error: signErr } = await admin.storage
+      .from("whatsapp-media").createSignedUrl(path, 60 * 60 * 24 * 3); // 3 dias
+    if (signErr || !signed?.signedUrl) { console.warn("[media] sign error:", signErr?.message); return null; }
+    return { url: signed.signedUrl, path };
+  } catch (e) {
+    console.warn("[media] upload exception:", String(e));
+    return null;
+  }
+}
+
 function bytesToBase64(bytes: Uint8Array): string {
   let bin = "";
   const chunk = 0x8000;
@@ -1020,6 +1089,16 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Baixa e armazena imagem/vídeo/documento no bucket (URL assinada 3 dias)
+  const isVisualMedia = !isAudio && hasMedia && (
+    msgType === "image" || msgType === "video" || msgType === "sticker" || msgType === "document"
+  );
+  let mediaUrl: string | null = null;
+  let mediaMime: string | null = null;
+  let mediaPath: string | null = null;
+  let mediaKind: string | null = null;
+  const captionText = String(payload?.caption ?? payload?._data?.caption ?? "").trim();
+
   const storedBody = messageBody
     || (transcript ? `🎤 ${transcript}` : (isAudio ? "[áudio]" : (hasMedia ? "[mídia]" : "")));
   const aiInput = messageBody
@@ -1157,19 +1236,43 @@ Deno.serve(async (req) => {
     if (existing) return json({ ok: true, deduped: true });
   }
 
+  // Se for mídia visual, baixa do WAHA e sobe pro bucket antes de gravar a mensagem
+  if (isVisualMedia) {
+    const media = await downloadWahaMediaAny(payload);
+    if (media) {
+      mediaMime = media.mime;
+      mediaKind = msgType;
+      const uploaded = await uploadMediaToStorage(admin, contact.id, String(externalId ?? crypto.randomUUID()), media.bytes, media.mime);
+      if (uploaded) { mediaUrl = uploaded.url; mediaPath = uploaded.path; }
+    }
+  }
+
+  const finalStoredBody = storedBody || captionText || (isVisualMedia
+    ? (msgType === "image" ? "[imagem]" : msgType === "video" ? "[vídeo]" : msgType === "sticker" ? "[sticker]" : "[documento]")
+    : "");
+
   const arrivedAt = new Date().toISOString();
   await admin.from("messages").insert({
     conversation_id: convId,
     contact_id: contact.id,
     channel: "whatsapp",
     direction: fromMe ? "out" : "in",
-    body: storedBody,
+    body: finalStoredBody,
     external_id: externalId,
     msg_type: payload?.type ?? "text",
     author: fromMe ? "human" : "contact",
     status: fromMe ? "sent" : "delivered",
     sent_at: eventSentAt,
-    metadata: { waha_event: event, from_phone: fromMe, raw: payload },
+    metadata: {
+      waha_event: event,
+      from_phone: fromMe,
+      media_url: mediaUrl,
+      media_mime: mediaMime,
+      media_path: mediaPath,
+      media_kind: mediaKind,
+      caption: captionText || null,
+      raw: payload,
+    },
   });
 
   const convUpdate: any = {
