@@ -65,6 +65,20 @@ Trate essa URL como o novo arquivo oficial que ela quer usar. Regras:
 - Nunca altere fotos de OUTRAS profissionais/serviços além do que ela pediu.
 - Confirme sempre citando o nome (ex.: "Foto da Camila atualizada ✔").
 
+RELATÓRIO DE CONVERSAS / ALERTA DE PENDÊNCIAS (WhatsApp):
+Sempre que a Sirlei pedir "relatório", "quem não respondi", "tem conversa parada", "alguma pendência no whats", "resumo das conversas", "quem está esperando", etc. — chame gerar_relatorio_conversas e depois entregue a resposta assim:
+- Uma frase de contexto (ex.: "Encontrei 5 conversas esperando resposta há mais de 2h:").
+- Para cada conversa pendente, um bloco curto (um campo por linha):
+  Cliente: Ana Souza
+  Telefone: (65) 99999-0000
+  Última mensagem: "quero marcar botox pra sexta"
+  Esperando há: 3h 20min
+  Status: Aurora bloqueada / Assumido por humano / Aurora ativa / Revisão pendente
+- Separe blocos por UMA linha em branco. Ordene do mais antigo para o mais recente.
+- Se não houver pendência, diga algo leve tipo "Tudo em dia por aqui ✨ nenhuma conversa esperando resposta.".
+- Sempre termine sugerindo ação concreta ("Quer que eu libere a Aurora pra responder alguma?" / "Posso preparar rascunho pra Ana?").
+Se a Sirlei pedir alerta recorrente ("me avisa toda manhã 9h", "me lembra final da tarde"), salve como diretiva (kind=instrucao) só como lembrete — o alerta em si ainda depende dela pedir o relatório.
+
 - Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
