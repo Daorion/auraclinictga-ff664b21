@@ -1125,8 +1125,24 @@ Deno.serve(async (req) => {
       .insert({ contact_id: contact.id, channel: "whatsapp", ai_enabled: true, external_session: session })
       .select("id")
       .single();
-    if (newErr || !newConv) return json({ error: "conv_failed", details: newErr }, 500);
-    convId = newConv.id;
+    if (newConv) {
+      convId = newConv.id;
+    } else if (newErr?.code === "23505") {
+      // Outra mensagem do mesmo contato criou a conversa aberta no mesmo instante.
+      const { data: racedConv } = await admin
+        .from("conversations")
+        .select("id, ai_enabled, human_takeover_until, unread_count")
+        .eq("contact_id", contact.id)
+        .eq("status", "open")
+        .maybeSingle();
+      if (!racedConv) return json({ error: "conv_race_failed", details: newErr }, 500);
+      convId = racedConv.id;
+      convAiEnabled = racedConv.ai_enabled ?? true;
+      convTakeoverUntil = racedConv.human_takeover_until;
+      convUnread = racedConv.unread_count ?? 0;
+    } else {
+      return json({ error: "conv_failed", details: newErr }, 500);
+    }
   }
 
   // Save message (idempotent via external_id). If fromMe and we already logged it
