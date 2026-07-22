@@ -122,7 +122,7 @@ const AdminAtendimentos = () => {
   const loadMessages = async (convId: string) => {
     const { data } = await supabase
       .from("messages")
-      .select("id,conversation_id,direction,body,author,status,is_draft,error,created_at")
+      .select("id,conversation_id,direction,body,author,status,is_draft,error,created_at,metadata")
       .eq("conversation_id", convId)
       .order("sent_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
@@ -496,7 +496,31 @@ const AdminAtendimentos = () => {
                         : "bg-card border"
                     } ${m.is_draft ? "opacity-70 border-dashed" : ""}`}>
 
-                      <p className="whitespace-pre-wrap">{m.body}</p>
+                      {(() => {
+                        const md = m.metadata || {};
+                        const url = md.media_url as string | undefined;
+                        const mime = (md.media_mime as string | undefined) || "";
+                        const kind = md.media_kind as string | undefined;
+                        if (url && (kind === "image" || kind === "sticker" || mime.startsWith("image/"))) {
+                          return (
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="block mb-1">
+                              <img src={url} alt="mídia" className="max-w-full max-h-64 rounded-md border" loading="lazy" />
+                            </a>
+                          );
+                        }
+                        if (url && (kind === "video" || mime.startsWith("video/"))) {
+                          return <video src={url} controls className="max-w-full max-h-64 rounded-md border mb-1" />;
+                        }
+                        if (url && (kind === "document" || mime === "application/pdf")) {
+                          return (
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="underline text-xs block mb-1">
+                              📎 Abrir documento
+                            </a>
+                          );
+                        }
+                        return null;
+                      })()}
+                      {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
                       <div className="text-[10px] opacity-70 mt-1 flex items-center gap-1">
                         {m.author === "aurora" && <Bot className="w-3 h-3" />}
                         {m.author === "sirlei" && <UserCheck className="w-3 h-3" />}
