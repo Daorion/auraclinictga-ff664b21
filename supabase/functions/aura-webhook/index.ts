@@ -1319,6 +1319,20 @@ Deno.serve(async (req) => {
   }
 
   if (fromMe) {
+    // Comandos da Sirlei pelo próprio WhatsApp: "aurora ignora essa conversa" / "aurora volte"
+    const cmd = detectAuroraCommand(storedBody);
+    if (cmd) {
+      const newBlocked = cmd === "block";
+      await admin.from("contacts").update({ aurora_blocked: newBlocked }).eq("id", contact.id);
+      if (newBlocked) {
+        // Também encerra qualquer takeover pendente/irrelevante — o bloqueio é definitivo até desbloqueio
+        await admin.from("conversations")
+          .update({ human_takeover_until: null, pending_reply_token: null })
+          .eq("contact_id", contact.id).eq("status", "open");
+      }
+      if (externalId) await sendReaction(externalId, "👍");
+      return json({ ok: true, aurora_command: cmd, contact_id: contact.id });
+    }
     return json({ ok: true, human_takeover: true, hours: HUMAN_PAUSE_HOURS });
   }
 
