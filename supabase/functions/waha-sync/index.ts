@@ -124,12 +124,19 @@ Deno.serve(async (req) => {
       .select("id").eq("contact_id", contact.id).eq("status", "open").maybeSingle();
     if (openConv) convId = openConv.id;
     else {
-      const { data: newConv } = await admin.from("conversations")
+      const { data: newConv, error: newConvErr } = await admin.from("conversations")
         .insert({ contact_id: contact.id, channel: "whatsapp", ai_enabled: true, external_session: WAHA_SESSION })
         .select("id").single();
-      if (!newConv) continue;
-      convId = newConv.id;
-      stats.conversations++;
+      if (newConv) {
+        convId = newConv.id;
+        stats.conversations++;
+      } else if (newConvErr?.code === "23505") {
+        // Another webhook/sync created the open conversation at the same time.
+        const { data: racedConv } = await admin.from("conversations")
+          .select("id").eq("contact_id", contact.id).eq("status", "open").maybeSingle();
+        if (!racedConv) continue;
+        convId = racedConv.id;
+      } else continue;
     }
 
     // Fetch recent messages
@@ -168,6 +175,14 @@ Deno.serve(async (req) => {
         sent_at: ts,
         metadata: { synced: true, raw: m },
       });
+      if (fromMe) {
+        await admin.from("conversations").update({
+          human_takeover_until: new Date(Date.now() + 3 * 3600_000).toISOString(),
+          assigned_to: "sirlei",
+          pending_reply_token: null,
+          unread_count: 0,
+        }).eq("contact_id", contact.id).eq("status", "open");
+      }
       stats.messages++;
     }
 

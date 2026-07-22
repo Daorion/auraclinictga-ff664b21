@@ -82,7 +82,8 @@ Deno.serve(async (req) => {
     sent_at: new Date().toISOString(),
   });
 
-  // Update conversation snapshot. AI only pauses when explicitly requested by the panel.
+  // Update conversation snapshot. When Sirlei answers, pause Aurora for every open
+  // conversation of this contact so a duplicate/legacy conversation cannot reply over her.
   const patch: Record<string, unknown> = {
     last_message_at: new Date().toISOString(),
     last_message_preview: text.slice(0, 140),
@@ -96,8 +97,13 @@ Deno.serve(async (req) => {
     const until = new Date(Date.now() + HUMAN_PAUSE_HOURS * 3600 * 1000).toISOString();
     patch.human_takeover_until = until;
     patch.assigned_to = "sirlei";
+    patch.pending_reply_token = null;
   }
-  await admin.from("conversations").update(patch).eq("id", conversation_id);
+  if (pause_ai !== false) {
+    await admin.from("conversations").update(patch).eq("contact_id", conv.contact_id).eq("status", "open");
+  } else {
+    await admin.from("conversations").update(patch).eq("id", conversation_id);
+  }
 
   return json({ ok: true, error: sendError, external_id: sentId });
 });

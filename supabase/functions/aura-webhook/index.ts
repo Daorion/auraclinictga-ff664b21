@@ -784,6 +784,7 @@ async function executeAuroraTool(
 }
 
 const DEBOUNCE_MS = 8_000; // aguarda a pessoa terminar de mandar as msgs
+const STALE_EVENT_MS = 2 * 60_000; // histórico/replay do WAHA: salva, mas não dispara IA
 const TYPING_CPS = 45;     // ~45 caracteres por segundo "digitados"
 const TYPING_MIN_MS = 1200;
 const TYPING_MAX_MS = 4500;
@@ -818,6 +819,20 @@ async function scheduleReply(
   const { data: ctBlk } = await admin.from("contacts").select("aurora_blocked").eq("id", contactId).maybeSingle();
   if (ctBlk?.aurora_blocked) { console.log("aurora_blocked_contact", { contactId }); return; }
 
+  // Lock real por CONTATO: se entrou qualquer mensagem depois desta (inclusive da Sirlei), aborta.
+  // Isso protege mesmo se algum caminho legado criar/usar outra conversation_id.
+  const { data: latestContactMsg } = await admin
+    .from("messages")
+    .select("direction, author, created_at")
+    .eq("contact_id", contactId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!latestContactMsg || latestContactMsg.direction !== "in" || new Date(latestContactMsg.created_at).getTime() > new Date(arrivedAt).getTime()) {
+    console.log("contact_debounce_superseded", { contactId, convId, arrivedAt, latest: latestContactMsg?.created_at, direction: latestContactMsg?.direction });
+    return;
+  }
+
   // 3) Gera resposta com base em TODO o histórico acumulado
   const reply = await generateAiReply(admin, convId, phone, contactName, "");
   if (!reply) return;
@@ -834,6 +849,21 @@ async function scheduleReply(
     .maybeSingle();
   if (!claim) {
     console.log("claim_lost", { convId, myToken });
+    return;
+  }
+
+  // Última barreira antes de enviar: se Sirlei respondeu durante a geração, não manda nada.
+  const { data: humanAfterClaim } = await admin
+    .from("messages")
+    .select("id")
+    .eq("contact_id", contactId)
+    .eq("direction", "out")
+    .in("author", ["human", "sirlei"])
+    .gt("created_at", arrivedAt)
+    .limit(1)
+    .maybeSingle();
+  if (humanAfterClaim) {
+    console.log("human_intervened_before_send", { contactId, convId });
     return;
   }
 
@@ -965,6 +995,9 @@ Deno.serve(async (req) => {
   const notifyName = isLid ? null : rawNotifyName;
   const messageBody = String(payload?.body ?? payload?.text ?? "").trim();
   const externalId = payload?.id?._serialized ?? payload?.id ?? null;
+  const payloadTsRaw = Number(payload?.timestamp ?? payload?._data?.timestamp ?? 0);
+  const eventSentAt = payloadTsRaw > 0 ? new Date(payloadTsRaw * 1000).toISOString() : new Date().toISOString();
+  const isStaleReplay = !fromMe && payloadTsRaw > 0 && (Date.now() - payloadTsRaw * 1000) > STALE_EVENT_MS;
   const hasMedia = payload?.hasMedia === true;
   const isAudio = msgType === "audio" || msgType === "ptt" || payload?._data?.isPtt === true;
   const audioSeconds = Number(payload?.duration ?? payload?._data?.duration ?? 0);
@@ -1028,11 +1061,11 @@ Deno.serve(async (req) => {
   // Look up existing contact so we NEVER overwrite the CRM name with WhatsApp push name
   const { data: existingContact } = await admin
     .from("contacts")
-    .select("id, name, client_id")
+    .select("id, name, client_id, aurora_blocked")
     .eq("phone", phone)
     .maybeSingle();
 
-  let contact: { id: string; name: string | null } | null = null;
+  let contact: { id: string; name: string | null; aurora_blocked?: boolean } | null = null;
   if (existingContact) {
     const patch: Record<string, unknown> = {
       wa_id: rawFrom,
@@ -1046,7 +1079,7 @@ Deno.serve(async (req) => {
     }
     if (!existingContact.client_id && linkedClientId) patch.client_id = linkedClientId;
     const { data: updated, error: updErr } = await admin
-      .from("contacts").update(patch).eq("id", existingContact.id).select("id, name").single();
+      .from("contacts").update(patch).eq("id", existingContact.id).select("id, name, aurora_blocked").single();
     if (updErr || !updated) return json({ error: "contact_update_failed", details: updErr }, 500);
     contact = updated;
   } else {
@@ -1062,7 +1095,7 @@ Deno.serve(async (req) => {
         origin: "whatsapp",
         client_id: linkedClientId,
       })
-      .select("id, name")
+      .select("id, name, aurora_blocked")
       .single();
     if (insErr || !inserted) return json({ error: "contact_failed", details: insErr }, 500);
     contact = inserted;
@@ -1092,8 +1125,24 @@ Deno.serve(async (req) => {
       .insert({ contact_id: contact.id, channel: "whatsapp", ai_enabled: true, external_session: session })
       .select("id")
       .single();
-    if (newErr || !newConv) return json({ error: "conv_failed", details: newErr }, 500);
-    convId = newConv.id;
+    if (newConv) {
+      convId = newConv.id;
+    } else if (newErr?.code === "23505") {
+      // Outra mensagem do mesmo contato criou a conversa aberta no mesmo instante.
+      const { data: racedConv } = await admin
+        .from("conversations")
+        .select("id, ai_enabled, human_takeover_until, unread_count")
+        .eq("contact_id", contact.id)
+        .eq("status", "open")
+        .maybeSingle();
+      if (!racedConv) return json({ error: "conv_race_failed", details: newErr }, 500);
+      convId = racedConv.id;
+      convAiEnabled = racedConv.ai_enabled ?? true;
+      convTakeoverUntil = racedConv.human_takeover_until;
+      convUnread = racedConv.unread_count ?? 0;
+    } else {
+      return json({ error: "conv_failed", details: newErr }, 500);
+    }
   }
 
   // Save message (idempotent via external_id). If fromMe and we already logged it
@@ -1119,7 +1168,7 @@ Deno.serve(async (req) => {
     msg_type: payload?.type ?? "text",
     author: fromMe ? "human" : "contact",
     status: fromMe ? "sent" : "delivered",
-    sent_at: arrivedAt,
+    sent_at: eventSentAt,
     metadata: { waha_event: event, from_phone: fromMe, raw: payload },
   });
 
@@ -1131,13 +1180,24 @@ Deno.serve(async (req) => {
     // Humano assumiu direto pelo celular → pausa a Aurora por HUMAN_PAUSE_HOURS
     convUpdate.human_takeover_until = new Date(Date.now() + HUMAN_PAUSE_HOURS * 3600_000).toISOString();
     convUpdate.unread_count = 0;
+    convUpdate.pending_reply_token = null;
   } else {
     convUpdate.unread_count = convUnread + 1;
   }
-  await admin.from("conversations").update(convUpdate).eq("id", convId);
+  if (fromMe) {
+    await admin.from("conversations").update(convUpdate).eq("contact_id", contact.id).eq("status", "open");
+  } else {
+    await admin.from("conversations").update(convUpdate).eq("id", convId);
+  }
 
   if (fromMe) {
     return json({ ok: true, human_takeover: true, hours: HUMAN_PAUSE_HOURS });
+  }
+
+  // WAHA pode reenviar histórico depois de reconectar. Registramos a mensagem,
+  // mas não deixamos replay antigo acionar a Aurora.
+  if (isStaleReplay) {
+    return json({ ok: true, ai_skipped: "stale_waha_replay", event_sent_at: eventSentAt });
   }
 
   // Decide: should AI reply?
