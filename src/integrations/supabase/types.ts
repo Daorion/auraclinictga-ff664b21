@@ -695,6 +695,65 @@ export type Database = {
           },
         ]
       }
+      contact_insights: {
+        Row: {
+          alerts: string[] | null
+          contact_id: string
+          created_at: string
+          interest: string | null
+          last_analyzed_at: string
+          last_message_at: string | null
+          message_count_at_analysis: number | null
+          next_action: string | null
+          objections: string[] | null
+          opportunity_score: number | null
+          raw: Json | null
+          stage: string | null
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          alerts?: string[] | null
+          contact_id: string
+          created_at?: string
+          interest?: string | null
+          last_analyzed_at?: string
+          last_message_at?: string | null
+          message_count_at_analysis?: number | null
+          next_action?: string | null
+          objections?: string[] | null
+          opportunity_score?: number | null
+          raw?: Json | null
+          stage?: string | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alerts?: string[] | null
+          contact_id?: string
+          created_at?: string
+          interest?: string | null
+          last_analyzed_at?: string
+          last_message_at?: string | null
+          message_count_at_analysis?: number | null
+          next_action?: string | null
+          objections?: string[] | null
+          opportunity_score?: number | null
+          raw?: Json | null
+          stage?: string | null
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_insights_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: true
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           aurora_blocked: boolean

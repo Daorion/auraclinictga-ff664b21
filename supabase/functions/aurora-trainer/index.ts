@@ -79,6 +79,28 @@ Sempre que a Sirlei pedir "relatório", "quem não respondi", "tem conversa para
 - Sempre termine sugerindo ação concreta ("Quer que eu libere a Aurora pra responder alguma?" / "Posso preparar rascunho pra Ana?").
 Se a Sirlei pedir alerta recorrente ("me avisa toda manhã 9h", "me lembra final da tarde"), salve como diretiva (kind=instrucao) só como lembrete — o alerta em si ainda depende dela pedir o relatório.
 
+ANÁLISE INTELIGENTE POR PESSOA (analisar_contato):
+Quando a Sirlei pedir para "analisar" alguém, "olhar", "ver o que passou", "avaliar o lead", "vale a pena ligar", "o que a fulana quer", "me fala sobre X" — chame analisar_contato com o nome/telefone que ela mencionou. Depois entregue no formato:
+- Uma linha com nome + telefone + estágio + score (ex.: "Michelly — (65) 99999-0000 — negociando, score 78 🔥").
+- Bloco de campos rotulados:
+  Interesse: harmonização facial
+  Objeções: preço, medo de ficar "artificial"
+  Próxima ação: mandar antes/depois de harmonização discreta + oferecer avaliação gratuita
+  Alertas: cliente esperando resposta há 2 dias
+  Resumo: Michelly demonstrou interesse alto mas travou no preço. Última mensagem sem resposta.
+- Se vier "ambiguo": mostre os candidatos numerados e peça pra ela escolher.
+- Se vier warning: explique que a conversa é curta demais e sugira ação humana direta.
+- Fechar com uma pergunta prática ("Quer que eu prepare um rascunho de mensagem pra ela?").
+
+BRIEFING DO DIA (briefing_do_dia):
+Quando a Sirlei pedir "briefing", "panorama", "resumo geral", "onde tão as oportunidades", "o que preciso olhar hoje" — chame briefing_do_dia e entregue:
+- Título curto ("Briefing de {data} — {total} contatos analisados:").
+- Bloco 🔥 OPORTUNIDADES QUENTES: para cada uma → nome (score) + próxima_ação em 1 linha.
+- Bloco ❄️ ESFRIANDO: nome + há quanto tempo + próxima_ação.
+- Bloco ⚠️ ALERTAS: nome + alerta principal.
+- Encerrar com "Por qual você quer começar?".
+- Se estiver tudo vazio, diga com leveza ("Nada urgente hoje ✨").
+
 - Hoje é ${new Date().toISOString()} (UTC).`;
 
 const tools = [
@@ -423,6 +445,34 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "analisar_contato",
+      description: "Faz uma análise INTELIGENTE e FRESCA da conversa de UMA pessoa no WhatsApp — devolve estágio no funil, interesse principal, objeções, próxima ação recomendada, score de oportunidade (0-100) e resumo executivo. Use sempre que a Sirlei perguntar 'analisa o fulano', 'como tá o lead X', 'o que passou com a Michelly', 'me diz o que essa pessoa quer', 'vale a pena ligar pra ele?', etc. Passe o nome/telefone que a Sirlei mencionou.",
+      parameters: {
+        type: "object",
+        properties: {
+          nome_ou_telefone: { type: "string", description: "Nome, apelido ou telefone que a Sirlei mencionou. Ex.: 'Michelly', 'Henrique Lopes', '65999...'." },
+          contact_id: { type: "string", description: "UUID direto do contato (se já souber)." },
+          forcar_reanalise: { type: "boolean", description: "Ignora cache e roda análise nova (padrão true quando a Sirlei pede)." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "briefing_do_dia",
+      description: "Devolve um briefing executivo para a Sirlei com base nas análises dos contatos: TOP oportunidades quentes (score alto sem agendamento), leads esfriando, quem tem alerta, resumo por estágio do funil. Use quando ela pedir 'briefing', 'panorama', 'o que preciso olhar hoje', 'onde estão as oportunidades', 'me dá um resumo geral'.",
+      parameters: {
+        type: "object",
+        properties: {
+          limite_por_bloco: { type: "number", description: "Quantos itens por bloco (padrão 5)." },
+        },
+      },
+    },
+  },
 ];
 
 async function resolveProfessionalId(admin: any, slug?: string): Promise<string> {
@@ -761,6 +811,110 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
         horas_min: horasMin,
         gerado_em: new Date().toISOString(),
         pendentes,
+      };
+    }
+    if (name === "analisar_contato") {
+      let contactId: string | null = args.contact_id ?? null;
+      if (!contactId) {
+        const q = String(args.nome_ou_telefone ?? "").trim();
+        if (!q) return { error: "informe nome_ou_telefone ou contact_id" };
+        const digits = q.replace(/\D/g, "");
+        let query = admin.from("contacts").select("id, name, push_name, phone, wa_id").limit(5);
+        if (digits.length >= 6) {
+          query = query.or(`phone.ilike.%${digits}%,wa_id.ilike.%${digits}%`);
+        } else {
+          const like = `%${q}%`;
+          query = query.or(`name.ilike.${like},push_name.ilike.${like}`);
+        }
+        const { data: hits } = await query;
+        if (!hits?.length) return { error: `contato não encontrado: ${q}` };
+        if (hits.length > 1) {
+          return { ambiguo: true, candidatos: hits.map((h: any) => ({ id: h.id, nome: h.name || h.push_name, telefone: h.phone || h.wa_id })) };
+        }
+        contactId = hits[0].id;
+      }
+      const force = args.forcar_reanalise !== false;
+      const analyzeUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/aurora-analisar-conversa`;
+      let result: any = null;
+      if (force) {
+        const r = await fetch(analyzeUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+          body: JSON.stringify({ contact_id: contactId }),
+        });
+        result = await r.json().catch(() => null);
+      }
+      const { data: insight } = await admin.from("contact_insights")
+        .select("*").eq("contact_id", contactId).maybeSingle();
+      const { data: contact } = await admin.from("contacts")
+        .select("id, name, push_name, phone, wa_id, aurora_blocked").eq("id", contactId).maybeSingle();
+      if (!insight) return { warning: "análise ainda não disponível (conversa muito curta ou sem histórico)", contato: contact, run_result: result };
+      return {
+        contato: {
+          id: contact?.id,
+          nome: contact?.name || contact?.push_name,
+          telefone: contact?.phone || contact?.wa_id,
+          aurora_bloqueada: !!contact?.aurora_blocked,
+        },
+        analise: {
+          estagio: insight.stage,
+          interesse: insight.interest,
+          objecoes: insight.objections ?? [],
+          proxima_acao: insight.next_action,
+          score_oportunidade: insight.opportunity_score,
+          resumo: insight.summary,
+          alertas: insight.alerts ?? [],
+          analisado_em: insight.last_analyzed_at,
+          mensagens_consideradas: insight.message_count_at_analysis,
+        },
+      };
+    }
+    if (name === "briefing_do_dia") {
+      const perBlock = Math.max(3, Math.min(15, Number(args.limite_por_bloco ?? 5)));
+      // Dispara reanálise em background das conversas com msg dos últimos 90min
+      const analyzeUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/aurora-analisar-conversa`;
+      fetch(analyzeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+        body: JSON.stringify({ since_minutes: 180, limit: 30 }),
+      }).catch(() => {});
+
+      const { data: rows } = await admin.from("contact_insights")
+        .select("contact_id, stage, interest, next_action, opportunity_score, summary, alerts, last_message_at, contacts:contact_id(name, push_name, phone, wa_id, aurora_blocked)")
+        .order("opportunity_score", { ascending: false, nullsFirst: false })
+        .limit(300);
+      const enriched = (rows ?? []).map((r: any) => {
+        const c = r.contacts ?? {};
+        return {
+          contact_id: r.contact_id,
+          nome: c.name || c.push_name || c.phone || "Sem nome",
+          telefone: c.phone || c.wa_id || null,
+          estagio: r.stage,
+          interesse: r.interest,
+          proxima_acao: r.next_action,
+          score: r.opportunity_score ?? 0,
+          resumo: r.summary,
+          alertas: r.alerts ?? [],
+          ultima_mensagem_em: r.last_message_at,
+          aurora_bloqueada: !!c.aurora_blocked,
+        };
+      });
+
+      const quentes = enriched.filter((x) => x.score >= 65 && !["agendada", "cliente_fiel"].includes(x.estagio)).slice(0, perBlock);
+      const esfriando = enriched
+        .filter((x) => x.score >= 40 && x.score < 65 && x.ultima_mensagem_em && (Date.now() - new Date(x.ultima_mensagem_em).getTime()) > 3 * 86400_000)
+        .slice(0, perBlock);
+      const comAlerta = enriched.filter((x) => x.alertas && x.alertas.length > 0).slice(0, perBlock);
+      const porEstagio: Record<string, number> = {};
+      for (const x of enriched) { if (x.estagio) porEstagio[x.estagio] = (porEstagio[x.estagio] || 0) + 1; }
+
+      return {
+        total_contatos_analisados: enriched.length,
+        gerado_em: new Date().toISOString(),
+        oportunidades_quentes: quentes,
+        esfriando: esfriando,
+        com_alerta: comAlerta,
+        distribuicao_estagios: porEstagio,
       };
     }
     return { error: `unknown_tool_${name}` };
