@@ -554,14 +554,43 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
       const termo = String(args.termo ?? "").trim();
       if (!termo) return { error: "termo_vazio" };
       const digits = termo.replace(/\D/g, "");
+      const isLidLike = digits.length >= 13; // @lid pseudo-phones têm 13+ dígitos
       let q = admin.from("clients").select("id, name, phone, whatsapp_phone, email").eq("active", true).limit(20);
-      if (digits.length >= 4) {
+      if (digits.length >= 4 && !isLidLike) {
         q = q.or(`phone.ilike.%${digits}%,whatsapp_phone.ilike.%${digits}%`);
       } else {
         q = q.ilike("name", `%${termo}%`);
       }
-      const { data } = await q;
-      return { total: data?.length ?? 0, clientes: data ?? [] };
+      const { data: clients } = await q;
+
+      // Fallback / complemento: buscar em contacts (leads do WhatsApp)
+      let ctQuery = admin.from("contacts").select("id, name, push_name, phone, wa_id, client_id, aurora_blocked").limit(20);
+      if (digits.length >= 4) {
+        // busca por dígitos cobre tanto telefone real quanto @lid
+        ctQuery = ctQuery.or(`phone.ilike.%${digits}%,wa_id.ilike.%${digits}%`);
+      } else {
+        const like = `%${termo}%`;
+        ctQuery = ctQuery.or(`name.ilike.${like},push_name.ilike.${like}`);
+      }
+      const { data: contacts } = await ctQuery;
+
+      const contatos = (contacts ?? []).map((c: any) => ({
+        contact_id: c.id,
+        nome: c.name || c.push_name,
+        telefone: /@lid$/i.test(c.wa_id ?? "") ? "(oculto pelo WhatsApp)" : c.phone,
+        cadastrado_como_cliente: !!c.client_id,
+        aurora_bloqueada: !!c.aurora_blocked,
+      }));
+
+      return {
+        total_clientes: clients?.length ?? 0,
+        clientes: clients ?? [],
+        total_contatos_whatsapp: contatos.length,
+        contatos_whatsapp: contatos,
+        obs: contatos.length && !(clients?.length)
+          ? "Nenhum cliente cadastrado com esse nome; encontrei contatos do WhatsApp. Para criar agendamento, cadastre com criar_cliente."
+          : undefined,
+      };
     }
     if (name === "criar_cliente") {
       const { data, error } = await admin.from("clients").insert({
