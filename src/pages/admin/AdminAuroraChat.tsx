@@ -254,7 +254,32 @@ const AdminAuroraChat = () => {
               </div>
             )}
           </div>
+          {attachments.length > 0 && (
+            <div className="border-t border-border/50 px-3 pt-3 flex flex-wrap gap-2">
+              {attachments.map((a, i) => (
+                <div key={i} className="relative group">
+                  <img src={a.url} alt={a.name} className="w-16 h-16 object-cover rounded-md border border-border" />
+                  <button
+                    type="button"
+                    onClick={() => setAttachments((cur) => cur.filter((_, j) => j !== i))}
+                    className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                    title="Remover"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="border-t border-border/50 p-3 flex gap-2 items-end">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => uploadFiles(e.target.files)}
+            />
             <Textarea
               ref={inputRef}
               value={input}
@@ -262,11 +287,22 @@ const AdminAuroraChat = () => {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
               }}
-              placeholder={recording ? "Gravando... clique no quadrado para parar" : transcribing ? "Transcrevendo áudio..." : "Ex.: A partir de hoje até 30/12 temos promoção de botox por 850,00. Cadastra isso pra você mencionar."}
+              placeholder={recording ? "Gravando... clique no quadrado para parar" : transcribing ? "Transcrevendo áudio..." : "Ex.: Troque a foto da Camila por essa imagem que estou enviando."}
               rows={2}
               disabled={sending || recording || transcribing}
               className="resize-none"
             />
+            <Button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={sending || recording || transcribing || uploading}
+              size="icon"
+              variant="outline"
+              className="h-10 w-10 flex-shrink-0"
+              title="Anexar imagem"
+            >
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+            </Button>
             <Button
               type="button"
               onClick={recording ? stopRecording : startRecording}
@@ -278,7 +314,7 @@ const AdminAuroraChat = () => {
             >
               {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </Button>
-            <Button onClick={send} disabled={sending || recording || transcribing || !input.trim()} size="icon" className="h-10 w-10 flex-shrink-0">
+            <Button onClick={send} disabled={sending || recording || transcribing || uploading || (!input.trim() && attachments.length === 0)} size="icon" className="h-10 w-10 flex-shrink-0">
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
