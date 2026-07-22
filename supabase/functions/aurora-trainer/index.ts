@@ -791,6 +791,110 @@ async function executeTool(admin: any, userId: string, name: string, args: any):
         pendentes,
       };
     }
+    if (name === "analisar_contato") {
+      let contactId: string | null = args.contact_id ?? null;
+      if (!contactId) {
+        const q = String(args.nome_ou_telefone ?? "").trim();
+        if (!q) return { error: "informe nome_ou_telefone ou contact_id" };
+        const digits = q.replace(/\D/g, "");
+        let query = admin.from("contacts").select("id, name, push_name, phone, wa_id").limit(5);
+        if (digits.length >= 6) {
+          query = query.or(`phone.ilike.%${digits}%,wa_id.ilike.%${digits}%`);
+        } else {
+          const like = `%${q}%`;
+          query = query.or(`name.ilike.${like},push_name.ilike.${like}`);
+        }
+        const { data: hits } = await query;
+        if (!hits?.length) return { error: `contato não encontrado: ${q}` };
+        if (hits.length > 1) {
+          return { ambiguo: true, candidatos: hits.map((h: any) => ({ id: h.id, nome: h.name || h.push_name, telefone: h.phone || h.wa_id })) };
+        }
+        contactId = hits[0].id;
+      }
+      const force = args.forcar_reanalise !== false;
+      const analyzeUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/aurora-analisar-conversa`;
+      let result: any = null;
+      if (force) {
+        const r = await fetch(analyzeUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+          body: JSON.stringify({ contact_id: contactId }),
+        });
+        result = await r.json().catch(() => null);
+      }
+      const { data: insight } = await admin.from("contact_insights")
+        .select("*").eq("contact_id", contactId).maybeSingle();
+      const { data: contact } = await admin.from("contacts")
+        .select("id, name, push_name, phone, wa_id, aurora_blocked").eq("id", contactId).maybeSingle();
+      if (!insight) return { warning: "análise ainda não disponível (conversa muito curta ou sem histórico)", contato: contact, run_result: result };
+      return {
+        contato: {
+          id: contact?.id,
+          nome: contact?.name || contact?.push_name,
+          telefone: contact?.phone || contact?.wa_id,
+          aurora_bloqueada: !!contact?.aurora_blocked,
+        },
+        analise: {
+          estagio: insight.stage,
+          interesse: insight.interest,
+          objecoes: insight.objections ?? [],
+          proxima_acao: insight.next_action,
+          score_oportunidade: insight.opportunity_score,
+          resumo: insight.summary,
+          alertas: insight.alerts ?? [],
+          analisado_em: insight.last_analyzed_at,
+          mensagens_consideradas: insight.message_count_at_analysis,
+        },
+      };
+    }
+    if (name === "briefing_do_dia") {
+      const perBlock = Math.max(3, Math.min(15, Number(args.limite_por_bloco ?? 5)));
+      // Dispara reanálise em background das conversas com msg dos últimos 90min
+      const analyzeUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/aurora-analisar-conversa`;
+      fetch(analyzeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+        body: JSON.stringify({ since_minutes: 180, limit: 30 }),
+      }).catch(() => {});
+
+      const { data: rows } = await admin.from("contact_insights")
+        .select("contact_id, stage, interest, next_action, opportunity_score, summary, alerts, last_message_at, contacts:contact_id(name, push_name, phone, wa_id, aurora_blocked)")
+        .order("opportunity_score", { ascending: false, nullsFirst: false })
+        .limit(300);
+      const enriched = (rows ?? []).map((r: any) => {
+        const c = r.contacts ?? {};
+        return {
+          contact_id: r.contact_id,
+          nome: c.name || c.push_name || c.phone || "Sem nome",
+          telefone: c.phone || c.wa_id || null,
+          estagio: r.stage,
+          interesse: r.interest,
+          proxima_acao: r.next_action,
+          score: r.opportunity_score ?? 0,
+          resumo: r.summary,
+          alertas: r.alerts ?? [],
+          ultima_mensagem_em: r.last_message_at,
+          aurora_bloqueada: !!c.aurora_blocked,
+        };
+      });
+
+      const quentes = enriched.filter((x) => x.score >= 65 && !["agendada", "cliente_fiel"].includes(x.estagio)).slice(0, perBlock);
+      const esfriando = enriched
+        .filter((x) => x.score >= 40 && x.score < 65 && x.ultima_mensagem_em && (Date.now() - new Date(x.ultima_mensagem_em).getTime()) > 3 * 86400_000)
+        .slice(0, perBlock);
+      const comAlerta = enriched.filter((x) => x.alertas && x.alertas.length > 0).slice(0, perBlock);
+      const porEstagio: Record<string, number> = {};
+      for (const x of enriched) { if (x.estagio) porEstagio[x.estagio] = (porEstagio[x.estagio] || 0) + 1; }
+
+      return {
+        total_contatos_analisados: enriched.length,
+        gerado_em: new Date().toISOString(),
+        oportunidades_quentes: quentes,
+        esfriando: esfriando,
+        com_alerta: comAlerta,
+        distribuicao_estagios: porEstagio,
+      };
+    }
     return { error: `unknown_tool_${name}` };
   } catch (e) {
     return { error: String(e) };
