@@ -1029,6 +1029,17 @@ Deno.serve(async (req) => {
       return json({ error: "ai_error", status: resp.status, detail: errText }, 500);
     }
     const data = await resp.json();
+    try {
+      const u = data?.usage ?? {};
+      await admin.from("ai_usage_log").insert({
+        function_name: "aurora-trainer",
+        model: "google/gemini-2.5-flash",
+        prompt_tokens: Number(u.prompt_tokens ?? 0),
+        completion_tokens: Number(u.completion_tokens ?? 0),
+        total_tokens: Number(u.total_tokens ?? (Number(u.prompt_tokens ?? 0) + Number(u.completion_tokens ?? 0))),
+        meta: { iter: i, finish_reason: data?.choices?.[0]?.finish_reason ?? null },
+      });
+    } catch (e) { console.warn("ai_usage_log_failed", String(e)); }
     const choice = data.choices?.[0]?.message;
     if (!choice) return json({ error: "no_choice" }, 500);
 

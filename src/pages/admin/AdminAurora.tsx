@@ -14,6 +14,7 @@ import {
 import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
+import AdminAuroraConsumo from "./AdminAuroraConsumo";
 
 interface AiSetting {
   id: string; action_key: string; label: string;
@@ -105,6 +106,7 @@ const AdminAurora = () => {
           <TabsTrigger value="modes">Modos de operação</TabsTrigger>
           <TabsTrigger value="pricing">Base oficial de preços</TabsTrigger>
           <TabsTrigger value="persona">Persona</TabsTrigger>
+          <TabsTrigger value="consumo">Consumo de IA</TabsTrigger>
         </TabsList>
 
         <TabsContent value="modes" className="space-y-3 mt-6">
@@ -204,6 +206,10 @@ const AdminAurora = () => {
               da base oficial de preços acima e do histórico da conversa. Nenhuma chave de IA fica exposta no navegador.
             </p>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="consumo" className="mt-6">
+          <AdminAuroraConsumo />
         </TabsContent>
       </Tabs>
     </div>
