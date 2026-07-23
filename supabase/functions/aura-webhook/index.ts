@@ -376,7 +376,7 @@ async function buildSystemPrompt(
 
   const persona = settings?.config?.system_prompt ?? `Você é a Aurora, atendente virtual da Aura Clinic (clínica de estética em Tangará da Serra-MT).
 Tom acolhedor, elegante, profissional. Respostas curtas (2-4 frases), naturais no WhatsApp.
-Nunca invente preços. Se perguntarem valores, ofereça agendar avaliação presencial gratuita.
+Nunca, JAMAIS invente preços. Antes de citar QUALQUER valor em reais, você é OBRIGADA a chamar \`listar_servicos\` e usar exatamente o preço retornado (\`price_cents\` dividido por 100). Se o serviço perguntado não aparecer na lista, ou não tiver \`price_cents\`, NÃO chute valor: chame \`solicitar_revisao_humana\` com motivo "preço não catalogado" e pare. É PROIBIDO citar preço "aproximado", "em torno de", "a partir de" sem confirmação da ferramenta.
 OBJETIVO PRINCIPAL: conduzir toda conversa para AGENDAR UMA AVALIAÇÃO (modo avaliação).
 Fluxo ideal: 1) cumprimente pelo nome, 2) entenda o interesse, 3) explique brevemente o procedimento, 4) proponha 2 opções de dia/horário para avaliação presencial, 5) confirme e peça nome completo + WhatsApp.
 Se pedirem para falar com humano, diga que vai encaminhar para uma atendente.`;
@@ -678,29 +678,89 @@ async function generateAiReply(
   ];
 
 
-  const callGateway = async (msgs: any[]) => {
+  const callGateway = async (msgs: any[], maxTokens = 900) => {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: msgs, tools }),
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: msgs, tools, max_tokens: maxTokens }),
     });
     if (!r.ok) { console.error("ai_gateway_error", r.status, await r.text()); return null; }
     return await r.json();
   };
 
+  // Detecta resposta truncada: vazia, sem pontuação final, ou terminando em "R", "R$", número solto, preposição.
+  const looksTruncated = (text: string | null | undefined): boolean => {
+    if (!text) return true;
+    const t = text.trim();
+    if (t.length < 3) return true;
+    // Termina com letra/símbolo que sugere corte no meio (ex: "custam R", "por R$", "de aproximadamen")
+    if (/[A-Za-zÀ-ÿ]$/.test(t) && !/[.!?…)"”'’]$/.test(t)) {
+      // aceita só se terminar com emoji ou pontuação
+      const lastChar = t.slice(-1);
+      const isEmoji = /\p{Extended_Pictographic}/u.test(lastChar);
+      if (!isEmoji) return true;
+    }
+    if (/\bR\$?$/.test(t)) return true;
+    if (/\b(de|da|do|para|com|em|no|na|por|a|o|e|ou|que)$/i.test(t)) return true;
+    return false;
+  };
+
   try {
     for (let iter = 0; iter < 4; iter++) {
-      const data = await callGateway(messages);
+      let data = await callGateway(messages);
       if (!data) return null;
-      const msg = data?.choices?.[0]?.message;
+      let choice = data?.choices?.[0];
+      let msg = choice?.message;
       if (!msg) return null;
       const toolCalls = msg.tool_calls;
       if (!toolCalls || toolCalls.length === 0) {
-        return msg.content ?? null;
+        const finishReason = choice?.finish_reason;
+        let content: string | null = msg.content ?? null;
+        // Se veio cortado pelo modelo ou parece truncado, regenera UMA vez com mais tokens e instrução de fechar.
+        if (finishReason === "length" || finishReason === "content_filter" || looksTruncated(content)) {
+          console.warn("ai_response_truncated_retry", { finishReason, tail: (content ?? "").slice(-40) });
+          const retryMsgs = [
+            ...messages,
+            {
+              role: "system",
+              content: "Sua última resposta foi cortada ou incompleta. Reescreva do zero UMA resposta curta (2-4 frases), completa, terminando com pontuação final (. ! ?). Se for citar preço, use SÓ o valor retornado por listar_servicos; se não tiver certeza, chame solicitar_revisao_humana em vez de responder.",
+            },
+          ];
+          const retry = await callGateway(retryMsgs, 1100);
+          const rChoice = retry?.choices?.[0];
+          const rMsg = rChoice?.message;
+          if (rMsg?.tool_calls?.length) {
+            // Modelo decidiu chamar ferramenta na regeneração — segue o fluxo normal.
+            msg = rMsg;
+            choice = rChoice;
+          } else {
+            const rContent = rMsg?.content ?? null;
+            const rFinish = rChoice?.finish_reason;
+            if (rContent && !looksTruncated(rContent) && rFinish !== "length" && rFinish !== "content_filter") {
+              return rContent;
+            }
+            // Regeneração também falhou → aciona revisão humana e devolve mensagem-ponte.
+            console.error("ai_response_truncated_giveup", { finishReason, rFinish });
+            await admin.from("conversations").update({
+              needs_review: true,
+              review_reason: "Resposta da Aurora saiu cortada/incompleta duas vezes seguidas.",
+              review_requested_at: new Date().toISOString(),
+              human_takeover_until: new Date(Date.now() + 24 * 3600_000).toISOString(),
+              assigned_to: "sirlei",
+            }).eq("id", convId);
+            const firstName = (contactName ?? "").trim().split(/\s+/)[0];
+            const saudacao = firstName ? `${firstName}, ` : "";
+            return `${saudacao}deixa eu confirmar isso certinho com a Sirlei pra não te passar informação errada 💛 Em instantes ela mesma te responde por aqui, tá bom?`;
+          }
+        }
+        if (!msg.tool_calls?.length) {
+          return msg.content ?? null;
+        }
+        // caiu aqui = retry devolveu tool_calls; deixa o loop tratar
       }
       // Push assistant tool_calls message
       messages.push(msg);
-      for (const tc of toolCalls) {
+      for (const tc of msg.tool_calls ?? []) {
         const name = tc.function?.name;
         let args: any = {};
         try { args = JSON.parse(tc.function?.arguments ?? "{}"); } catch { args = {}; }
@@ -752,7 +812,7 @@ async function executeAuroraTool(
     if (name === "listar_servicos") {
       const { data: rows } = await admin
         .from("services")
-        .select("id, name, category, duration, professional_name")
+        .select("id, name, category, duration, professional_name, price_cents")
         .eq("active", true)
         .order("display_order", { ascending: true })
         .limit(60);
