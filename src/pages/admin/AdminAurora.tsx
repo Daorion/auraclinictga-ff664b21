@@ -207,6 +207,10 @@ const AdminAurora = () => {
             </p>
           </Card>
         </TabsContent>
+
+        <TabsContent value="consumo" className="mt-6">
+          <AdminAuroraConsumo />
+        </TabsContent>
       </Tabs>
     </div>
   );
