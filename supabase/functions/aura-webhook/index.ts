@@ -752,7 +752,7 @@ async function executeAuroraTool(
     if (name === "listar_servicos") {
       const { data: rows } = await admin
         .from("services")
-        .select("id, name, category, duration, professional_name")
+        .select("id, name, category, duration, professional_name, price_cents")
         .eq("active", true)
         .order("display_order", { ascending: true })
         .limit(60);
