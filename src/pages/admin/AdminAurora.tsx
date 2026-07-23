@@ -106,6 +106,7 @@ const AdminAurora = () => {
           <TabsTrigger value="modes">Modos de operação</TabsTrigger>
           <TabsTrigger value="pricing">Base oficial de preços</TabsTrigger>
           <TabsTrigger value="persona">Persona</TabsTrigger>
+          <TabsTrigger value="consumo">Consumo de IA</TabsTrigger>
         </TabsList>
 
         <TabsContent value="modes" className="space-y-3 mt-6">
