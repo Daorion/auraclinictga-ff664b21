@@ -14,6 +14,7 @@ import {
 import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
+import AdminAuroraConsumo from "./AdminAuroraConsumo";
 
 interface AiSetting {
   id: string; action_key: string; label: string;
