@@ -678,14 +678,28 @@ async function generateAiReply(
   ];
 
 
+  const MODEL_NAME = "google/gemini-2.5-flash";
   const callGateway = async (msgs: any[], maxTokens = 900) => {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: msgs, tools, max_tokens: maxTokens }),
+      body: JSON.stringify({ model: MODEL_NAME, messages: msgs, tools, max_tokens: maxTokens }),
     });
     if (!r.ok) { console.error("ai_gateway_error", r.status, await r.text()); return null; }
-    return await r.json();
+    const data = await r.json();
+    try {
+      const u = data?.usage ?? {};
+      await admin.from("ai_usage_log").insert({
+        function_name: "aura-webhook",
+        model: MODEL_NAME,
+        prompt_tokens: Number(u.prompt_tokens ?? 0),
+        completion_tokens: Number(u.completion_tokens ?? 0),
+        total_tokens: Number(u.total_tokens ?? (Number(u.prompt_tokens ?? 0) + Number(u.completion_tokens ?? 0))),
+        conversation_id: convId,
+        meta: { finish_reason: data?.choices?.[0]?.finish_reason ?? null },
+      });
+    } catch (e) { console.warn("ai_usage_log_failed", String(e)); }
+    return data;
   };
 
   // Detecta resposta truncada: vazia, sem pontuação final, ou terminando em "R", "R$", número solto, preposição.
