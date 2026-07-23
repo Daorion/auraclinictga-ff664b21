@@ -111,6 +111,18 @@ ${transcript}
     return { contact_id: contactId, error: `ai_${resp.status}`, details: err.slice(0, 300) };
   }
   const data = await resp.json();
+  try {
+    const u = data?.usage ?? {};
+    await admin.from("ai_usage_log").insert({
+      function_name: "aurora-analisar-conversa",
+      model: MODEL,
+      prompt_tokens: Number(u.prompt_tokens ?? 0),
+      completion_tokens: Number(u.completion_tokens ?? 0),
+      total_tokens: Number(u.total_tokens ?? (Number(u.prompt_tokens ?? 0) + Number(u.completion_tokens ?? 0))),
+      contact_id: contactId,
+      meta: {},
+    });
+  } catch (e) { console.warn("ai_usage_log_failed", String(e)); }
   const raw = data?.choices?.[0]?.message?.content ?? "{}";
   let parsed: any;
   try { parsed = JSON.parse(raw); } catch { return { contact_id: contactId, error: "parse_failed", raw }; }
