@@ -120,6 +120,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_log: {
+        Row: {
+          completion_tokens: number
+          contact_id: string | null
+          conversation_id: string | null
+          created_at: string
+          function_name: string
+          id: string
+          meta: Json
+          model: string
+          prompt_tokens: number
+          total_tokens: number
+        }
+        Insert: {
+          completion_tokens?: number
+          contact_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          function_name: string
+          id?: string
+          meta?: Json
+          model: string
+          prompt_tokens?: number
+          total_tokens?: number
+        }
+        Update: {
+          completion_tokens?: number
+          contact_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          function_name?: string
+          id?: string
+          meta?: Json
+          model?: string
+          prompt_tokens?: number
+          total_tokens?: number
+        }
+        Relationships: []
+      }
       appointment_history: {
         Row: {
           appointment_id: string
