@@ -540,14 +540,24 @@ Fluxo:
   const nowIso = new Date().toISOString();
   const { data: directives } = await admin
     .from("aurora_directives")
-    .select("title, kind, content, ends_at")
+    .select("title, kind, content, ends_at, created_at")
     .eq("active", true)
     .or(`ends_at.is.null,ends_at.gt.${nowIso}`)
-    .limit(30);
+    .limit(200);
   let directivesText = "";
   if (directives && directives.length) {
+    // Ordena: promoções e instruções primeiro (com vigência), depois persona/conhecimento por recência
+    const priority: Record<string, number> = { promocao: 0, instrucao: 1, persona: 2, conhecimento: 3 };
+    const sorted = [...directives].sort((a: any, b: any) => {
+      const pa = priority[a.kind] ?? 4;
+      const pb = priority[b.kind] ?? 4;
+      if (pa !== pb) return pa - pb;
+      // dentro do mesmo grupo: as com ends_at (vigentes) primeiro, depois mais recentes
+      if (!!a.ends_at !== !!b.ends_at) return a.ends_at ? -1 : 1;
+      return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+    });
     directivesText = "\n\n=== DIRETIVAS ATIVAS (siga sempre — configuradas pela administradora) ===\n" +
-      directives.map((d: any) =>
+      sorted.map((d: any) =>
         `• [${d.kind}] ${d.title}${d.ends_at ? ` (vigente até ${d.ends_at})` : ""}: ${d.content}`
       ).join("\n");
   }
