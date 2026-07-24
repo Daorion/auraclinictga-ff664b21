@@ -1121,6 +1121,41 @@ Deno.serve(async (req) => {
   const session = body?.session ?? WAHA_SESSION;
   const payload = body?.payload ?? body?.data ?? body;
 
+  // ===== Safety-net resume: re-dispara resposta para inbounds "abandonados" =====
+  // Chamado por aurora-safety-net (pg_cron a cada 2min). Já autenticado via ?secret=.
+  if (event === "_safety_resume") {
+    const convId = String(body?.conversation_id ?? "");
+    if (!convId) return json({ error: "missing_conversation_id" }, 400);
+    const { data: conv } = await admin
+      .from("conversations")
+      .select("id, contact_id, ai_enabled, human_takeover_until, pending_reply_token, contacts:contact_id(id, phone, name, wa_id, aurora_blocked)")
+      .eq("id", convId)
+      .maybeSingle();
+    if (!conv || !conv.contacts) return json({ ok: true, skipped: "no_conv" });
+    if (conv.ai_enabled === false) return json({ ok: true, skipped: "ai_disabled" });
+    if (conv.human_takeover_until && new Date(conv.human_takeover_until) > new Date()) return json({ ok: true, skipped: "takeover" });
+    if ((conv.contacts as any).aurora_blocked) return json({ ok: true, skipped: "blocked" });
+    const { data: lastIn } = await admin
+      .from("messages")
+      .select("created_at")
+      .eq("contact_id", conv.contact_id)
+      .eq("direction", "in")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!lastIn) return json({ ok: true, skipped: "no_inbound" });
+    const rawFrom = (conv.contacts as any).wa_id || `${(conv.contacts as any).phone}@c.us`;
+    const resumeToken = crypto.randomUUID();
+    await admin.from("conversations").update({ pending_reply_token: resumeToken }).eq("id", convId);
+    // @ts-ignore
+    EdgeRuntime.waitUntil(
+      scheduleReply(admin, convId, rawFrom, (conv.contacts as any).phone, conv.contact_id, (conv.contacts as any).name, lastIn.created_at, resumeToken),
+    );
+    return json({ ok: true, resumed: true, token: resumeToken });
+  }
+
+
+
   // ===== session.status =====
   if (event === "session.status" || event === "session.state") {
     await admin.from("whatsapp_sessions").upsert(
