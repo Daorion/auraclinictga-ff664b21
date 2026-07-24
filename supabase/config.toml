@@ -14,3 +14,7 @@ verify_jwt = false
 
 [functions.waha-send]
 verify_jwt = true
+
+[functions.aurora-safety-net]
+verify_jwt = false
+
